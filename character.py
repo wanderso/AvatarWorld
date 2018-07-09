@@ -1,4 +1,5 @@
 import random
+import powers
 #https://pastebin.com/azrdkPdB blorp
 
 class Dice:
@@ -94,6 +95,15 @@ class Character:
 
         self.conditions = []
 
+    def generate_health_evade(self):
+        self.max_stamina = max(self.get_dodge(), self.get_parry()) + self.pl
+        self.max_wounds = (self.get_toughness()) * self.pl
+
+        self.wounds = self.max_wounds
+        self.stamina = self.max_stamina
+
+        self.conditions = []
+
     def heal_stamina(self, healval):
         self.stamina += healval
         if self.stamina > self.max_stamina:
@@ -132,6 +142,37 @@ class Character:
 
     def roll_toughness(self):
         return Dice.d20() + self.toughness - self.bruise
+
+    def exec_attack_evasion(self, atk_name, atk_target):
+        if atk_name not in self.attacks:
+            print("Error - invalid attack name. %s does not have attack %s" % (self.name, atk_name))
+            return
+        atk = self.attacks[atk_name]
+        skill = atk.get_skill()
+        skill_value = 0
+        if skill in self.skills:
+            skill_value = self.skills[skill]
+
+        roll = Dice.d20() + skill_value
+
+        hit = False
+        dodged = False
+
+        tdv = None # target defense value
+
+        if (callable(atk.defense)):
+            tdv = atk.defense(target)
+        elif (atk.defense == "Dodge"):
+            tdv = atk_target.get_dodge_defense()
+        elif (atk.defense == "Parry"):
+            tdv = atk_target.get_parry_defense()
+
+        default_target = 10
+        if roll >= default_target:
+            hit = True
+
+        if hit:
+            pass
 
     def exec_attack_classic(self, atk_name, atk_target):
         if atk_name not in self.attacks:
@@ -337,70 +378,6 @@ class Character:
                     atk_target.conditions.append("Incapacitated")
 
 
-class Power:
-    def __init__(self, name, pow_type):
-        self.name = name
-        self.power_type = pow_type
-        self.points = 0
-        self.points_per_rank = 0.0
-        self.points_flat = 0
-
-    def get_power_type(self):
-        return self.power_type
-
-    def get_name(self):
-        return self.name
-
-    def get_points(self):
-        return self.points
-
-class Attack(Power):
-    def __init__(self, name, skill, rank, defense, resistance, recovery, modifiers={}):
-        super().__init__(name, "Attack")
-        self.descriptors = {}
-        self.attack_skill = skill
-        self.damage_rank = rank
-        self.defense = defense
-        self.resistance = resistance
-        self.recovery = recovery
-        self.modifiers = modifiers
-
-        self.points = rank
-        self.points_per_rank = 1.0
-
-        if ('Ranged') in modifiers:
-            if modifiers['Ranged'] == "default":
-                modifiers['Ranged'] = rank
-                self.points += rank
-                self.points_per_rank += 1.0
-
-        if ('Perception-Ranged') in modifiers:
-            if modifiers['Perception-Ranged'] == "default":
-                modifiers['Perception-Ranged'] = rank
-                self.points += rank*2
-                self.points_per_rank += 2.0
-
-        if ('Multiattack') in modifiers:
-            if modifiers['Multiattack'] == "default":
-                modifiers['Multiattack'] = rank
-                self.points += rank
-                self.points_per_rank += 1.0
-
-
-    def get_skill(self):
-        return self.attack_skill
-
-    def get_rank(self):
-        return self.damage_rank
-
-    def get_defense(self):
-        return self.defense
-
-    def get_resistance(self):
-        return self.resistance
-
-    def get_recovery(self):
-        return self.recovery
 
 
 class CharacterGenerators:
@@ -503,12 +480,12 @@ def menlo_cer_sim():
     ana = CharacterGenerators.default_char("Miss Trial", 10, "Balanced")
     mer = CharacterGenerators.default_char("Metal Knuckle", 10, "Balanced")
 
-    vm = Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, "Toughness", modifiers={'Ranged':'default'})
-    ef = Attack("Electron Flurry", "Melee Combat: Martial Arts", 10, "Parry", "Toughness", "Toughness")
-    mf = Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", "Toughness", "Toughness")
-    sk = Attack("Sack", "Melee Combat: Football", 10, "Parry", "Toughness", "Toughness")
-    ij = Attack("Injunction", "Melee Combat: Gavels", 10, "Parry", "Toughness", "Toughness")
-    rp = Attack("Rocket Punch", "Ranged Combat: Martial Arts", 10, "Dodge", "Toughness", "Toughness", modifiers={'Ranged':'default'})
+    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifiers={'Ranged':'default'})
+    ef = powers.Attack("Electron Flurry", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
+    mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
+    sk = powers.Attack("Sack", "Melee Combat: Football", 10, "Parry", Character.get_toughness, Character.get_toughness)
+    ij = powers.Attack("Injunction", "Melee Combat: Gavels", 10, "Parry", Character.get_toughness, Character.get_toughness)
+    rp = powers.Attack("Rocket Punch", "Ranged Combat: Martial Arts", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifiers={'Ranged':'default'})
 
     men.set_skill("Ranged Combat: Hypersuit Blasters", 10)
     srk.set_skill("Melee Combat: Martial Arts", 10)
@@ -526,7 +503,7 @@ def menlo_cer_sim():
 
     print("Points in the Voltaic Manipulator attack: %d" % rp.get_points())
 
-    combat_sim_wulin(cer, ana, 10000)
+    combat_sim_new(cer, men, 10000)
 
 
 def avatar_caus_sim():
@@ -550,7 +527,6 @@ def avatar_caus_sim():
     ava.add_attack(eb)
     cau.add_attack(ab)
 
-#    combat_sim_classic(cau, ava, 10000)
     combat_sim_new(cau, ava, 10000)
 
 
