@@ -1,5 +1,7 @@
 import random
 import powers
+import skills
+import ability
 #https://pastebin.com/azrdkPdB blorp
 
 class Dice:
@@ -33,11 +35,19 @@ class Character:
     def __init__(self, name):
         self.name = name
         self.minion = False
+
+        self.dodge_ranks = 0
+        self.parry_ranks = 0
+        self.fortitude_ranks = 0
+        self.will_ranks = 0
+
+        self.initiative = 0
         self.dodge = 0
         self.parry = 0
         self.toughness = 0
         self.fortitude = 0
         self.will = 0
+
         self.bruise = 0
         self.stamina = 0
         self.wounds = 0
@@ -47,13 +57,31 @@ class Character:
         self.max_stamina = 0
         self.max_wounds = 0
 
+        self.abilities = {}
+
         self.skills = {}
-        self.attacks = {}
-        self.conditions = []
+        self.skill_ranks = {}
+
+        self.advantages_natural = {}
+
+        self.advantages = {}
+
         self.powers = {}
+        self.attacks = {}
+
+        self.conditions = []
 
     def set_pl(self, pl):
         self.pl = pl
+
+    def generate_will(self):
+        pass
+
+    def generate_fortitude(self):
+        pass
+
+    def generate_defenses(self, update=["Initiative", "Dodge", "Parry", "Toughness", "Fortitude", "Will"]):
+        pass
 
     def generate_health_classic(self):
         self.bruise = 0
@@ -83,12 +111,6 @@ class Character:
     def generate_health_new(self):
         self.max_stamina = max(self.get_dodge(),self.get_parry()) * self.pl
         self.max_wounds = (self.get_toughness()) * self.pl
-
-#        self.max_stamina = (max(self.get_dodge()+10,self.get_parry()+10) * self.pl)/2
-#        self.max_wounds = ((self.get_toughness()+5) * self.pl)
-
-#        self.max_stamina = 100
-#        self.max_wounds = 100
 
         self.wounds = self.max_wounds
         self.stamina = self.max_stamina
@@ -132,13 +154,54 @@ class Character:
 
     def add_attack(self, atk):
         nm = atk.get_name()
+        sk = atk.get_skill()
+
         if nm not in self.attacks:
             self.attacks[nm] = atk
         if nm not in self.powers:
             self.powers[nm] = atk
+        if sk not in self.skill_ranks:
+            self.skill_ranks[sk] = 0
+            self.calculate_skill(sk)
 
-    def set_skill(self, name, value):
-        self.skills[name] = value
+    def set_skill_ranks(self, name, value):
+        self.skill_ranks[name] = value
+        self.calculate_skill(name)
+
+    def set_base_ability(self, ability_name, value):
+        self.abilities[ability_name] = value
+        for power in self.powers:
+            if power.power_type == "Enhanced Ability":
+                if ability_name in power.abilities:
+                    self.abilities[ability_name] += power.abilities[ability_name]
+                # TODO: Check if power is active!
+
+        # set skills!
+        if ability_name in ability.Ability.ability_list:
+            for entry in ability.Ability.ability_list[ability_name].associated_skills:
+                if ":" in entry:
+                    for skill_name in self.skills:
+                        if skill_name.split(':')[0]+':' == entry:
+                            self.calculate_skill(skill_name)
+                else:
+                    self.calculate_skill(entry)
+
+        # set powers!
+
+
+    def calculate_skill(self, name):
+        skill_val = 0
+        if name in self.skill_ranks:
+            skill_val += self.skill_ranks[name]
+        if name.split(':')[0] in skills.Skill.skill_abilities:
+            skill_ability = skills.Skill.skill_abilities[name.split(':')[0]]
+            if skill_ability in self.abilities:
+                skill_val += self.abilities[skill_ability]
+        for power in self.powers:
+            if power.power_type == "Enhanced Skill":
+                skill_val += power.rank
+                ## TODO: Needs to check if power is active!
+        self.skills[name] = skill_val
 
     def roll_toughness(self):
         return Dice.d20() + self.toughness - self.bruise
@@ -185,8 +248,6 @@ class Character:
             skill_value = self.skills[skill]
 
         roll = Dice.d20() + skill_value
-
-#        print ("Roll is %d" % roll)
 
         hit = False
 
@@ -487,12 +548,16 @@ def menlo_cer_sim():
     ij = powers.Attack("Injunction", "Melee Combat: Gavels", 10, "Parry", Character.get_toughness, Character.get_toughness)
     rp = powers.Attack("Rocket Punch", "Ranged Combat: Martial Arts", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifiers={'Ranged':'default'})
 
-    men.set_skill("Ranged Combat: Hypersuit Blasters", 10)
-    srk.set_skill("Melee Combat: Martial Arts", 10)
-    cer.set_skill("Melee Combat: Martial Arts", 10)
-    mik.set_skill("Melee Combat: Football", 10)
-    ana.set_skill("Melee Combat: Gavels", 10)
-    mer.set_skill("Ranged Combat: Martial Arts", 10)
+    men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 8)
+    srk.set_skill_ranks("Melee Combat: Martial Arts", 10)
+    cer.set_skill_ranks("Melee Combat: Martial Arts", 5)
+    mik.set_skill_ranks("Melee Combat: Football", 10)
+    ana.set_skill_ranks("Melee Combat: Gavels", 10)
+    mer.set_skill_ranks("Ranged Combat: Martial Arts", 10)
+
+    men.set_base_ability("Dexterity", 2)
+    cer.set_base_ability("Fighting", 5)
+    
 
     men.add_attack(vm)
     srk.add_attack(ef)
@@ -521,8 +586,8 @@ def avatar_caus_sim():
     eb = Attack("Energy Blasts", "Ranged Combat: Energy Blasts", ava_pl, "Dodge", "Toughness", "Toughness")
     ab = Attack("Acausal Burst", "Ranged Combat: Spellcasting", cau_pl, "Dodge", "Toughness", "Toughness")
 
-    ava.set_skill("Ranged Combat: Energy Blasts", ava_pl)
-    cau.set_skill("Ranged Combat: Spellcasting", cau_pl)
+    ava.set_skill_ranks("Ranged Combat: Energy Blasts", ava_pl)
+    cau.set_skill_ranks("Ranged Combat: Spellcasting", cau_pl)
 
     ava.add_attack(eb)
     cau.add_attack(ab)

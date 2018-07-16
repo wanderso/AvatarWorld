@@ -1,6 +1,7 @@
 import enum
+import powers
 
-class Skill_Names(enum):
+class Skill_Names(enum.Enum):
     ACROBATICS = 1
     ATHLETICS = 2
     CLOSE_COMBAT = 3
@@ -19,6 +20,25 @@ class Skill_Names(enum):
     VEHICLES = 16
 
 class Skill:
+    skill_abilities = {'Acrobatics':'Agility',
+                       'Athletics':'Strength',
+                       'Melee Combat':'Fighting',
+                       'Deception':'Presence',
+                       'Expertise':'Intelligence',
+                       'Insight':'Awareness',
+                       'Intimidation':'Presence',
+                       'Investigation':'Intelligence',
+                       'Perception':'Awareness',
+                       'Persuasion':'Presence',
+                       'Ranged Combat':'Dexterity',
+                       'Sleight of Hand':'Dexterity',
+                       'Stealth':'Agility',
+                       'Technology':'Intelligence',
+                       'Treatment':'Intelligence',
+                       'Vehicles':'Dexterity'}
+
+    def __init__(self):
+        self.ability = None
     pass
 
 class Acrobatics(Skill):
