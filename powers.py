@@ -14,6 +14,14 @@ class Power_Action(enum.Enum):
     REACTION = 4
     NONE = 5
 
+class Power_Type(enum.Enum):
+    ATTACK = 1
+    ENHANCED_ABILITY = 4
+    ENHANCED_DEFENSE = 3
+    ENHANCED_SKILL = 5
+    PROTECTION = 2
+
+
 class Power:
     def __init__(self, name, pow_type):
         self.name = name

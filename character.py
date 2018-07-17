@@ -3,6 +3,7 @@ import powers
 import skills
 import ability
 import defenses
+import advantages
 #https://pastebin.com/azrdkPdB blorp
 
 class Dice:
@@ -542,8 +543,28 @@ class Character:
 
         adv_pts = 0
 
+        adv_names = []
+
         for entry in self.advantages_natural:
+            adv_pts += entry.advantage_cost
+            adv_names.append(advantage_name)
+
+        addl_str = ""
+
+        for entry in sorted(adv_names):
+            addl_str += "%s, "
+
+        addl_str = addl_str[:-2] + "\n"
+
+        return_string += addl_str
+        for pow in self.powers:
             pass
+
+        return_string += "(%d point" % adv_pts
+        if adv_pts != 1:
+            return_string += "s"
+        return_string += ")\n"
+
 
         return return_string
 
