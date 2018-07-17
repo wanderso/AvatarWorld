@@ -24,10 +24,9 @@ class Power:
         self.points = 0
         self.points_per_rank = 0.0
         self.points_flat = 0
-
         self.available = True
-
         self.active = True
+        self.natural_power = False
 
     def get_available(self):
         return self.available
