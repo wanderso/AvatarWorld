@@ -75,7 +75,15 @@ class Character:
         self.pl = pl
 
     def generate_will(self):
-        pass
+        will_value = self.will_ranks
+        if "Awareness" in self.abilities:
+            will_value += self.abilities["Awareness"]
+        for power in self.powers:
+            if power.power_type == "Enhanced Defenses":
+                will_value += power.rank
+                # Check to see if power is on!
+            
+
 
     def generate_fortitude(self):
         pass
