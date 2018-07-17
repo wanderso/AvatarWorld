@@ -4,24 +4,31 @@ class Defense:
     associated_ability = None
     associated_pl_cap = []
     defense_list = {}
+    defense_name = None
 
 class Initiative(Defense):
     associated_ability = ability.Agility
+    defense_name = "Initiative"
 
 class Dodge(Defense):
     associated_ability = ability.Agility
+    defense_name = "Dodge"
 
 class Parry(Defense):
     associated_ability = ability.Fighting
+    defense_name = "Parry"
 
 class Toughness(Defense):
     associated_ability = ability.Stamina
+    defense_name = "Toughness"
 
 class Fortitude(Defense):
     associated_ability = ability.Stamina
+    defense_name = "Fortitude"
 
 class Will(Defense):
     associated_ability = ability.Awareness
+    defense_name = "Will"
 
 Dodge.associated_pl_cap = [Toughness]
 Parry.associated_pl_cap = [Toughness]

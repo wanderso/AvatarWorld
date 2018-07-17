@@ -2,6 +2,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 
 root = tk.Tk()
+root.title("Pinnacle Academy")
 
 frame_root = tk.Frame(root)
 frame_root.pack()
@@ -11,13 +12,13 @@ w = tk.Label(frame_root, font = "Helvetica 16 bold", text="Pinnacle Academy Inte
 w.pack(side=tk.TOP)
 
 main_frame = tk.Frame(frame_root)
-main_frame.pack(side=tk.TOP)
+main_frame.pack(side=tk.TOP, fill=tk.BOTH)
 
 frame_tabs = tk.Frame(main_frame)
-frame_tabs.pack(side=tk.LEFT)
+frame_tabs.pack(side=tk.LEFT, fill=tk.Y)
 
 view_switch = tk.Frame(frame_tabs)
-view_switch.pack(side=tk.TOP)
+view_switch.pack(side=tk.TOP, fill=tk.Y)
 
 chara_viewer_button = tk.Button(view_switch, text="Character Viewer", command=quit)
 chara_viewer_button.pack(side=tk.TOP, fill=tk.X)
@@ -32,7 +33,7 @@ map_creator_button = tk.Button(view_switch, text="Map Creator", command=quit)
 map_creator_button.pack(side=tk.TOP, fill=tk.X)
 
 frame_display = tk.Frame(main_frame)
-frame_display.pack(side=tk.RIGHT)
+frame_display.pack(side=tk.RIGHT, fill=tk.BOTH)
 
 image = Image.open("Graphics/daphne_example.jpg")
 daphne = ImageTk.PhotoImage(image)

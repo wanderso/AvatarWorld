@@ -15,6 +15,7 @@ class Ability:
     ability_list = {}
     associated_skills = []
     associated_defenses = []
+    ability_name = None
 
     def __init__(self, val):
         self.trait_value = val
@@ -29,6 +30,7 @@ class Strength(Ability):
     """
     associated_skills = ['Athletics']
     associated_defenses = []
+    ability_name = "Strength"
 
 
 class Stamina(Ability):
@@ -38,6 +40,7 @@ class Stamina(Ability):
     TOTAL: 2 ppr"""
     associated_skills = []
     associated_defenses = ["Toughness", "Fortitude"]
+    ability_name = "Stamina"
 
 
 class Agility(Ability):
@@ -49,6 +52,7 @@ class Agility(Ability):
     TOTAL: 2.25 ppr"""
     associated_skills = ['Acrobatics', 'Stealth']
     associated_defenses = ["Initiative", "Dodge"]
+    ability_name = "Agility"
 
 
 class Dexterity(Ability):
@@ -59,6 +63,8 @@ class Dexterity(Ability):
     TOTAL: 1.5 ppr"""
     associated_skills = ['Ranged Combat:', 'Sleight of Hand', 'Vehicles']
     associated_defenses = []
+    ability_name = "Dexterity"
+
 
 
 class Fighting(Ability):
@@ -69,6 +75,7 @@ class Fighting(Ability):
     """
     associated_skills = ['Melee Combat:']
     associated_defenses = ['Parry']
+    ability_name = "Fighting"
 
 
 class Intelligence(Ability):
@@ -81,6 +88,7 @@ class Intelligence(Ability):
     """
     associated_skills = ['Expertise:', 'Investigation', 'Technology', 'Treatment']
     associated_defenses = []
+    ability_name = "Intelligence"
 
 class Awareness(Ability):
     """
@@ -91,6 +99,7 @@ class Awareness(Ability):
     """
     associated_skills = ['Insight', 'Perception']
     associated_defenses = ['Will']
+    ability_name = "Awareness"
 
 
 class Presence(Ability):
@@ -102,6 +111,7 @@ class Presence(Ability):
     """
     associated_skills = ['Deception', 'Intimidation', 'Persuasion']
     associated_defenses = []
+    ability_name = "Presence"
 
 
 Ability.ability_list = {'Strength':Strength,

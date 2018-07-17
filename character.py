@@ -2,6 +2,7 @@ import random
 import powers
 import skills
 import ability
+import defenses
 #https://pastebin.com/azrdkPdB blorp
 
 class Dice:
@@ -74,22 +75,53 @@ class Character:
     def set_pl(self, pl):
         self.pl = pl
 
-    def generate_will(self):
-        will_value = self.will_ranks
-        if "Awareness" in self.abilities:
-            will_value += self.abilities["Awareness"]
-        for power in self.powers:
-            if power.power_type == "Enhanced Defenses":
-                will_value += power.rank
-                # Check to see if power is on!
-            
+    def set_dodge_ranks(self, value):
+        self.dodge_ranks = value
+
+    def set_parry_ranks(self, value):
+        self.parry_ranks = value
+
+    def set_fortitude_ranks(self, value):
+        self.fortitude_ranks = value
+
+    def set_will_ranks(self, value):
+        self.will_ranks = value
 
 
-    def generate_fortitude(self):
-        pass
-
-    def generate_defenses(self, update=["Initiative", "Dodge", "Parry", "Toughness", "Fortitude", "Will"]):
-        pass
+    def generate_defenses(self, update=[defenses.Initiative, defenses.Dodge, defenses.Parry, defenses.Toughness, defenses.Fortitude, defenses.Will]):
+        for entry in update:
+            update_value = 0
+            if entry == defenses.Dodge:
+                update_value = self.dodge_ranks
+            elif entry == defenses.Parry:
+                update_value = self.parry_ranks
+            elif entry == defenses.Fortitude:
+                update_value = self.fortitude_ranks
+            elif entry == defenses.Will:
+                update_value = self.will_ranks
+            value_ability_name = entry.associated_ability.ability_name
+            if value_ability_name in self.abilities:
+                update_value += self.abilities[value_ability_name]
+            for power in powers:
+                if power.power_type == "Enhanced Defenses":
+                    if entry.defense_name in power.abilities:
+                        update_value += power.abilities[entry.defense_name]
+                        # TODO: Check if power is active!
+                elif power.power_type == "Protection":
+                    if entry.defense_name == "Toughness":
+                        update_value += power.rank
+            if entry == defenses.Dodge:
+                self.dodge = update_value
+            elif entry == defenses.Parry:
+                self.parry = update_value
+            elif entry == defenses.Fortitude:
+                self.fortitude = update_value
+            elif entry == defenses.Will:
+                self.will = update_value
+            elif entry == defenses.Toughness:
+                self.toughness = update_value
+            elif entry == defenses.Initiative:
+                self.initiative = update_value
 
     def generate_health_classic(self):
         self.bruise = 0
