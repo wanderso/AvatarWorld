@@ -54,6 +54,8 @@ class Character:
         self.wounds = 0
 
         self.pl = 0
+        self.exp = 0
+        self.spent_points = 0
 
         self.max_stamina = 0
         self.max_wounds = 0
@@ -478,6 +480,153 @@ class Character:
                 else:
                     atk_target.conditions.append("Incapacitated")
 
+    def print_character_sheet(self):
+        return_string = ""
+        return_string += ("%s - (PL %d, %d EXP)" % (self.name, self.pl, self.pl*15))
+        return_string += "\n\n"
+        if self.exp > self.spent_points:
+            return_string += "(%d points extra)\n\n" % (self.exp-self.spent_points)
+        elif self.exp < self.spent_points:
+            return_string += "(%d points over)\n\n" % (self.spent_points-self.exp)
+        return_string += "Traits\n\n"
+        trait_list = [("STR","Strength"),("STA","Stamina"),("AGL","Agility"),("DEX","Dexterity"),
+                      ("FGT","Fighting"),("INT","Intelligence"),("AWE","Awareness"),("PRE","Presence")]
+
+        abil_pts = 0
+
+        for entry in trait_list:
+            abil_val = 0
+            if entry[1] in self.abilities:
+                abil_val = self.abilities[entry[1]]
+                abil_pts += abil_val*2
+            return_string += ("%s %d (%d points)\n" %(entry[0],abil_val,abil_val*2))
+
+        return_string += "\n(%d points)" % abil_pts
+
+        return_string += "\n\nSkills:\n"
+
+        skill_list = []
+
+        for key in self.skill_ranks:
+            skill_list.append(key)
+
+        total_ranks = 0
+
+        for entry in sorted(skill_list):
+            return_string += "%s: %d " % (entry, self.skills[entry])
+            skill_name = entry.split(":")[0]
+            addl_str = ""
+            if skill_name in skills.Skill.skill_abilities:
+                addl_str += "("
+                ability_name = skills.Skill.skill_abilities[skill_name]
+                ability_val = 0
+                if ability_name in self.abilities:
+                    ability_val = self.abilities[ability_name]
+                if ability_val > 0:
+                    addl_str += "+"
+                for tup in trait_list:
+                    if tup[1] == ability_name:
+                        addl_str += "%d %s)" %(ability_val,tup[0])
+            addl_str += " + (%d ranks)" % self.skill_ranks[entry]
+            total_ranks += self.skill_ranks[entry]
+            addl_str += "\n"
+
+            return_string += addl_str
+
+        if total_ranks%2 == 0:
+            return_string += "\n(%d points)" % (total_ranks/2)
+        else:
+            return_string += "\n(%d.5 points)" % (total_ranks / 2)
+
+        return_string += "\n\nAdvantages:\n"
+
+        adv_pts = 0
+
+        for entry in self.advantages_natural:
+            pass
+
+        return return_string
+
+        """
+Advantages:
+Attractive, Benefit 6 (Wealth 4, OmniForce Clearance 2), Defensive Roll 2, Equipment 30
+(39 points)
+ 
+Equipment: 
+PixNet Camera and Communications System (Linked Commlink, Video Recorder, Night-Vision Goggles, Mini-Tracer) (5 points of Equipment)
+
+Armor: 
+OmniCorp Special Operations Infiltration 'Wraith' Suit: (3 points of Equipment)
+	Textured Light Combat Mycofibers (Blade/Bullet Resistant): Subtle Protection 2 (3 points) 
+
+Weapons: 
+OmniCorp Polycarbonate Weighted Quarterstaff: 
+	Strength-Based Damage 4, Reach 1 (5 points of Equipment)	
+
+Utility Belt: (45 points of Equipment)
+
+Vehicles: (82 points total)
+CR-15 'Chariot' VTOL Gunship - (81 points)
+
+Gargantuan, Strength 9, Toughness 12, Dodge/Parry 6 (-4 size penalty) Flight 8 (16 points)
+
+Vehicle Armor and Features: (31 points total)
+RCS Cross Section Reduction: Concealment (Radio) (2 points)
+Comms Network: Communications 3 (Radio), Onboard Computer System (13 points)
+Autopilot and Gunnery Computer: Autopilot 1, Enhanced Vehicles 4, Enhanced Ranged Combat: Vehicle-Mounted Weapons 4, Enhanced Advantages: Move-By Attack (6 points)
+Radar Dish: Senses 5 (Accurate Radio, Extended Range), Enhanced Perception 6, Skill Mastery: Perception (9 points)
+
+Vehicle-Mounted Weapons: (34 point array)
+Missile Pod: Unreliable (Limited Use) Ranged Burst Area 2 Damage 8 (32 points)
+Tankbuster: Unreliable (Limited Use) Nullify Protection 8 Alternate Resistance (Impervious Toughness) Accurate 1 Homing 2 Linked to Ranged Damage 8 Accurate 1 Homing 2 (32 points - 1 point for alternate effect)
+Light HEAT Cannon: Ranged Multiattack Penetrating Damage 8 (32 points)
+
+Damage-Proof Luxury Cognoscenti - (81 points - 1 point for Alternate Vehicle)
+Large, Strength 7, Toughness 16, Dodge/Parry 10 (0 size penalty), Speed 6 (21 points)
+
+Vehicle Armor and Features: (30 points)
+Damage-Proof: Impervious Toughness 16 (16 points)
+Luxe: Luxury 3 (Extreme), Alarm 3, Bulletproof Tires 2 (Toughness 13), Navigation System (9 points)
+Kelvi Integrated Tracking Technology: Autopilot 1, Communications, Onboard Computer System, Remote Control, Enhanced Vehicle-Mounted Weapons 2 (5 points)
+
+Vehicle-Mounted Tools: (30 points)
+Light HEAT Turret: Ranged Penetrating Damage 8 (24 points)
+Riot Control Cannon: Ranged Multiattack Damage 8 (24 points - 1 point for Alternate Effect)
+Electrobarrier: Reaction (to touching Vehicle) Close Damage 6 (24 points - 1 point for Alternate Effect)
+Pursuit Mode: (24 points of Linked Powers - 1 point for Alternate Effect)
+	Afterburner and Power Slide: Enhanced Strength 2 (total 9), Enhanced Speed 2 (total 8), Enhanced Vehicles 4 (6 points)
+	Pursuit Weaponry: (18 point Array)
+		Immobilizer: Ranged Damage 8 Homing 1 (17 points)
+		Grappling Line: Move Object 8 Accurate 1 (17 points - 1 point for alternate effect)
+Stealth Mode: (24 points of Linked Powers - 1 point for Alternate Effect)
+	Run Silent: Blending Concealment 6 (Audio: All Frequencies, Vision: Infrared, Radio: Radar, Olfactory: Exhaust) (6 points)
+	Polymorphic Smart Tires: Movement 2 (Sure-Footed, Trackless) (4 points)
+	Optical Camouflage Texture: Environment 1 (Visibility -5), Partial Concealment 4 (Vision: All Frequencies) (6 points)
+	Diamond in the Rough: Enhanced Deception 12 (Limited to Disguise), Enhanced Stealth 6, Skill Mastery: Deception, Stealth (8 points) 
+EMP: Unreliable (Limited Use) Close Burst Area 2 (120 ft) Affects Objects Affliction 8 (Impaired/Disabled/Incapacitated) Alternate Resistance (Technology Check) Limited to (Use on Machines) (24 points - 1 point for Alternate Effect)
+Tankbuster Missile: Unreliable (Limited Use) Nullify Protection 8 Alternate Resistance (Impervious Toughness) Linked to Ranged Damage 8 (24 points - 1 point for alternate effect)
+
+HQ: Wraith's Tower: (Medium Headquarters) (10 points)
+Defense System, Fire Suppression System, Computer, Living Space, Library, Garage, Gym, Security System 3
+
+(105/150 points total)
+
+
+Powers: 
+#1 Worshipper: Enhanced Skill: Stealth 2, Luck 1, Senses 1 (Low-Light Vision) (3 points)
+(3 points)
+
+
+ 
+Defenses:
+Initiative: +6 = (+6 AGL)
+Dodge: +10 = (+6 AGL) + (4 ranks) 
+Parry: +10 = (+4 FGT) + (6 ranks)
+Toughness: +6/4/2 = (+2 STA) + (2 Defensive Roll) + (2 from Wraith Suit)
+Fortitude: +10 = (+2 STA) + (8 Ranks)
+Will: +6 = (+2 AWE) + (4 Ranks)
+(22 points)"""
+
 
 
 
@@ -595,7 +744,16 @@ def menlo_cer_sim():
     ana.set_skill_ranks("Melee Combat: Gavels", 10)
     mer.set_skill_ranks("Ranged Combat: Martial Arts", 10)
 
+    men.set_skill_ranks("Acrobatics", 2)
+    men.set_skill_ranks("Technology", 10)
+    men.set_skill_ranks("Treatment", 10)
+    men.set_skill_ranks("Expertise: Science", 10)
+    men.set_skill_ranks("Perception", 8)
+
+    men.set_base_ability("Intelligence", 10)
+    men.set_base_ability("Awareness", 6)
     men.set_base_ability("Dexterity", 2)
+    men.set_base_ability("Agility", -2)
     cer.set_base_ability("Fighting", 5)
     
 
@@ -609,6 +767,7 @@ def menlo_cer_sim():
     print("Points in the Voltaic Manipulator attack: %d" % rp.get_points())
 
     combat_sim_new(cer, men, 10000)
+    print(men.print_character_sheet())
 
 
 def avatar_caus_sim():
