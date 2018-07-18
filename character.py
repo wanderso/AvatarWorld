@@ -131,6 +131,45 @@ class Character:
             elif entry == defenses.Initiative:
                 self.initiative = update_value
 
+
+    def get_initiative(self):
+        return self.initiative
+
+    def get_fortitude(self):
+        return self.fortitude
+
+    def get_will(self):
+        return self.will
+
+    def get_dodge(self):
+        return self.dodge
+
+    def get_parry(self):
+        return self.parry
+
+    def get_fortitude_ranks(self):
+        return self.fortitude_ranks
+
+    def get_will_ranks(self):
+        return self.will_ranks
+
+    def get_dodge_ranks(self):
+        return self.dodge_ranks
+
+    def get_parry_ranks(self):
+        return self.parry_ranks
+
+    def get_dodge_defense(self):
+        return self.dodge + 10
+
+    def get_parry_defense(self):
+        return self.parry + 10
+
+    def get_toughness(self):
+        return self.toughness
+
+
+
     def generate_health_classic(self):
         self.bruise = 0
         self.conditions = []
@@ -209,41 +248,32 @@ class Character:
             return self.get_will_ranks()
 
 
-    def get_initiative(self):
-        return self.initiative
+    def get_ability(self, ability_name):
+        if ability_name in self.abilities:
+            return self.abilities[ability_name]
+        else:
+            return 0
 
-    def get_fortitude(self):
-        return self.fortitude
+    def set_base_ability(self, ability_name, value):
+        self.abilities[ability_name] = value
+        for power in self.powers:
+            if power.power_type == "Enhanced Ability":
+                if ability_name in power.abilities:
+                    self.abilities[ability_name] += power.abilities[ability_name]
+                # TODO: Check if power is active!
 
-    def get_will(self):
-        return self.will
+        # set skills!
+        if ability_name in ability.Ability.ability_list:
+            for entry in ability.Ability.ability_list[ability_name].associated_skills:
+                if ":" in entry:
+                    for skill_name in self.skills:
+                        if skill_name.split(':')[0]+':' == entry:
+                            self.calculate_skill(skill_name)
+                else:
+                    self.calculate_skill(entry)
+        # set powers!
 
-    def get_dodge(self):
-        return self.dodge
 
-    def get_parry(self):
-        return self.parry
-
-    def get_fortitude_ranks(self):
-        return self.fortitude_ranks
-
-    def get_will_ranks(self):
-        return self.will_ranks
-
-    def get_dodge_ranks(self):
-        return self.dodge_ranks
-
-    def get_parry_ranks(self):
-        return self.parry_ranks
-
-    def get_dodge_defense(self):
-        return self.dodge + 10
-
-    def get_parry_defense(self):
-        return self.parry + 10
-
-    def get_toughness(self):
-        return self.toughness
 
     def add_power(self, pow):
         if pow.get_power_type() == "Attack":
@@ -269,25 +299,7 @@ class Character:
         self.skill_ranks[name] = value
         self.calculate_skill(name)
 
-    def set_base_ability(self, ability_name, value):
-        self.abilities[ability_name] = value
-        for power in self.powers:
-            if power.power_type == "Enhanced Ability":
-                if ability_name in power.abilities:
-                    self.abilities[ability_name] += power.abilities[ability_name]
-                # TODO: Check if power is active!
 
-        # set skills!
-        if ability_name in ability.Ability.ability_list:
-            for entry in ability.Ability.ability_list[ability_name].associated_skills:
-                if ":" in entry:
-                    for skill_name in self.skills:
-                        if skill_name.split(':')[0]+':' == entry:
-                            self.calculate_skill(skill_name)
-                else:
-                    self.calculate_skill(entry)
-
-        # set powers!
 
 
     def calculate_skill(self, name):
@@ -852,5 +864,6 @@ def avatar_caus_sim():
 
 
 if __name__ == '__main__':
+    print(advantages.Accurate_Attack(4).calculate_cost())
     menlo_cer_sim()
 #    avatar_caus_sim()
