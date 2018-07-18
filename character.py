@@ -4,6 +4,7 @@ import skills
 import ability
 import defenses
 import advantages
+import pickle
 #https://pastebin.com/azrdkPdB blorp
 
 class Dice:
@@ -80,16 +81,19 @@ class Character:
 
     def set_dodge_ranks(self, value):
         self.dodge_ranks = value
+        self.generate_defenses(update=[defenses.Dodge])
 
     def set_parry_ranks(self, value):
         self.parry_ranks = value
+        self.generate_defenses(update=[defenses.Parry])
 
     def set_fortitude_ranks(self, value):
         self.fortitude_ranks = value
+        self.generate_defenses(update=[defenses.Fortitude])
 
     def set_will_ranks(self, value):
         self.will_ranks = value
-
+        self.generate_defenses(update=[defenses.Will])
 
     def generate_defenses(self, update=[defenses.Initiative, defenses.Dodge, defenses.Parry, defenses.Toughness, defenses.Fortitude, defenses.Will]):
         for entry in update:
@@ -105,7 +109,8 @@ class Character:
             value_ability_name = entry.associated_ability.ability_name
             if value_ability_name in self.abilities:
                 update_value += self.abilities[value_ability_name]
-            for power in powers:
+            for key in self.powers:
+                power = self.powers[key]
                 if power.power_type == "Enhanced Defenses":
                     if entry.defense_name in power.abilities:
                         update_value += power.abilities[entry.defense_name]
@@ -174,6 +179,39 @@ class Character:
         if self.stamina > self.max_stamina:
             self.stamina = self.max_stamina
 
+    def get_value_from_class(self, class_target):
+        if class_target == defenses.Initiative:
+            return self.get_initiative()
+        elif class_target == defenses.Dodge:
+            return self.get_dodge()
+        elif class_target == defenses.Parry:
+            return self.get_parry()
+        elif class_target == defenses.Toughness:
+            return self.get_toughness()
+        elif class_target == defenses.Fortitude:
+            return self.get_fortitude()
+        elif class_target == defenses.Will:
+            return self.get_will()
+
+    def get_rank_value_from_class(self, class_target):
+        if class_target == defenses.Initiative:
+            # Eventually replace this with levels of improved init x4
+            return 0
+        elif class_target == defenses.Dodge:
+            return self.get_dodge_ranks()
+        elif class_target == defenses.Parry:
+            return self.get_parry_ranks()
+        elif class_target == defenses.Toughness:
+            return 0
+        elif class_target == defenses.Fortitude:
+            return self.get_fortitude_ranks()
+        elif class_target == defenses.Will:
+            return self.get_will_ranks()
+
+
+    def get_initiative(self):
+        return self.initiative
+
     def get_fortitude(self):
         return self.fortitude
 
@@ -186,6 +224,18 @@ class Character:
     def get_parry(self):
         return self.parry
 
+    def get_fortitude_ranks(self):
+        return self.fortitude_ranks
+
+    def get_will_ranks(self):
+        return self.will_ranks
+
+    def get_dodge_ranks(self):
+        return self.dodge_ranks
+
+    def get_parry_ranks(self):
+        return self.parry_ranks
+
     def get_dodge_defense(self):
         return self.dodge + 10
 
@@ -194,6 +244,14 @@ class Character:
 
     def get_toughness(self):
         return self.toughness
+
+    def add_power(self, pow):
+        if pow.get_power_type() == "Attack":
+            self.add_attack(pow)
+        else:
+            nm = pow.get_name()
+            if nm not in self.powers:
+                self.powers[nm] = pow
 
     def add_attack(self, atk):
         nm = atk.get_name()
@@ -557,7 +615,8 @@ class Character:
         addl_str = addl_str[:-2] + "\n"
 
         return_string += addl_str
-        for pow in self.powers:
+        for key in self.powers:
+            pow = self.powers[key]
             pass
 
         return_string += "(%d point" % adv_pts
@@ -566,88 +625,59 @@ class Character:
         return_string += ")\n"
 
 
+        pow_pts = 0
+        return_string += "\nPowers:\n"
+        for key in self.powers:
+            pow = self.powers[key]
+            return_string += pow.get_character_sheet_repr()
+            pow_pts += pow.get_points()
+            pass
+
+        return_string += "\n(%d point" % pow_pts
+        if pow_pts != 1:
+            return_string += "s"
+        return_string += ")\n"
+
+        self.generate_defenses()
+
+        return_string += "\nDefenses:\n"
+
+        defense_points = 0
+
+        defenses_list_order = [defenses.Initiative, defenses.Dodge, defenses.Parry, defenses.Toughness, defenses.Fortitude, defenses.Will]
+        for entry in defenses_list_order:
+            addl_str = "%s: %d = (" % (entry.defense_name, self.get_value_from_class(entry))
+            ability_name = entry.associated_ability.ability_name
+            ability_val = 0
+            if ability_name in self.abilities:
+                ability_val = self.abilities[ability_name]
+            if ability_val > 0:
+                addl_str += "+"
+            for tup in trait_list:
+                if tup[1] == ability_name:
+                    addl_str += "%d %s)" %(ability_val,tup[0])
+            rank_val = self.get_rank_value_from_class(entry)
+            defense_points += rank_val
+            if rank_val != 0:
+                addl_str += " + (%d rank" % rank_val
+                if rank_val != 1:
+                    addl_str += 's'
+                addl_str += ")"
+            addl_str += "\n"
+            return_string += addl_str
+
+        return_string += "\n(%d point" % defense_points
+        if defense_points != 1:
+            return_string += "s"
+        return_string += ")\n"
+
         return return_string
 
-        """
-Advantages:
-Attractive, Benefit 6 (Wealth 4, OmniForce Clearance 2), Defensive Roll 2, Equipment 30
-(39 points)
- 
-Equipment: 
-PixNet Camera and Communications System (Linked Commlink, Video Recorder, Night-Vision Goggles, Mini-Tracer) (5 points of Equipment)
+    def save_character_to_file(self, file_name):
+        pass
 
-Armor: 
-OmniCorp Special Operations Infiltration 'Wraith' Suit: (3 points of Equipment)
-	Textured Light Combat Mycofibers (Blade/Bullet Resistant): Subtle Protection 2 (3 points) 
-
-Weapons: 
-OmniCorp Polycarbonate Weighted Quarterstaff: 
-	Strength-Based Damage 4, Reach 1 (5 points of Equipment)	
-
-Utility Belt: (45 points of Equipment)
-
-Vehicles: (82 points total)
-CR-15 'Chariot' VTOL Gunship - (81 points)
-
-Gargantuan, Strength 9, Toughness 12, Dodge/Parry 6 (-4 size penalty) Flight 8 (16 points)
-
-Vehicle Armor and Features: (31 points total)
-RCS Cross Section Reduction: Concealment (Radio) (2 points)
-Comms Network: Communications 3 (Radio), Onboard Computer System (13 points)
-Autopilot and Gunnery Computer: Autopilot 1, Enhanced Vehicles 4, Enhanced Ranged Combat: Vehicle-Mounted Weapons 4, Enhanced Advantages: Move-By Attack (6 points)
-Radar Dish: Senses 5 (Accurate Radio, Extended Range), Enhanced Perception 6, Skill Mastery: Perception (9 points)
-
-Vehicle-Mounted Weapons: (34 point array)
-Missile Pod: Unreliable (Limited Use) Ranged Burst Area 2 Damage 8 (32 points)
-Tankbuster: Unreliable (Limited Use) Nullify Protection 8 Alternate Resistance (Impervious Toughness) Accurate 1 Homing 2 Linked to Ranged Damage 8 Accurate 1 Homing 2 (32 points - 1 point for alternate effect)
-Light HEAT Cannon: Ranged Multiattack Penetrating Damage 8 (32 points)
-
-Damage-Proof Luxury Cognoscenti - (81 points - 1 point for Alternate Vehicle)
-Large, Strength 7, Toughness 16, Dodge/Parry 10 (0 size penalty), Speed 6 (21 points)
-
-Vehicle Armor and Features: (30 points)
-Damage-Proof: Impervious Toughness 16 (16 points)
-Luxe: Luxury 3 (Extreme), Alarm 3, Bulletproof Tires 2 (Toughness 13), Navigation System (9 points)
-Kelvi Integrated Tracking Technology: Autopilot 1, Communications, Onboard Computer System, Remote Control, Enhanced Vehicle-Mounted Weapons 2 (5 points)
-
-Vehicle-Mounted Tools: (30 points)
-Light HEAT Turret: Ranged Penetrating Damage 8 (24 points)
-Riot Control Cannon: Ranged Multiattack Damage 8 (24 points - 1 point for Alternate Effect)
-Electrobarrier: Reaction (to touching Vehicle) Close Damage 6 (24 points - 1 point for Alternate Effect)
-Pursuit Mode: (24 points of Linked Powers - 1 point for Alternate Effect)
-	Afterburner and Power Slide: Enhanced Strength 2 (total 9), Enhanced Speed 2 (total 8), Enhanced Vehicles 4 (6 points)
-	Pursuit Weaponry: (18 point Array)
-		Immobilizer: Ranged Damage 8 Homing 1 (17 points)
-		Grappling Line: Move Object 8 Accurate 1 (17 points - 1 point for alternate effect)
-Stealth Mode: (24 points of Linked Powers - 1 point for Alternate Effect)
-	Run Silent: Blending Concealment 6 (Audio: All Frequencies, Vision: Infrared, Radio: Radar, Olfactory: Exhaust) (6 points)
-	Polymorphic Smart Tires: Movement 2 (Sure-Footed, Trackless) (4 points)
-	Optical Camouflage Texture: Environment 1 (Visibility -5), Partial Concealment 4 (Vision: All Frequencies) (6 points)
-	Diamond in the Rough: Enhanced Deception 12 (Limited to Disguise), Enhanced Stealth 6, Skill Mastery: Deception, Stealth (8 points) 
-EMP: Unreliable (Limited Use) Close Burst Area 2 (120 ft) Affects Objects Affliction 8 (Impaired/Disabled/Incapacitated) Alternate Resistance (Technology Check) Limited to (Use on Machines) (24 points - 1 point for Alternate Effect)
-Tankbuster Missile: Unreliable (Limited Use) Nullify Protection 8 Alternate Resistance (Impervious Toughness) Linked to Ranged Damage 8 (24 points - 1 point for alternate effect)
-
-HQ: Wraith's Tower: (Medium Headquarters) (10 points)
-Defense System, Fire Suppression System, Computer, Living Space, Library, Garage, Gym, Security System 3
-
-(105/150 points total)
-
-
-Powers: 
-#1 Worshipper: Enhanced Skill: Stealth 2, Luck 1, Senses 1 (Low-Light Vision) (3 points)
-(3 points)
-
-
- 
-Defenses:
-Initiative: +6 = (+6 AGL)
-Dodge: +10 = (+6 AGL) + (4 ranks) 
-Parry: +10 = (+4 FGT) + (6 ranks)
-Toughness: +6/4/2 = (+2 STA) + (2 Defensive Roll) + (2 from Wraith Suit)
-Fortitude: +10 = (+2 STA) + (8 Ranks)
-Will: +6 = (+2 AWE) + (4 Ranks)
-(22 points)"""
-
+    def load_character_from_file(self, file_name):
+        pass
 
 
 
@@ -758,6 +788,8 @@ def menlo_cer_sim():
     ij = powers.Attack("Injunction", "Melee Combat: Gavels", 10, "Parry", Character.get_toughness, Character.get_toughness)
     rp = powers.Attack("Rocket Punch", "Ranged Combat: Martial Arts", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifiers={'Ranged':'default'})
 
+    es = powers.Protection("Electrostatic Shield", 10)
+
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 8)
     srk.set_skill_ranks("Melee Combat: Martial Arts", 10)
     cer.set_skill_ranks("Melee Combat: Martial Arts", 5)
@@ -778,12 +810,16 @@ def menlo_cer_sim():
     cer.set_base_ability("Fighting", 5)
     
 
-    men.add_attack(vm)
-    srk.add_attack(ef)
-    cer.add_attack(mf)
-    mik.add_attack(sk)
-    ana.add_attack(ij)
-    mer.add_attack(rp)
+    men.add_power(vm)
+    srk.add_power(ef)
+    cer.add_power(mf)
+    mik.add_power(sk)
+    ana.add_power(ij)
+    mer.add_power(rp)
+
+    men.add_power(es)
+
+    men.set_dodge_ranks(1)
 
     print("Points in the Voltaic Manipulator attack: %d" % rp.get_points())
 

@@ -51,6 +51,9 @@ class Power:
     def get_points(self):
         return self.points
 
+    def get_character_sheet_repr(self):
+        return repr(self)
+
 class Attack(Power):
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifiers={}):
         super().__init__(name, "Attack")
@@ -68,33 +71,57 @@ class Attack(Power):
 
         if ('Ranged') in modifiers:
             if modifiers['Ranged'] == "default":
-                modifiers['Ranged'] = rank
+                self.modifiers['Ranged'] = rank
                 self.points += rank
                 self.points_per_rank += 1.0
 
         if ('Perception-Ranged') in modifiers:
             if modifiers['Perception-Ranged'] == "default":
-                modifiers['Perception-Ranged'] = rank
+                self.modifiers['Perception-Ranged'] = rank
                 self.points += rank*2
                 self.points_per_rank += 2.0
 
         if ('Multiattack') in modifiers:
             if modifiers['Multiattack'] == "default":
-                modifiers['Multiattack'] = rank
+                self.modifiers['Multiattack'] = rank
                 self.points += rank
                 self.points_per_rank += 1.0
 
         if ('Selective') in modifiers:
             if modifiers['Selective'] == "default":
-                modifiers['Selective'] = rank
+                self.modifiers['Selective'] = rank
                 self.points += rank
                 self.points_per_rank += 1.0
 
         if ('Reaction') in modifiers:
             if modifiers['Reaction'] == "default":
-                modifiers['Reaction'] = rank
+                self.modifiers['Reaction'] = rank
                 self.points += rank*3
                 self.points_per_rank += 3.0
+
+
+    def get_character_sheet_repr(self):
+        return_string = "%s: " % self.get_name()
+        addl_string = "Damage %d" % self.get_rank()
+        """Shadow Hankyū: Subtle 2 Precise Ranged Damage 8, Accurate 8, Affects Corporeal 8, Indirect 4 Limited to (from and to shadows) (37 points)"""
+
+        # The magic happens
+
+        predicate_list = ['Perception-Ranged', 'Ranged', 'Multiattack', 'Reaction', 'Selective']
+        for analyze_val in predicate_list:
+            if (analyze_val) in self.modifiers:
+                if self.modifiers[analyze_val] != self.get_rank():
+                    addl_string = ("%s %d" % (analyze_val, self.modifiers[analyze_val])) + addl_string
+                else:
+                    addl_string = "%s " % analyze_val + addl_string
+
+
+
+        return_string = return_string + addl_string + " (%d point" % self.points
+        if self.points != 1:
+            return_string += "s"
+        return_string += ")\n"
+        return return_string
 
     def get_skill(self):
         return self.attack_skill
@@ -115,6 +142,7 @@ class Protection(Power):
     def __init__(self, name, rank, modifiers={}):
         super().__init__(name, "Protection")
         self.rank = rank
+        self.points = rank
         self.points_per_rank = 1.0
         self.modifiers = modifiers
         self.duration = Power_Duration.PERMANENT
@@ -129,3 +157,14 @@ class Protection(Power):
         elif self.duration == Power_Duration.SUSTAINED:
             return True
             # So long as they've got a free action!
+
+
+    def get_character_sheet_repr(self):
+        return_string = "%s: " % self.get_name()
+        addl_string = "Protection %d" % self.get_rank()
+
+        return_string = return_string + addl_string + " (%d point" % self.points
+        if self.points != 1:
+            return_string += "s"
+        return_string += ")\n"
+        return return_string
