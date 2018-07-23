@@ -276,6 +276,7 @@ and with Intimidation are separate advantages.
 Take this advantage twice in order to be able to do both."""
     def __init__(self, skill_list):
         super().__init__("Daze")
+        self.list_value = skill_list
         rank = len(skill_list)
         self.init_flat(rank)
 
@@ -384,6 +385,7 @@ You may take this advantage more than once. Each time, it
 applies to a different skill."""
     def __init__(self, skill_list):
         super().__init__("Fascinate")
+        self.list_value = skill_list
         rank = len(skill_list)
         self.init_flat(rank)
 
@@ -396,6 +398,158 @@ required to grab your opponent."""
     def __init__(self):
         super().__init__("Fast Grab")
         self.init_no()
+
+class Favored_Environment(Advantage):
+    """You have an environment you’re especially suited for
+fighting in. Examples include in the air, underwater, in
+space, in extreme heat or cold, in jungles or woodlands,
+and so forth. While you are in your favored environment,
+you gain a +2 circumstance bonus to attack checks or your
+active defenses. Choose at the start of the round whether
+the bonus applies to attack or defense. The choice remains
+until the start of your next round. This circumstance bonus
+is not affected by power level."""
+    def __init__(self, environment_list):
+        super().__init__("Favored Environment")
+        self.list_value = environment_list
+        rank = len(environment_list)
+        self.init_flat(rank)
+
+class Favored_Foe(Advantage):
+    """You have a particular type of opponent you’ve studied or
+are especially effective against. It may be a type of creature
+(aliens, animals, constructs, mutants, undead, etc.), a profession
+(soldiers, police officers, Yakuza, etc.) or any other
+category the GM approves. Especially broad categories
+like “humans” or “villains” are not permitted. You gain a +2
+circumstance bonus on Deception, Intimidation, Insight,
+and Perception checks dealing with your Favored Foe. This
+circumstance bonus is not limited by power level."""
+    def __init__(self, foe_list):
+        super().__init__("Favored Foe")
+        self.list_value = foe_list
+        rank = len(self.list_value)
+        self.init_flat(rank)
+
+class Fearless(Advantage):
+    """You are immune to fear effects of all sorts, essentially the
+same as an Immunity to Fear effect (see Immunity in the
+Powers chapter)."""
+    def __init__(self):
+        super().__init__("Fearless")
+        self.init_no()
+
+class Grabbing_Finesse(Advantage):
+    """You can use your Dexterity bonus, rather than your
+Strength bonus, to make grab attacks. You are not vulnerable
+while grabbing. See Grab, page 248, for details. This
+is a good advantage for skilled unarmed combatants focused
+more on speed than strength."""
+    def __init__(self):
+        super().__init__("Grabbing Finesse")
+        self.init_no()
+
+class Great_Endurance(Advantage):
+    """You have a +5 bonus on checks to avoid becoming fatigued
+and checks to hold your breath, avoid damage
+from starvation or thirst, avoid damage from hot or cold
+environments, and to resist suffocation and drowning.
+See Hazards and the Environment in the Action & Adventure
+chapter for details on these checks."""
+    def __init__(self):
+        super().__init__("Great Endurance")
+        self.init_no()
+
+class Hide_In_Plain_Sight(Advantage):
+    """You can hide (see Hiding under Stealth in the Skills
+chapter) without any need for a Deception or Intimidation
+check or any sort of diversion, and without penalty
+to your Stealth check. You’re literally there one moment,
+and gone the next. You must still have some form of cover
+or concealment within range of your normal movement
+speed in order to hide."""
+    def __init__(self):
+        super().__init__("Hide In Plain Sight")
+        self.init_no()
+
+class Improved_Aim(Advantage):
+    """You have an even keener eye when it comes to ranged
+combat. When you take a standard action to aim, you
+gain double the normal circumstance bonus: +10 for a
+close attack or ranged attack adjacent to the target, +5
+for a ranged attack at a greater distance. See Aim, page
+246, for details."""
+    def __init__(self):
+        super().__init__("Improved Aim")
+        self.init_no()
+
+class Improved_Critical(Advantage):
+    """Increase your critical threat range with a particular attack
+(chosen when you acquire this advantage) by 1, allowing
+you to score a critical hit on a natural 19 or 20. Only
+a natural 20 is an automatic hit, however, and an attack
+that misses is not a critical. Each additional rank applies
+to a different attack or increases your threat range with an
+existing attack by one more, to a maximum threat range
+of 16-20 with 4 ranks."""
+    def __init__(self, skill, rank):
+        super().__init__("Evasion")
+        self.skill = skill
+        self.init_pyramid(rank)
+
+class Improved_Defense(Advantage):
+    """When you take the defend action in combat (see Defend
+in the Action & Adventure chapter) you gain a +2 circumstance
+bonus to your active defense checks for the
+round."""
+    def __init__(self):
+        super().__init__("Improved Defense")
+        self.init_no()
+
+class Improved_Disarm(Advantage):
+    """You have no penalty to your attack check when attempting
+to disarm an opponent and they do not get the opportunity
+to disarm you (see Disarm in the Action & Adventure
+chapter)."""
+    def __init__(self):
+        super().__init__("Improved Disarm")
+        self.init_no()
+
+class Improved_Grab(Advantage):
+    """You can make grab attacks with only one arm, leaving
+the other free. You can also maintain the grab while using
+your other hand to perform actions. You are not vulnerable
+while grabbing (see Grabbing in the Action & Adventure
+chapter)."""
+    def __init__(self):
+        super().__init__("Improved Grab")
+        self.init_no()
+
+class Improved_Hold(Advantage):
+    """Your grab attacks are particularly difficult to escape. Opponents
+you grab suffer a –5 circumstance penalty on
+checks to escape."""
+    def __init__(self):
+        super().__init__("Improved Hold")
+        self.init_no()
+
+class Improved_Initiative(Advantage):
+    """You have a +4 bonus to your initiative checks per rank in
+this advantage."""
+    def __init__(self, rank):
+        super().__init__("Improved Initiative")
+        self.init_flat(rank)
+
+class Improved_Smash(Advantage):
+    """You have no penalty to attack checks to hit an object held
+by another character (see Smash in the Action & Adventure
+chapter)."""
+    def __init__(self):
+        super().__init__("Improved Smash")
+        self.init_no()
+
+
+
 
 
 combat_adv = """Accurate Attack Trade effect DC for attack bonus.
