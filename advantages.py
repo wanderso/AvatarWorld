@@ -73,7 +73,6 @@ class Accurate_Attack(Advantage):
     249) you can take a penalty of up to –5 on the effect modifier
     of the attack and add the same number (up to +5) to
     your attack bonus."""
-
     def __init__(self, rank):
         super().__init__("Accurate Attack")
         self.init_pyramid(rank)
@@ -359,7 +358,7 @@ a hero point at the start of your next turn reduces the cost
 of your extraordinary effort to merely fatigued, the same
 as a regular extra effort."""
     def __init__(self):
-        super().__init__("Eidetic Memory")
+        super().__init__("Extraordinary Effort")
         self.init_no()
 
 class Fascinate(Advantage):
@@ -493,7 +492,7 @@ to a different attack or increases your threat range with an
 existing attack by one more, to a maximum threat range
 of 16-20 with 4 ranks."""
     def __init__(self, skill, rank):
-        super().__init__("Evasion")
+        super().__init__("Improved Critical")
         self.skill = skill
         self.init_pyramid(rank)
 
@@ -548,9 +547,451 @@ chapter)."""
         super().__init__("Improved Smash")
         self.init_no()
 
+class Improved_Trip(Advantage):
+    """You have no penalty to your attack check to trip an opponent
+and they do not get the opportunity to trip you.
+When making a trip attack, make an opposed check of
+your Acrobatics or Athletics against your opponent’s Acrobatics
+or Athletics, you choose which your opponent
+uses to defend, rather than the target choosing (see Trip
+in the Action & Adventure chapter). This is a good martial
+arts advantage for unarmed fighters."""
+    def __init__(self):
+        super().__init__("Improved Trip")
+        self.init_no()
 
+class Improvised_Tools(Advantage):
+    """You ignore the circumstance penalty for using skills without
+proper tools, since you can improvise sufficient tools
+with whatever is at hand. If you’re forced to work without
+tools at all, you suffer only a –2 penalty."""
+    def __init__(self):
+        super().__init__("Improvised Tools")
+        self.init_no()
 
+class Improvised_Weapon(Advantage):
+    """When wielding an improvised close combat weapon—
+anything from a chair to a telephone pole or entire car—
+you use your Close Combat: Unarmed skill bonus for attack
+checks with the “weapon” rather than relying on your
+general Close Combat skill bonus. Additional ranks in this
+advantage give you a +1 bonus to Damage with improvised
+weapons per rank. Your maximum Damage bonus is
+still limited by power level, as usual."""
+    def __init__(self, rank):
+        super().__init__("Improvised Weapon")
+        self.init_flat(rank)
 
+class Inspire(Advantage):
+    """You can inspire your allies to greatness. Once per scene, by
+taking a standard action and spending a hero point, allies
+able to interact with you gain a +1 circumstance bonus per
+Inspire rank on all checks until the start of your next round,
+with a maximum bonus of +5. You do not gain the bonus,
+only your allies do. The inspiration bonus ignores power
+level limits, like other uses of hero points. Multiple uses of
+Inspire do not stack, only the highest bonus applies."""
+    def __init__(self, rank):
+        super().__init__("Inspire")
+        self.init_flat(rank)
+
+class Instant_Up(Advantage):
+    """You can go from prone to standing as a free action without
+the need for an Acrobatics skill check."""
+    def __init__(self):
+        super().__init__("Instant Up")
+        self.init_no()
+
+class Interpose(Advantage):
+    """Once per round, when an ally within range of your normal
+movement is hit by an attack, you can choose to place
+yourself between the attacker and your ally as a reaction,
+making you the target of the attack instead. The attack
+hits you rather than your ally, and you suffer the effects
+normally. You cannot use this advantage against area effects
+or perception range attacks, only those requiring an
+attack check."""
+    def __init__(self, rank):
+        super().__init__("Interpose")
+        self.init_pyramid(rank)
+
+class Inventor(Advantage):
+    """You can use the Technology skill to create inventions. See
+Inventing, page 211, for details."""
+    def __init__(self):
+        super().__init__("Inventor")
+        self.init_no()
+
+class Jack_Of_All_Trades(Advantage):
+    """You can use any skill untrained, even skills or aspects of
+skills that normally cannot be used untrained, although
+you must still have proper tools if the skill requires them"""
+    def __init__(self):
+        super().__init__("Jack-of-all-Trades")
+        self.init_no()
+
+class Languages(Advantage):
+    """You can speak and understand additional languages.
+With one rank in this advantage, you know an additional
+language. For each additional rank, you double your additional
+known languages: two at rank 2, four at rank 3,
+eight at rank 4, etc. So a character with Languages 7 is fluent
+in 64 languages! Characters are assumed to be fluent
+in any languages they know, including being able to read
+and write in them.
+For the ability to understand any language, see the Comprehend
+effect in the Powers chapter."""
+    def __init__(self, language_list, rank):
+        super().__init__("Languages")
+        self.list_value = language_list
+        self.init_flat(rank)
+
+class Leadership(Advantage):
+    """Your presence reassures and lends courage to your allies.
+As a standard action, you can spend a hero point to remove one
+of the following conditions from an ally with whom you can
+interact: dazed, fatigued, or stunned."""
+    def __init__(self):
+        super().__init__("Leadership")
+        self.init_no()
+
+class Luck(Advantage):
+    """Once per round, you can choose to re-roll a die roll, like
+spending a hero point (see Hero Points, page 20), including
+adding 10 to re-rolls of 10 or less. You can do this a
+number of times per game session equal to your Luck
+rank, with a maximum rank of half the series power level
+(rounded down). Your Luck ranks refresh when your hero
+points “reset” at the start of an adventure. The GM may
+choose to set a different limit on ranks in this advantage,
+depending on the series."""
+    def __init__(self, rank):
+        super().__init__("Luck")
+        self.init_pyramid(rank)
+
+class Minion(Advantage):
+    """You have a follower or minion. This minion is an independent
+character with a power point total of (advantage
+rank x 15). Minions are subject to the normal power level
+limits, and cannot have minions themselves. Your minions
+(if capable of independent thought) automatically have a
+helpful attitude toward you. They are subject to the normal
+rules for minions (see page 245).
+Minions do not earn power points. Instead, you must spend
+earned power points to increase your rank in this advantage
+to improve the minion’s power point total and traits.
+Minions also do not have hero points. Any lost minions are
+replaced in between adventures with other followers with
+similar abilities at the Gamemaster’s discretion."""
+    def __init__(self, minion_name, rank):
+        super().__init__("Minion")
+        self.minion_name = minion_name
+        self.init_flat(rank)
+
+class Move_By_Action(Advantage):
+    """When taking a standard action and a move action you can
+move both before and after your standard action, provided
+the total distance moved isn’t greater than your normal
+movement speed."""
+    def __init__(self):
+        super().__init__("Move-By Action")
+        self.init_no()
+
+class Power_Attack(Advantage):
+    """When you make a power attack (see Maneuvers, page
+250) you can take a penalty of up to –5 on your attack
+bonus and add the same number (up to +5) to the effect
+bonus of your attack."""
+    def __init__(self, rank):
+        super().__init__("Power Attack")
+        self.init_pyramid(rank)
+
+class Precise_Attack(Advantage):
+    """When you make close or ranged attacks (choose one) you
+ignore attack check penalties for cover or concealment
+(choose one), although total cover still prevents you from
+making attacks. Each additional rank in this advantage lets
+you choose an additional option, so with Precise Attack 4,
+all your attacks (both close and ranged) ignore penalties
+for both cover and concealment."""
+    def __init__(self, penalty_list):
+        super().__init__("Precise_Attack")
+        self.list_value = penalty_list
+        rank = len(self.list_value)
+        self.init_flat(rank)
+
+class Prone_Fighting(Advantage):
+    """You suffer no circumstance penalty to attack checks for
+being prone, and adjacent opponents do not gain the
+usual circumstance bonus for close attacks against you."""
+    def __init__(self):
+        super().__init__("Prone Fighting")
+        self.init_no()
+
+class Quick_Draw(Advantage):
+    """You can draw a weapon from a holster or sheath as a free
+action, rather than a move action."""
+    def __init__(self,rank):
+        super().__init__("Quick Draw")
+        self.init_flat(rank)
+
+class Ranged_Attack(Advantage):
+    """You have a +1 bonus to ranged attacks checks per rank in
+this advantage. Your total attack bonus is still limited by
+power level."""
+    def __init__(self,rank):
+        super().__init__("Ranged Attack")
+        self.init_flat(rank)
+
+class Redirect(Advantage):
+    """If you successfully trick an opponent (see Trick under Deception
+in the Skills chapter), you can redirect a missed
+attack against you from that opponent at another target
+as a reaction. The new target must be adjacent to you and
+within range of the attack. The attacker makes a new attack
+check with the same modifiers as the first against the
+new target."""
+    def __init__(self, rank):
+        super().__init__("Redirect")
+        self.init_pyramid(rank)
+
+class Ritualist(Advantage):
+    """You can use the Expertise: Magic skill to create and cast
+magical rituals (see page 212). This advantage is often a
+back-up or secondary magical power for superhuman
+sorcerers, and may be the only form of magic available to
+some “dabbler” types."""
+    def __init__(self):
+        super().__init__("Ritualist")
+        self.init_no()
+
+class Second_Chance(Advantage):
+    """Choose a particular hazard, such as falling, being tripped,
+triggering traps, mind control (or another fairly specific
+power effect, such as Damage with the fire descriptor) or
+a particular skill with consequences for failure. If you fail a
+check against that hazard, you can make another immediately
+and use the better of the two results. You only get
+one second chance for any given check, and the GM decides
+if a particular hazard or skill is an appropriate focus
+for this advantage. You can take this advantage multiple
+times, each for a different hazard."""
+    def __init__(self, chance_list):
+        super().__init__("Second Chance")
+        self.list_value = chance_list
+        rank = len(self.list_value)
+        self.init_flat(rank)
+
+class Seize_Initiative(Advantage):
+    """You can spend a hero point to automatically go first in the
+initiative order. You may only do so at the start of combat,
+when you would normally make your initiative check.
+If more than one character uses this advantage, they all
+make initiative checks normally and act in order of their
+initiative result, followed by all the other characters who
+do not have this advantage."""
+    def __init__(self):
+        super().__init__("Seize Initiative")
+        self.init_no()
+
+class Set_Up(Advantage):
+    """You can transfer the benefits of a successful combat use of
+an interaction skill to your teammate(s). For example, you
+can feint and have your target vulnerable against one or
+more allies next attack(s), rather than yours. Each rank in
+the advantage lets you transfer the benefit to one ally. The
+interaction skill check requires its normal action, and the
+affected allies must be capable of interacting with you (or
+at least seeing the set-up) to benefit from it."""
+    def __init__(self, rank):
+        super().__init__("Set-Up")
+        self.init_pyramid(rank)
+
+class Sidekick(Advantage):
+    """You have another character serving as your partner and
+aide. Create your sidekick as an independent character
+with (advantage rank x 5) power points, and subject to the
+series power level. A sidekick’s power point total must be
+less than yours. Your sidekick is an NPC, but automatically
+helpful and loyal to you. Gamemasters should generally
+allow you to control your sidekick, although sidekicks remain
+NPCs and the GM has final say in their actions.
+Sidekicks do not earn power points. Instead, you must
+spend earned power points to increase your rank in Sidekick
+to improve the sidekick’s power point total and traits;
+each point you spend to increase your rank in Sidekick
+grants the sidekick 5 additional power points. Sidekicks
+also do not have hero points, but you can spend your own
+hero points on the sidekick’s behalf with the usual benefits.
+Sidekicks are not minions, but full-fledged characters,
+so they are not subject to the minion rules."""
+    def __init__(self, sidekick_name, rank):
+        super().__init__("Sidekick")
+        self.sidekick_name = sidekick_name
+        self.init_flat(rank)
+
+class Skill_Mastery(Advantage):
+    """Choose a skill. You can make routine checks with that skill
+even when under pressure (see Routine Checks in The
+Basics chapter). This advantage does not allow you to
+make routine checks with skills that do not normally allow
+you to do so. You can take this advantage multiple times
+for different skills."""
+    def __init__(self, skill_list):
+        super().__init__("Skill Mastery")
+        self.list_value = skill_list
+        rank = len(skill_list)
+        self.init_flat(rank)
+
+class Startle(Advantage):
+    """You can use Intimidation rather than Deception to feint in
+combat (see Feint under the Deception skill description).
+Targets resist with Insight, Intimidation, or Will defense."""
+    def __init__(self):
+        super().__init__("Startle")
+        self.init_no()
+
+class Takedown(Advantage):
+    """If you render a minion incapacitated with an attack, you
+get an immediate extra attack as a free action against another
+minion within range and adjacent to the previous
+target’s location. The extra attack is with the same attack
+and bonus as the first. You can continue using this advantage
+until you miss or there are no more minions within
+range of your attack or your last target.
+A second rank in this advantage allows you to attack nonadjacent
+minion targets, moving between attacks if necessary
+to do so. You cannot move more than your total
+speed in the round, regardless of the number of attacks
+you make. You stop attacking once you miss, run out of
+movement, or there are no more minions within range of
+your attack."""
+    def __init__(self, rank):
+        super().__init__("Takedown")
+        self.init_pyramid(rank)
+
+class Taunt(Advantage):
+    """You can demoralize an opponent with Deception rather
+than Intimidation (see Demoralize under the Intimidation
+skill description), disparaging and undermining confidence
+rather than threatening. Targets resist using Deception,
+Insight, or Will defense."""
+    def __init__(self):
+        super().__init__("Taunt")
+        self.init_no()
+
+class Teamwork(Advantage):
+    """You’re effective at helping out your friends. When you
+support a team check (see Team Checks in The Basics
+chapter) you have a +5 circumstance bonus to your
+check. This bonus also applies to the Aid action and
+Team Attacks."""
+    def __init__(self):
+        super().__init__("Teamwork")
+        self.init_no()
+
+class Throwing_Mastery(Advantage):
+    """You have a +1 damage bonus with thrown weapons per
+rank in this advantage. You can also throw normally harmless
+objects—playing cards, pens, paper clips, and so
+forth—as weapons with a damage bonus equal to your
+advantage rank and range based on the higher of your
+advantage rank or Strength (see Ranged in the Powers
+chapter). Your maximum damage bonus with any given
+weapon or attack is still limited by power level."""
+    def __init__(self, rank):
+        super().__init__("Throwing Mastery")
+        self.init_flat(rank)
+
+class Tracking(Advantage):
+    """You can use the Perception skill to visually follow tracks
+like the Tracking Senses effect (see the Powers chapter)."""
+    def __init__(self):
+        super().__init__("Tracking")
+        self.init_no()
+
+class Trance(Advantage):
+    """Through breathing and bodily control, you can slip into a
+deep trance. This takes a minute of uninterrupted meditation
+and a DC 15 Awareness check. While in the trance
+you add your Awareness rank to your Stamina rank to determine
+how long you can hold your breath and you use
+the higher of your Fortitude or Will defenses for resistance
+checks against suffocation (see Suffocation, page 238).
+Poison and disease effects are suspended for the duration
+of the trance. It requires a Perception check with a DC
+equal to your Awareness check result to determine you’re
+not dead because your bodily functions are so slow. You
+are aware of your surroundings while in trance and can
+come out of it at any time at will. You cannot take any actions
+while in the trance, but your GM may allow mental
+communication while in a trance."""
+    def __init__(self):
+        super().__init__("Trance")
+        self.init_no()
+
+class Ultimate_Effort(Advantage):
+    """You can spend a hero point on a particular check and
+treat the roll as a 20 (meaning you don’t need to roll the
+die at all, just apply a result of 20 to your modifier). This
+is not a natural 20, but is treated as a roll of 20 in all other
+respects. You choose the particular check the advantage
+applies to when you acquire it and the GM must approve
+it. You can take Ultimate Effort multiple times, each time,
+it applies to a different check. This advantage may not
+be used after you’ve rolled the die to determine if you
+succeed."""
+    def __init__(self, skill_list):
+        super().__init__("Ultimate Effort")
+        self.list_value = skill_list
+        rank = len(skill_list)
+        self.init_flat(rank)
+
+class Uncanny_Dodge(Advantage):
+    """You are especially attuned to danger. You are not
+vulnerable when surprised or otherwise caught off-guard. You are
+still made vulnerable by effects that limit your mobility."""
+    def __init__(self):
+        super().__init__("Uncanny Dodge")
+        self.init_no()
+
+class Weapon_Bind(Advantage):
+    """If you take the defend action (see Defend in the Action
+& Adventure chapter) and successfully defend against
+a close weapon attack, you can make a disarm attempt
+against the attacker immediately as a reaction. The disarm
+attempt is carried out normally, including the attacker
+getting the opportunity to disarm you."""
+    def __init__(self):
+        super().__init__("Weapon Bind")
+        self.init_no()
+
+class Weapon_Break(Advantage):
+    """If you take the defend action (see Defend in the Action
+& Adventure chapter) and successfully defend against
+a close weapon attack, you can make an attack against
+the attacker’s weapon immediately as a reaction. This
+requires an attack check and inflicts normal damage to the
+weapon if it hits (see Smash in the Action & Adventure
+chapter)."""
+    def __init__(self):
+        super().__init__("Weapon Break")
+        self.init_no()
+
+class Well_Informed(Advantage):
+    """You are exceptionally well-informed. When encountering
+an individual, group, or organization for the first time, you
+can make an immediate Investigation or Persuasion skill
+check to see if your character has heard something about
+the subject. Use the guidelines for gathering information
+in the Investigation skill description to determine the level
+of information you gain. You receive only one check per
+subject upon first encountering them, although the GM
+may allow another upon encountering the subject again
+once significant time has passed."""
+    def init(self):
+        super().init("Well Informed")
+        self.init_no()
 
 combat_adv = """Accurate Attack Trade effect DC for attack bonus.
 All-out Attack Trade active defense for attack bonus.
