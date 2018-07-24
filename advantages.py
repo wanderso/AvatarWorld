@@ -1,4 +1,5 @@
 import enum
+import math
 
 class Advantage_Type(enum.Enum):
     COMBAT_ADVANTAGE = 1
@@ -11,26 +12,65 @@ class Cost_Type(enum.Enum):
     PYRAMID_RANK = 2
     NO_RANK = 3
 
-
-
 class Advantage:
+    advantage_list = None
+    advantage_cost_type = None
+    advantage_needs_skill = False
+    advantage_needs_rank = False
+    advantage_needs_name = False
+    advantage_has_list = False
     def __init__(self, name):
         self.advantage_name = name
         self.advantage_cost = 0
-        self.advantage_cost_type = Cost_Type.FLAT_RANK
+        self.instance_cost_type = Cost_Type.FLAT_RANK
         self.advantage_rank = 0
         self.advantage_func_list = None
 
+    def representation(self):
+        if self.instance_cost_type == Cost_Type.NO_RANK:
+            return self.advantage_name
+        else:
+            if self.advantage_rank == 1:
+                return self.advantage_name
+            else:
+                return "%s %d" % (self.advantage_name, self.advantage_rank)
+
+    def represent_no(self):
+        return "%s" % self.advantage_name
+
+    def represent_rank(self):
+        if self.advantage_rank == 1:
+            return "%s" % self.advantage_name
+        return "%s %d" % (self.advantage_name, self.advantage_rank)
+
+    def represent_list(self):
+        list_string = ""
+        data_list = []
+        try:
+            data_list = self.list_value
+        except AttributeError:
+            print("Uh-oh. Couldn't find list when running represent_list.")
+        for entry in sorted(data_list):
+            list_string += "%s ," % entry
+        try:
+            list_string = list_string[:-2]
+        except IndexError:
+            print("Empty list sent to represent_list.")
+        return "%s (%s)" % self.advantage_name, list_string
+
+    def combine_advantage(self):
+        pass
+
     def calculate_cost(self):
         print("Will we ever reach this?")
-        if self.advantage_cost_type == Cost_Type.FLAT_RANK:
+        if self.instance_cost_type  == Cost_Type.FLAT_RANK:
             return self.advantage_rank
-        elif self.advantage_cost_type == Cost_Type.PYRAMID_RANK:
+        elif self.instance_cost_type  == Cost_Type.PYRAMID_RANK:
             ret_val = 0
             for i in range (1, self.advantage_rank+1):
                 ret_val += i
             return ret_val
-        elif self.advantage_cost_type == Cost_Type.NO_RANK:
+        elif self.instance_cost_type  == Cost_Type.NO_RANK:
             return 1
 
     def pyramid_cost(self):
@@ -47,32 +87,35 @@ class Advantage:
 
     def init_flat(self,rank):
         self.advantage_cost = rank
-        self.advantage_cost_type = Cost_Type.FLAT_RANK
+        self.instance_cost_type  = Cost_Type.FLAT_RANK
         self.advantage_rank = rank
         self.advantage_func_list = None
         self.calculate_cost = self.flat_cost
+        self.representation = self.represent_rank
 
     def init_no(self):
         self.advantage_cost = 1
-        self.advantage_cost_type = Cost_Type.NO_RANK
+        self.instance_cost_type  = Cost_Type.NO_RANK
         self.advantage_rank = 1
         self.advantage_func_list = None
         self.calculate_cost = self.no_rank_cost
+        self.representation = self.represent_no
 
     def init_pyramid(self,rank):
         self.advantage_cost = 0
-        self.advantage_cost_type = Cost_Type.PYRAMID_RANK
+        self.instance_cost_type  = Cost_Type.PYRAMID_RANK
         self.advantage_rank = rank
         self.advantage_func_list = None
         self.calculate_cost = self.pyramid_cost
-
-
+        self.representation = self.represent_rank
 
 class Accurate_Attack(Advantage):
     """When you make an accurate attack (see Maneuvers, page
     249) you can take a penalty of up to –5 on the effect modifier
     of the attack and add the same number (up to +5) to
     your attack bonus."""
+    advantage_needs_rank = True
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
     def __init__(self, rank):
         super().__init__("Accurate Attack")
         self.init_pyramid(rank)
@@ -84,6 +127,7 @@ class Agile_Feint(Advantage):
     (see the Deception skill description). Your opponent opposes
     the attempt with Acrobatics or Insight (whichever
     is better)."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Agile Feint")
         self.init_no()
@@ -93,6 +137,8 @@ class All_Out_Attack(Advantage):
 249) you can take a penalty of up to –5 on your active defenses
 (Dodge and Parry) and add the same number (up
 to +5) to your attack bonus."""
+    advantage_needs_rank = True
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
     def __init__(self, rank):
         super().__init__("All Out Attack")
         self.init_pyramid(rank)
@@ -105,6 +151,7 @@ your intent through gestures and body language
 and learn things by studying animal behavior. Characters
 normally have a –10 circumstance penalty to use interaction
 skills on animals, due to their Intellect and lack of language."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Animal Empathy")
         self.init_no()
@@ -113,6 +160,7 @@ class Artificer(Advantage):
     """You can use the Expertise: Magic skill to create temporary
 magical devices. See Magical Inventions, page 212, for
 details"""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Artificer")
         self.init_no()
@@ -130,6 +178,7 @@ target’s bonuses exactly.
 If you lose the opposed roll, you don’t find out anything.
 With more than one degree of failure, the GM may lie or
 otherwise exaggerate the target’s bonuses."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Assessment")
         self.init_no()
@@ -147,6 +196,8 @@ by your appearance.
 While superheroes tend to be a fairly good-looking lot,
 this advantage is generally reserved for characters with
 particularly impressive looks."""
+    advantage_needs_rank = True
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, rank):
         super().__init__("Attractive")
         self.init_flat(rank)
@@ -157,6 +208,7 @@ one skill of your choice you currently have at 4 or fewer
 ranks, including skills you have no ranks in, even if they can’t
 be used untrained. These temporary skill ranks last for the
 duration of the scene and grant you their normal benefits."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Beginner's Luck")
         self.init_no()
@@ -208,16 +260,24 @@ aristocracy, and so forth.
 material resources, such as well-off (rank 1), independently
 wealthy (rank 2), a millionaire (rank 3), multimillionaire
 (rank 4), or billionaire (rank 5)."""
+
+    advantage_cost_type = Cost_Type.FLAT_RANK
+
     def __init__(self, benefit_name, rank):
         super().__init__("Benefit")
         self.benefit_name = benefit_name
         self.init_flat(rank)
+        self.representation = self.representation_benefit
+
+    def representation_benefit(self):
+        return "Benefit %d: (%s)" % (self.advantage_rank, self.benefit_name)
 
 class Chokehold(Advantage):
     """If you successfully grab and restrain an opponent (see
 Grab, page 248), you can apply a chokehold, causing your
 opponent to begin suffocating for as long as you continue
 to restrain your target (see Suffocation, page 238)."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Chokehold")
         self.init_no()
@@ -229,6 +289,9 @@ power level. This advantage best suits characters with a
 level of overall close combat skill (armed and unarmed).
 For capability with a particular type of attack, use the
 Close Combat skill."""
+    advantage_needs_rank = True
+
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, rank):
         super().__init__("Close Attack")
         self.init_flat(rank)
@@ -246,6 +309,7 @@ veto any request if it is too involved or likely to spoil the plot
 of the adventure. Use of this advantage always requires at
 least a few minutes (and often much longer) and the means
 to contact your allies to ask for their help."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Connected")
         self.init_no()
@@ -258,6 +322,7 @@ getting in touch with your contacts. Further Investigation
 checks to gather information on the same subject require
 the normal length of time, since you must go beyond your
 immediate network of contacts."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Contacts")
         self.init_no()
@@ -273,17 +338,24 @@ target is dazed (able to take only a standard action) until
 the end of your next round. The ability to Daze with Deception
 and with Intimidation are separate advantages.
 Take this advantage twice in order to be able to do both."""
+
+    advantage_has_list = True
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, skill_list):
         super().__init__("Daze")
         self.list_value = skill_list
         rank = len(skill_list)
         self.init_flat(rank)
+        self.representation = self.represent_list
 
 class Defensive_Attack(Advantage):
     """When you make a defensive attack (see Maneuvers, page
 249), you can take a penalty of up to –5 on your attack
 bonus and add the same number (up to +5) to both your
 active defenses (Dodge and Parry)."""
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
+    advantage_needs_rank = True
+
     def __init__(self, rank):
         super().__init__("Defensive Attack")
         self.init_pyramid(rank)
@@ -299,6 +371,9 @@ including this advantage, is still limited by power level.
 This advantage is common for heroes who lack either superhuman
 speed or toughness, relying on their agility and
 training to avoid harm."""
+    advantage_needs_rank = True
+
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, rank):
         super().__init__("Defensive Roll")
         self.init_flat(rank)
@@ -309,6 +384,7 @@ in the Action & Adventure chapter) you automatically
 stabilize on the following round without any need for a
 Fortitude check, although further damage—such as a finishing
 attack—can still kill you."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Diehard")
         self.init_no()
@@ -323,6 +399,7 @@ if you were trained, meaning you can answer questions
 involving difficult or obscure knowledge even without
 ranks in the skill, due to the sheer amount of trivia you
 have picked up."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Eidetic Memory")
         self.init_no()
@@ -333,6 +410,9 @@ equipment. This includes vehicles and headquarters. See
 the Gadgets & Gear chapter for details on equipment and
 its costs. Many heroes rely almost solely on Equipment in
 conjunction with their skills and other advantages."""
+    advantage_needs_rank = True
+
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, rank):
         super().__init__("Defensive Roll")
         self.init_flat(rank)
@@ -342,6 +422,9 @@ class Evasion(Advantage):
 checks to avoid area effects (see the Area extra in the
 Powers chapter). If you have 2 ranks in this advantage,
 your circumstance bonus increases to +5."""
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
+    advantage_needs_rank = True
+
     def __init__(self, rank):
         super().__init__("Evasion")
         self.init_pyramid(rank)
@@ -357,6 +440,7 @@ exhausted, you cannot use extraordinary effort. Spending
 a hero point at the start of your next turn reduces the cost
 of your extraordinary effort to merely fatigued, the same
 as a regular extra effort."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Extraordinary Effort")
         self.init_no()
@@ -382,11 +466,15 @@ but you must affect everyone in the group in the same
 way.
 You may take this advantage more than once. Each time, it
 applies to a different skill."""
+    advantage_has_list = True
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, skill_list):
         super().__init__("Fascinate")
         self.list_value = skill_list
         rank = len(skill_list)
         self.init_flat(rank)
+        self.representation = self.represent_list
+
 
 class Fast_Grab(Advantage):
     """When you hit with an unarmed attack you can immediately
@@ -394,6 +482,7 @@ make a grab check against that opponent as a free
 action (see Grab, page 248). Your unarmed attack inflicts
 its normal damage and counts as the initial attack check
 required to grab your opponent."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Fast Grab")
         self.init_no()
@@ -408,11 +497,14 @@ active defenses. Choose at the start of the round whether
 the bonus applies to attack or defense. The choice remains
 until the start of your next round. This circumstance bonus
 is not affected by power level."""
+    advantage_has_list = True
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, environment_list):
         super().__init__("Favored Environment")
         self.list_value = environment_list
         rank = len(environment_list)
         self.init_flat(rank)
+        self.representation = self.represent_list
 
 class Favored_Foe(Advantage):
     """You have a particular type of opponent you’ve studied or
@@ -424,16 +516,20 @@ like “humans” or “villains” are not permitted. You gain a +2
 circumstance bonus on Deception, Intimidation, Insight,
 and Perception checks dealing with your Favored Foe. This
 circumstance bonus is not limited by power level."""
+    advantage_has_list = True
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, foe_list):
         super().__init__("Favored Foe")
         self.list_value = foe_list
         rank = len(self.list_value)
         self.init_flat(rank)
+        self.representation = self.represent_list
 
 class Fearless(Advantage):
     """You are immune to fear effects of all sorts, essentially the
 same as an Immunity to Fear effect (see Immunity in the
 Powers chapter)."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Fearless")
         self.init_no()
@@ -444,6 +540,7 @@ Strength bonus, to make grab attacks. You are not vulnerable
 while grabbing. See Grab, page 248, for details. This
 is a good advantage for skilled unarmed combatants focused
 more on speed than strength."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Grabbing Finesse")
         self.init_no()
@@ -455,6 +552,7 @@ from starvation or thirst, avoid damage from hot or cold
 environments, and to resist suffocation and drowning.
 See Hazards and the Environment in the Action & Adventure
 chapter for details on these checks."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Great Endurance")
         self.init_no()
@@ -467,6 +565,7 @@ to your Stealth check. You’re literally there one moment,
 and gone the next. You must still have some form of cover
 or concealment within range of your normal movement
 speed in order to hide."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Hide In Plain Sight")
         self.init_no()
@@ -478,6 +577,7 @@ gain double the normal circumstance bonus: +10 for a
 close attack or ranged attack adjacent to the target, +5
 for a ranged attack at a greater distance. See Aim, page
 246, for details."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Improved Aim")
         self.init_no()
@@ -491,16 +591,24 @@ that misses is not a critical. Each additional rank applies
 to a different attack or increases your threat range with an
 existing attack by one more, to a maximum threat range
 of 16-20 with 4 ranks."""
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
+    advantage_needs_skill = True
+    advantage_needs_rank = True
     def __init__(self, skill, rank):
         super().__init__("Improved Critical")
         self.skill = skill
         self.init_pyramid(rank)
+        self.representation = self.represent_improved_crit
+
+    def represent_improved_crit(self):
+        return "Improved Critical %d (%s) [%d-20]" % (self.advantage_rank, self.skill, (self.advantage_rank-20))
 
 class Improved_Defense(Advantage):
     """When you take the defend action in combat (see Defend
 in the Action & Adventure chapter) you gain a +2 circumstance
 bonus to your active defense checks for the
 round."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Improved Defense")
         self.init_no()
@@ -510,6 +618,7 @@ class Improved_Disarm(Advantage):
 to disarm an opponent and they do not get the opportunity
 to disarm you (see Disarm in the Action & Adventure
 chapter)."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Improved Disarm")
         self.init_no()
@@ -520,6 +629,7 @@ the other free. You can also maintain the grab while using
 your other hand to perform actions. You are not vulnerable
 while grabbing (see Grabbing in the Action & Adventure
 chapter)."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Improved Grab")
         self.init_no()
@@ -528,6 +638,7 @@ class Improved_Hold(Advantage):
     """Your grab attacks are particularly difficult to escape. Opponents
 you grab suffer a –5 circumstance penalty on
 checks to escape."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Improved Hold")
         self.init_no()
@@ -535,6 +646,8 @@ checks to escape."""
 class Improved_Initiative(Advantage):
     """You have a +4 bonus to your initiative checks per rank in
 this advantage."""
+    advantage_needs_rank = True
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, rank):
         super().__init__("Improved Initiative")
         self.init_flat(rank)
@@ -543,6 +656,7 @@ class Improved_Smash(Advantage):
     """You have no penalty to attack checks to hit an object held
 by another character (see Smash in the Action & Adventure
 chapter)."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Improved Smash")
         self.init_no()
@@ -556,6 +670,7 @@ or Athletics, you choose which your opponent
 uses to defend, rather than the target choosing (see Trip
 in the Action & Adventure chapter). This is a good martial
 arts advantage for unarmed fighters."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Improved Trip")
         self.init_no()
@@ -565,6 +680,7 @@ class Improvised_Tools(Advantage):
 proper tools, since you can improvise sufficient tools
 with whatever is at hand. If you’re forced to work without
 tools at all, you suffer only a –2 penalty."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Improvised Tools")
         self.init_no()
@@ -578,6 +694,8 @@ general Close Combat skill bonus. Additional ranks in this
 advantage give you a +1 bonus to Damage with improvised
 weapons per rank. Your maximum Damage bonus is
 still limited by power level, as usual."""
+    advantage_needs_rank = True
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, rank):
         super().__init__("Improvised Weapon")
         self.init_flat(rank)
@@ -591,6 +709,8 @@ with a maximum bonus of +5. You do not gain the bonus,
 only your allies do. The inspiration bonus ignores power
 level limits, like other uses of hero points. Multiple uses of
 Inspire do not stack, only the highest bonus applies."""
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_needs_rank = True
     def __init__(self, rank):
         super().__init__("Inspire")
         self.init_flat(rank)
@@ -598,6 +718,7 @@ Inspire do not stack, only the highest bonus applies."""
 class Instant_Up(Advantage):
     """You can go from prone to standing as a free action without
 the need for an Acrobatics skill check."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Instant Up")
         self.init_no()
@@ -611,6 +732,9 @@ hits you rather than your ally, and you suffer the effects
 normally. You cannot use this advantage against area effects
 or perception range attacks, only those requiring an
 attack check."""
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
+    advantage_needs_rank = True
+
     def __init__(self, rank):
         super().__init__("Interpose")
         self.init_pyramid(rank)
@@ -618,6 +742,7 @@ attack check."""
 class Inventor(Advantage):
     """You can use the Technology skill to create inventions. See
 Inventing, page 211, for details."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Inventor")
         self.init_no()
@@ -626,6 +751,7 @@ class Jack_Of_All_Trades(Advantage):
     """You can use any skill untrained, even skills or aspects of
 skills that normally cannot be used untrained, although
 you must still have proper tools if the skill requires them"""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Jack-of-all-Trades")
         self.init_no()
@@ -641,16 +767,21 @@ in any languages they know, including being able to read
 and write in them.
 For the ability to understand any language, see the Comprehend
 effect in the Powers chapter."""
-    def __init__(self, language_list, rank):
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_has_list = True
+    def __init__(self, language_list):
         super().__init__("Languages")
         self.list_value = language_list
+        rank = (math.ceil(math.log(len(language_list),2)))
         self.init_flat(rank)
+        self.representation = self.represent_list
 
 class Leadership(Advantage):
     """Your presence reassures and lends courage to your allies.
 As a standard action, you can spend a hero point to remove one
 of the following conditions from an ally with whom you can
 interact: dazed, fatigued, or stunned."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Leadership")
         self.init_no()
@@ -665,6 +796,8 @@ rank, with a maximum rank of half the series power level
 points “reset” at the start of an adventure. The GM may
 choose to set a different limit on ranks in this advantage,
 depending on the series."""
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
+    advantage_needs_rank = True
     def __init__(self, rank):
         super().__init__("Luck")
         self.init_pyramid(rank)
@@ -683,6 +816,9 @@ to improve the minion’s power point total and traits.
 Minions also do not have hero points. Any lost minions are
 replaced in between adventures with other followers with
 similar abilities at the Gamemaster’s discretion."""
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_needs_rank = True
+    advantage_needs_name = True
     def __init__(self, minion_name, rank):
         super().__init__("Minion")
         self.minion_name = minion_name
@@ -693,6 +829,7 @@ class Move_By_Action(Advantage):
 move both before and after your standard action, provided
 the total distance moved isn’t greater than your normal
 movement speed."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Move-By Action")
         self.init_no()
@@ -702,6 +839,8 @@ class Power_Attack(Advantage):
 250) you can take a penalty of up to –5 on your attack
 bonus and add the same number (up to +5) to the effect
 bonus of your attack."""
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
+    advantage_needs_rank = True
     def __init__(self, rank):
         super().__init__("Power Attack")
         self.init_pyramid(rank)
@@ -714,16 +853,20 @@ making attacks. Each additional rank in this advantage lets
 you choose an additional option, so with Precise Attack 4,
 all your attacks (both close and ranged) ignore penalties
 for both cover and concealment."""
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_has_list = True
     def __init__(self, penalty_list):
         super().__init__("Precise_Attack")
         self.list_value = penalty_list
         rank = len(self.list_value)
         self.init_flat(rank)
+        self.representation = self.represent_list
 
 class Prone_Fighting(Advantage):
     """You suffer no circumstance penalty to attack checks for
 being prone, and adjacent opponents do not gain the
 usual circumstance bonus for close attacks against you."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Prone Fighting")
         self.init_no()
@@ -731,6 +874,8 @@ usual circumstance bonus for close attacks against you."""
 class Quick_Draw(Advantage):
     """You can draw a weapon from a holster or sheath as a free
 action, rather than a move action."""
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_needs_rank = True
     def __init__(self,rank):
         super().__init__("Quick Draw")
         self.init_flat(rank)
@@ -739,6 +884,8 @@ class Ranged_Attack(Advantage):
     """You have a +1 bonus to ranged attacks checks per rank in
 this advantage. Your total attack bonus is still limited by
 power level."""
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_needs_rank = True
     def __init__(self,rank):
         super().__init__("Ranged Attack")
         self.init_flat(rank)
@@ -751,6 +898,8 @@ as a reaction. The new target must be adjacent to you and
 within range of the attack. The attacker makes a new attack
 check with the same modifiers as the first against the
 new target."""
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
+    advantage_needs_rank = True
     def __init__(self, rank):
         super().__init__("Redirect")
         self.init_pyramid(rank)
@@ -761,6 +910,7 @@ magical rituals (see page 212). This advantage is often a
 back-up or secondary magical power for superhuman
 sorcerers, and may be the only form of magic available to
 some “dabbler” types."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Ritualist")
         self.init_no()
@@ -776,11 +926,14 @@ one second chance for any given check, and the GM decides
 if a particular hazard or skill is an appropriate focus
 for this advantage. You can take this advantage multiple
 times, each for a different hazard."""
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_has_list = True
     def __init__(self, chance_list):
         super().__init__("Second Chance")
         self.list_value = chance_list
         rank = len(self.list_value)
         self.init_flat(rank)
+        self.representation = self.represent_list
 
 class Seize_Initiative(Advantage):
     """You can spend a hero point to automatically go first in the
@@ -790,6 +943,7 @@ If more than one character uses this advantage, they all
 make initiative checks normally and act in order of their
 initiative result, followed by all the other characters who
 do not have this advantage."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Seize Initiative")
         self.init_no()
@@ -803,6 +957,8 @@ the advantage lets you transfer the benefit to one ally. The
 interaction skill check requires its normal action, and the
 affected allies must be capable of interacting with you (or
 at least seeing the set-up) to benefit from it."""
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
+    advantage_needs_rank = True
     def __init__(self, rank):
         super().__init__("Set-Up")
         self.init_pyramid(rank)
@@ -825,6 +981,9 @@ also do not have hero points, but you can spend your own
 hero points on the sidekick’s behalf with the usual benefits.
 Sidekicks are not minions, but full-fledged characters,
 so they are not subject to the minion rules."""
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_needs_rank = True
+    advantage_needs_name = True
     def __init__(self, sidekick_name, rank):
         super().__init__("Sidekick")
         self.sidekick_name = sidekick_name
@@ -837,16 +996,20 @@ Basics chapter). This advantage does not allow you to
 make routine checks with skills that do not normally allow
 you to do so. You can take this advantage multiple times
 for different skills."""
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_has_list = True
     def __init__(self, skill_list):
         super().__init__("Skill Mastery")
         self.list_value = skill_list
         rank = len(skill_list)
         self.init_flat(rank)
+        self.representation = self.represent_list
 
 class Startle(Advantage):
     """You can use Intimidation rather than Deception to feint in
 combat (see Feint under the Deception skill description).
 Targets resist with Insight, Intimidation, or Will defense."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Startle")
         self.init_no()
@@ -866,6 +1029,8 @@ speed in the round, regardless of the number of attacks
 you make. You stop attacking once you miss, run out of
 movement, or there are no more minions within range of
 your attack."""
+    advantage_cost_type = Cost_Type.PYRAMID_RANK
+    advantage_needs_rank = True
     def __init__(self, rank):
         super().__init__("Takedown")
         self.init_pyramid(rank)
@@ -876,6 +1041,7 @@ than Intimidation (see Demoralize under the Intimidation
 skill description), disparaging and undermining confidence
 rather than threatening. Targets resist using Deception,
 Insight, or Will defense."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Taunt")
         self.init_no()
@@ -886,6 +1052,7 @@ support a team check (see Team Checks in The Basics
 chapter) you have a +5 circumstance bonus to your
 check. This bonus also applies to the Aid action and
 Team Attacks."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Teamwork")
         self.init_no()
@@ -899,6 +1066,9 @@ advantage rank and range based on the higher of your
 advantage rank or Strength (see Ranged in the Powers
 chapter). Your maximum damage bonus with any given
 weapon or attack is still limited by power level."""
+    advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_needs_rank = True
+
     def __init__(self, rank):
         super().__init__("Throwing Mastery")
         self.init_flat(rank)
@@ -906,6 +1076,7 @@ weapon or attack is still limited by power level."""
 class Tracking(Advantage):
     """You can use the Perception skill to visually follow tracks
 like the Tracking Senses effect (see the Powers chapter)."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Tracking")
         self.init_no()
@@ -926,6 +1097,7 @@ are aware of your surroundings while in trance and can
 come out of it at any time at will. You cannot take any actions
 while in the trance, but your GM may allow mental
 communication while in a trance."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Trance")
         self.init_no()
@@ -941,16 +1113,20 @@ it. You can take Ultimate Effort multiple times, each time,
 it applies to a different check. This advantage may not
 be used after you’ve rolled the die to determine if you
 succeed."""
+    advantage_has_list = True
+    advantage_cost_type = Cost_Type.FLAT_RANK
     def __init__(self, skill_list):
         super().__init__("Ultimate Effort")
         self.list_value = skill_list
         rank = len(skill_list)
         self.init_flat(rank)
+        self.representation = self.represent_list
 
 class Uncanny_Dodge(Advantage):
     """You are especially attuned to danger. You are not
 vulnerable when surprised or otherwise caught off-guard. You are
 still made vulnerable by effects that limit your mobility."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Uncanny Dodge")
         self.init_no()
@@ -962,6 +1138,7 @@ a close weapon attack, you can make a disarm attempt
 against the attacker immediately as a reaction. The disarm
 attempt is carried out normally, including the attacker
 getting the opportunity to disarm you."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Weapon Bind")
         self.init_no()
@@ -974,6 +1151,7 @@ the attacker’s weapon immediately as a reaction. This
 requires an attack check and inflicts normal damage to the
 weapon if it hits (see Smash in the Action & Adventure
 chapter)."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def __init__(self):
         super().__init__("Weapon Break")
         self.init_no()
@@ -989,8 +1167,9 @@ of information you gain. You receive only one check per
 subject upon first encountering them, although the GM
 may allow another upon encountering the subject again
 once significant time has passed."""
+    advantage_cost_type = Cost_Type.NO_RANK
     def init(self):
-        super().init("Well Informed")
+        super().__init__("Well Informed")
         self.init_no()
 
 combat_adv = """Accurate Attack Trade effect DC for attack bonus.
@@ -1070,3 +1249,77 @@ Startle Use Intimidation to feint in combat.
 Taunt Use Deception to demoralize in combat.
 Tracking Use Perception to follow tracks.
 Well-informed Immediate Investigation or Persuasion check to know something"""
+
+Advantage.advantage_list = {"Accurate Attack":Accurate_Attack,
+"Agile Feint":Agile_Feint,
+"All Out Attack":All_Out_Attack,
+"Animal Empathy":Animal_Empathy,
+"Artificer":Artificer,
+"Assessment":Assessment,
+"Attractive":Attractive,
+"Beginner's Luck":Beginners_Luck,
+"Benefit":Benefit,
+"Chokehold":Chokehold,
+"Close Attack":Close_Attack,
+"Connected":Connected,
+"Contacts":Contacts,
+"Daze":Daze,
+"Defensive Attack":Defensive_Attack,
+"Defensive Roll":Equipment,
+"Diehard":Diehard,
+"Eidetic Memory":Eidetic_Memory,
+"Evasion":Evasion,
+"Extraordinary Effort":Extraordinary_Effort,
+"Fascinate":Fascinate,
+"Fast Grab":Fast_Grab,
+"Favored Environment":Favored_Environment,
+"Favored Foe":Favored_Foe,
+"Fearless":Fearless,
+"Grabbing Finesse":Grabbing_Finesse,
+"Great Endurance":Great_Endurance,
+"Hide In Plain Sight":Hide_In_Plain_Sight,
+"Improved Aim":Improved_Aim,
+"Improved Critical":Improved_Critical,
+"Improved Defense":Improved_Defense,
+"Improved Disarm":Improved_Disarm,
+"Improved Grab":Improved_Grab,
+"Improved Hold":Improved_Hold,
+"Improved Initiative":Improved_Initiative,
+"Improved Smash":Improved_Smash,
+"Improved Trip":Improved_Trip,
+"Improvised Tools":Improvised_Tools,
+"Improvised Weapon":Improvised_Weapon,
+"Inspire":Inspire,
+"Instant Up":Instant_Up,
+"Interpose":Interpose,
+"Inventor":Inventor,
+"Jack-of-all-Trades":Jack_Of_All_Trades,
+"Languages":Languages,
+"Leadership":Leadership,
+"Luck":Luck,
+"Minion":Minion,
+"Move-By Action":Move_By_Action,
+"Power Attack":Power_Attack,
+"Precise_Attack":Precise_Attack,
+"Prone Fighting":Prone_Fighting,
+"Quick Draw":Quick_Draw,
+"Ranged Attack":Ranged_Attack,
+"Redirect":Redirect,
+"Ritualist":Ritualist,
+"Second Chance":Second_Chance,
+"Seize Initiative":Seize_Initiative,
+"Set-Up":Set_Up,
+"Sidekick":Sidekick,
+"Skill Mastery":Skill_Mastery,
+"Startle":Startle,
+"Takedown":Takedown,
+"Taunt":Taunt,
+"Teamwork":Teamwork,
+"Throwing Mastery":Throwing_Mastery,
+"Tracking":Tracking,
+"Trance":Trance,
+"Ultimate Effort":Ultimate_Effort,
+"Uncanny Dodge":Uncanny_Dodge,
+"Weapon Bind":Weapon_Bind,
+"Weapon Break":Weapon_Break,
+"Well Informed":Well_Informed}

@@ -273,6 +273,21 @@ class Character:
                     self.calculate_skill(entry)
         # set powers!
 
+    def add_advantage_natural(self, advantage_name, modifiers={}):
+        advantage_class = None
+        advantage_instance = None
+        if advantage_name in advantages.Advantage.advantage_list:
+            advantage_class = advantages.Advantage.advantage_list[advantage_name]
+        else:
+            print("Poorly formed advantage name selected!")
+        if advantage_class.advantage_cost_type == advantages.Cost_Type.NO_RANK:
+            advantage_instance = advantage_class()
+        else:
+            pass
+        self.advantages_natural[advantage_name] = (advantage_instance)
+
+    def del_advantage_natural(self, advantage_name, modifiers={}):
+        pass
 
 
     def add_power(self, pow):
@@ -615,14 +630,15 @@ class Character:
 
         adv_names = []
 
-        for entry in self.advantages_natural:
+        for key in self.advantages_natural:
+            entry = self.advantages_natural[key]
             adv_pts += entry.advantage_cost
-            adv_names.append(advantage_name)
+            adv_names.append(entry.representation())
 
         addl_str = ""
 
         for entry in sorted(adv_names):
-            addl_str += "%s, "
+            addl_str += "%s, " % entry
 
         addl_str = addl_str[:-2] + "\n"
 
@@ -832,6 +848,11 @@ def menlo_cer_sim():
     men.add_power(es)
 
     men.set_dodge_ranks(1)
+
+    men.add_advantage_natural("Teamwork")
+    men.add_advantage_natural("Agile Feint")
+    men.add_advantage_natural("Instant Up")
+
 
     print("Points in the Voltaic Manipulator attack: %d" % rp.get_points())
 
