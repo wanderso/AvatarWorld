@@ -1,5 +1,6 @@
 import enum
 import modifiers
+import points
 
 class Power_Duration(enum.Enum):
     INSTANT = 1
@@ -30,6 +31,7 @@ class Power_Range(enum.Enum):
 
 
 class Power:
+    points_per_rank_default = None
     def __init__(self, name, pow_type):
         self.name = name
         self.descriptors = {}
@@ -43,9 +45,11 @@ class Power:
         self.points_per_rank_numerator = 0
         self.points_per_rank_denominator = 1
         self.points_flat = 0
+        self.power_modifiers = []
         self.available = True
         self.active = True
         self.natural_power = False
+        self.points_in_power = None
 
     def adjust_points_per_rank(self, modifier):
         if self.points_per_rank_denominator > 1:
@@ -98,8 +102,12 @@ class Power:
 
     def get_character_sheet_repr(self):
         return repr(self)
+    
+    def get_points_in_power(self):
+        return self.points_in_power
 
 class Attack(Power):
+    points_per_rank_default = 1
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifiers={}):
         super().__init__(name, "Attack")
         self.duration = Power_Duration.INSTANT
@@ -113,35 +121,41 @@ class Attack(Power):
         self.range = Power_Range.CLOSE
 
         self.points = rank
+
+        self.base_power_points = rank
+        
         self.points_per_rank = 1.0
 
         self.points_per_rank_numerator = 1
         self.points_per_rank_denominator = 1
 
+        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank(1))
+
         if ('Ranged') in modifiers:
             if modifiers['Ranged'] == "default":
                 self.modifiers['Ranged'] = rank
-                self.adjust_points_per_rank(1)
+            ranged = modifiers.Increased_Range(self, self.modifiers['Ranged'])
+            ranged.adjust_points_per_rank()
 
         if ('Perception-Ranged') in modifiers:
             if modifiers['Perception-Ranged'] == "default":
                 self.modifiers['Perception-Ranged'] = rank
-                self.adjust_points_per_rank(2)
+#                self.adjust_points_per_rank(2)
 
         if ('Multiattack') in modifiers:
             if modifiers['Multiattack'] == "default":
                 self.modifiers['Multiattack'] = rank
-                self.adjust_points_per_rank(1)
+#                self.adjust_points_per_rank(1)
 
         if ('Selective') in modifiers:
             if modifiers['Selective'] == "default":
                 self.modifiers['Selective'] = rank
-                self.adjust_points_per_rank(1)
+#                self.adjust_points_per_rank(1)
 
         if ('Reaction') in modifiers:
             if modifiers['Reaction'] == "default":
                 self.modifiers['Reaction'] = rank
-                self.adjust_points_per_rank(3)
+#                self.adjust_points_per_rank(3)
 
         self.calculate_points()
 

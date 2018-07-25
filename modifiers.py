@@ -1,10 +1,15 @@
 import powers
+import points
 
 class Modifier:
     points_per_rank_modifier = None
     modifier_name = None
+    modifier_needs_rank = False
     def __init__(self, power):
         self.associated_powers = [power]
+        self.modifier_cost = 0
+        self.modifier_modifiers = []
+
 
 class Increased_Range(Modifier):
     """Effects have a standard range: personal, close, ranged, or
@@ -20,22 +25,41 @@ makes it a ranged effect.
 • Perception: When applied to a ranged effect, this
 modifier makes it perception range."""
     points_per_rank_modifier = 1.0
+    modifier_needs_rank = True
     modifier_name = "Increased Range"
-    def __init__(self, power):
+    def __init__(self, power, rank):
         super().__init__(power)
+        self.rank = rank
+        self.modifier_modifiers = []
+        self.ppr = points_per_rank_modifier
         apply()
 
+    def get_rank(self):
+        return self.rank
+
     def apply(self):
-        for power in self.associated_powers:
-            if power.range < powers.Power_Range.PERCEPTION:
-                power.range += 1
-                power.adjust_points_per_rank(points_per_rank_modifier)
+        if self.get_rank() == power.get_rank():
+            for power in self.associated_powers:
+                if power.range < powers.Power_Range.PERCEPTION:
+                    power.range += 1
+                    power.adjust_points_per_rank(points_per_rank_modifier)
 
     def remove(self):
-        for power in self.associated_powers:
-            if power.range > powers.Power_Range.PERSONAL:
-                power.range -= 1
-                power.adjust_points_per_rank(points_per_rank_modifier)
+        if self.get_rank() == power.get_rank():
+            for power in self.associated_powers:
+                if power.range > powers.Power_Range.PERSONAL:
+                    power.range -= 1
+                    power.adjust_points_per_rank(points_per_rank_modifier)
+
+    def get_points_per_rank(self):
+        return points_per_rank_modifier
+
+    def adjust_points_per_rank(self):
+        pip = self.power.get_points_in_power(ppr)
+        pip.adjust_ppr_for_range(0,self.rank,self.ppr)
+
+    def apply_modifier_to_modifier(self, modifier):
+        pass
 
 
 extras = """Accurate 1 flat per rank +2 attack check bonus per rank
