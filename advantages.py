@@ -262,6 +262,8 @@ wealthy (rank 2), a millionaire (rank 3), multimillionaire
 (rank 4), or billionaire (rank 5)."""
 
     advantage_cost_type = Cost_Type.FLAT_RANK
+    advantage_needs_name = True
+    advantage_needs_rank = True
 
     def __init__(self, benefit_name, rank):
         super().__init__("Benefit")
@@ -601,7 +603,7 @@ of 16-20 with 4 ranks."""
         self.representation = self.represent_improved_crit
 
     def represent_improved_crit(self):
-        return "Improved Critical %d (%s) [%d-20]" % (self.advantage_rank, self.skill, (self.advantage_rank-20))
+        return "Improved Critical %d (%s)" % (self.advantage_rank, self.skill)
 
 class Improved_Defense(Advantage):
     """When you take the defend action in combat (see Defend

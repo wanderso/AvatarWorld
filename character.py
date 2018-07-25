@@ -67,7 +67,7 @@ class Character:
         self.skills = {}
         self.skill_ranks = {}
 
-        self.advantages_natural = {}
+        self.advantages_natural = []
 
         self.advantages = {}
 
@@ -280,11 +280,17 @@ class Character:
             advantage_class = advantages.Advantage.advantage_list[advantage_name]
         else:
             print("Poorly formed advantage name selected!")
-        if advantage_class.advantage_cost_type == advantages.Cost_Type.NO_RANK:
-            advantage_instance = advantage_class()
+        if advantage_class.advantage_needs_name == True and advantage_class.advantage_needs_rank == True:
+            advantage_instance = advantage_class(modifiers['Name'], modifiers['Rank'])
+        elif advantage_class.advantage_needs_skill == True and advantage_class.advantage_needs_rank == True:
+            advantage_instance = advantage_class(modifiers['Skill'], modifiers['Rank'])
+        elif advantage_class.advantage_needs_rank == True:
+            advantage_instance = advantage_class(modifiers['Rank'])
+        elif advantage_class.advantage_has_list == True:
+            advantage_instance = advantage_class(modifiers['List'])
         else:
-            pass
-        self.advantages_natural[advantage_name] = (advantage_instance)
+            advantage_instance = advantage_class()
+        self.advantages_natural.append(advantage_instance)
 
     def del_advantage_natural(self, advantage_name, modifiers={}):
         pass
@@ -630,9 +636,8 @@ class Character:
 
         adv_names = []
 
-        for key in self.advantages_natural:
-            entry = self.advantages_natural[key]
-            adv_pts += entry.advantage_cost
+        for entry in self.advantages_natural:
+            adv_pts += entry.calculate_cost()
             adv_names.append(entry.representation())
 
         addl_str = ""
@@ -698,6 +703,8 @@ class Character:
         if defense_points != 1:
             return_string += "s"
         return_string += ")\n"
+
+        self.spent_points = (abil_pts + total_ranks/2 + adv_pts + pow_pts + defense_points)
 
         return return_string
 
@@ -852,11 +859,17 @@ def menlo_cer_sim():
     men.add_advantage_natural("Teamwork")
     men.add_advantage_natural("Agile Feint")
     men.add_advantage_natural("Instant Up")
+    men.add_advantage_natural("Improved Critical", modifiers={'Skill':'Ranged Combat: Hypersuit Blasters','Rank':4})
+    men.add_advantage_natural("Benefit", modifiers={'Name':'Wealth', 'Rank':3})
+    men.add_advantage_natural("Benefit", modifiers={'Name':'Venture Industries Employment', 'Rank': 1})
+    men.add_advantage_natural("Improved Critical", modifiers={'Skill':'Melee Combat: Martial Arts','Rank':1})
 
+    men.exp = 150
 
     print("Points in the Voltaic Manipulator attack: %d" % rp.get_points())
 
     combat_sim_new(cer, men, 10000)
+    men.print_character_sheet()
     print(men.print_character_sheet())
 
 
@@ -885,6 +898,6 @@ def avatar_caus_sim():
 
 
 if __name__ == '__main__':
-    print(advantages.Accurate_Attack(4).calculate_cost())
+#    print(advantages.Accurate_Attack(4).calculate_cost())
     menlo_cer_sim()
 #    avatar_caus_sim()
