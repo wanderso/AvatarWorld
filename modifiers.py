@@ -31,32 +31,33 @@ modifier makes it perception range."""
         super().__init__(power)
         self.rank = rank
         self.modifier_modifiers = []
-        self.ppr = points_per_rank_modifier
-        apply()
+        self.ppr = Increased_Range.points_per_rank_modifier
+        self.apply()
 
     def get_rank(self):
         return self.rank
 
     def apply(self):
-        if self.get_rank() == power.get_rank():
-            for power in self.associated_powers:
+        for power in self.associated_powers:
+            if self.get_rank() == power.get_rank():
                 if power.range < powers.Power_Range.PERCEPTION:
                     power.range += 1
-                    power.adjust_points_per_rank(points_per_rank_modifier)
+                    power.adjust_points_per_rank(Increased_Range.points_per_rank_modifier)
 
     def remove(self):
-        if self.get_rank() == power.get_rank():
-            for power in self.associated_powers:
+        for power in self.associated_powers:
+            if self.get_rank() == power.get_rank():
                 if power.range > powers.Power_Range.PERSONAL:
                     power.range -= 1
-                    power.adjust_points_per_rank(points_per_rank_modifier)
+                    power.adjust_points_per_rank(Increased_Range.points_per_rank_modifier)
 
     def get_points_per_rank(self):
         return points_per_rank_modifier
 
     def adjust_points_per_rank(self):
-        pip = self.power.get_points_in_power(ppr)
-        pip.adjust_ppr_for_range(0,self.rank,self.ppr)
+        for power in self.associated_powers:
+            pip = power.get_points_in_power()
+            pip.adjust_ppr_for_range(0,self.rank,self.ppr)
 
     def apply_modifier_to_modifier(self, modifier):
         pass

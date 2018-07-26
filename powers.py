@@ -2,28 +2,28 @@ import enum
 import modifiers
 import points
 
-class Power_Duration(enum.Enum):
+class Power_Duration(enum.IntEnum):
     INSTANT = 1
     SUSTAINED = 2
     CONCENTRATION = 3
     CONTINUOUS = 4
     PERMANENT = 5
 
-class Power_Action(enum.Enum):
+class Power_Action(enum.IntEnum):
     STANDARD = 1
     MOVE = 2
     FREE = 3
     REACTION = 4
     NONE = 5
 
-class Power_Type(enum.Enum):
+class Power_Type(enum.IntEnum):
     ATTACK = 1
     ENHANCED_ABILITY = 4
     ENHANCED_DEFENSE = 3
     ENHANCED_SKILL = 5
     PROTECTION = 2
 
-class Power_Range(enum.Enum):
+class Power_Range(enum.IntEnum):
     PERSONAL = 1
     CLOSE = 2
     RANGED = 3
@@ -76,8 +76,7 @@ class Power:
 
 
     def calculate_points(self):
-        if self.points_per_rank_denominator == 1:
-            self.points = (self.rank * self.points_per_rank_numerator) + self.points_flat
+        return self.get_points_in_power().get_points_total()
 
     def get_points_per_rank(self):
         return self.points_per_rank_numerator / self.points_per_rank_denominator
@@ -97,7 +96,11 @@ class Power:
     def get_rank(self):
         return self.rank
 
+    def get_range(self):
+        return self.range
+
     def get_points(self):
+        self.points = self.points_in_power.get_points_total()
         return self.points
 
     def get_character_sheet_repr(self):
@@ -108,7 +111,7 @@ class Power:
 
 class Attack(Power):
     points_per_rank_default = 1
-    def __init__(self, name, skill, rank, defense, resistance, recovery, modifiers={}):
+    def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")
         self.duration = Power_Duration.INSTANT
         self.action = Power_Action.STANDARD
@@ -117,7 +120,7 @@ class Attack(Power):
         self.defense = defense
         self.resistance = resistance
         self.recovery = recovery
-        self.modifiers = modifiers
+        self.modifiers = modifier_values
         self.range = Power_Range.CLOSE
 
         self.points = rank
@@ -129,31 +132,31 @@ class Attack(Power):
         self.points_per_rank_numerator = 1
         self.points_per_rank_denominator = 1
 
-        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank(1))
+        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
 
-        if ('Ranged') in modifiers:
-            if modifiers['Ranged'] == "default":
+        if ('Ranged') in self.modifiers:
+            if self.modifiers['Ranged'] == "default":
                 self.modifiers['Ranged'] = rank
             ranged = modifiers.Increased_Range(self, self.modifiers['Ranged'])
             ranged.adjust_points_per_rank()
 
-        if ('Perception-Ranged') in modifiers:
-            if modifiers['Perception-Ranged'] == "default":
+        if ('Perception-Ranged') in self.modifiers:
+            if self.modifiers['Perception-Ranged'] == "default":
                 self.modifiers['Perception-Ranged'] = rank
 #                self.adjust_points_per_rank(2)
 
-        if ('Multiattack') in modifiers:
-            if modifiers['Multiattack'] == "default":
+        if ('Multiattack') in self.modifiers:
+            if self.modifiers['Multiattack'] == "default":
                 self.modifiers['Multiattack'] = rank
 #                self.adjust_points_per_rank(1)
 
-        if ('Selective') in modifiers:
-            if modifiers['Selective'] == "default":
+        if ('Selective') in self.modifiers:
+            if self.modifiers['Selective'] == "default":
                 self.modifiers['Selective'] = rank
 #                self.adjust_points_per_rank(1)
 
-        if ('Reaction') in modifiers:
-            if modifiers['Reaction'] == "default":
+        if ('Reaction') in self.modifiers:
+            if self.modifiers['Reaction'] == "default":
                 self.modifiers['Reaction'] = rank
 #                self.adjust_points_per_rank(3)
 
@@ -204,6 +207,7 @@ class Protection(Power):
         self.modifiers = modifiers
         self.duration = Power_Duration.PERMANENT
         self.action = Power_Action.NONE
+        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
 
     def get_rank(self):
         return self.rank

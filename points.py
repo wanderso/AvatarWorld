@@ -14,7 +14,7 @@ class Points_Per_Rank:
 
 
     @classmethod
-    def from_int(self, int):
+    def from_int(cls, int):
         ppr_new = cls()
         if int >= 1:
             ppr_new.points_per_rank_numerator = int
@@ -119,6 +119,9 @@ class Points_In_Power:
         for entry in self.flat_list:
             current_total += entry.get_points()
         return math.ceil(current_total)
+
+    def __repr__(self):
+        return str(self.rank_list) + " " + str(self.ppr_list)
 
 if __name__ == "__main__":
     ppr_1 = Points_Per_Rank()
