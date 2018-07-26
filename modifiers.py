@@ -1,5 +1,12 @@
 import powers
 import points
+import value_enums
+
+class Modifier_Options:
+    def __init__(self, pt_list, val_list):
+        modifier_plain_text_names = list(pt_list)
+        modifier_values = list(val_list)
+
 
 class Modifier:
     points_per_rank_modifier = None
@@ -9,6 +16,7 @@ class Modifier:
         self.associated_powers = [power]
         self.modifier_cost = 0
         self.modifier_modifiers = []
+        self.applied = False
 
 
 class Increased_Range(Modifier):
@@ -24,13 +32,21 @@ of this extra, for +2 cost per rank.
 makes it a ranged effect.
 • Perception: When applied to a ranged effect, this
 modifier makes it perception range."""
-    points_per_rank_modifier = 1.0
+    points_per_rank_modifier = 1
     modifier_needs_rank = True
     modifier_name = "Increased Range"
-    def __init__(self, power, rank):
+
+    modifier_plain_text = ['Personal','Close','Ranged','Perception']
+    modifier_values = [value_enums.Power_Range.PERSONAL,value_enums.Power_Range.CLOSE,value_enums.Power_Range.RANGED,value_enums.Power_Range.PERCEPTION]
+
+    modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
+
+    def __init__(self, power, rank, starting_rank=0):
         super().__init__(power)
         self.rank = rank
+        self.starting_rank = starting_rank
         self.modifier_modifiers = []
+        self.ppr_modifiers = points.Points_Per_Rank.from_int(self.__class__.points_per_rank_modifier)
         self.ppr = Increased_Range.points_per_rank_modifier
         self.apply()
 
@@ -38,26 +54,31 @@ modifier makes it perception range."""
         return self.rank
 
     def apply(self):
+        if self.applied:
+            return
         for power in self.associated_powers:
-            if self.get_rank() == power.get_rank():
-                if power.range < powers.Power_Range.PERCEPTION:
-                    power.range += 1
-                    power.adjust_points_per_rank(Increased_Range.points_per_rank_modifier)
+            if power.range < value_enums.Power_Range.PERCEPTION:
+                power.range += 1
+        self.adjust_points_per_rank()
+        self.applied = True
 
     def remove(self):
+        if not self.applied:
+            return
         for power in self.associated_powers:
             if self.get_rank() == power.get_rank():
-                if power.range > powers.Power_Range.PERSONAL:
+                if power.range > value_enums.Power_Range.PERSONAL:
                     power.range -= 1
-                    power.adjust_points_per_rank(Increased_Range.points_per_rank_modifier)
+        self.adjust_points_per_rank(pos=False)
+        self.applied = False
 
     def get_points_per_rank(self):
         return points_per_rank_modifier
 
-    def adjust_points_per_rank(self):
+    def adjust_points_per_rank(self, pos=True):
         for power in self.associated_powers:
             pip = power.get_points_in_power()
-            pip.adjust_ppr_for_range(0,self.rank,self.ppr)
+            pip.adjust_ppr_for_range(self.starting_rank,self.rank,self.ppr_modifiers,pos=pos)
 
     def apply_modifier_to_modifier(self, modifier):
         pass
@@ -123,3 +144,7 @@ Side Effect –1-2 per rank Failing to use the effect causes a problematic side 
 Tiring –1 per rank Effect causes a level of fatigue when used.
 Uncontrolled –1 per rank You have no control over the effect.
 Unreliable –1 per rank Effect only works about half the time (roll of 11 or more)."""
+
+if __name__ == "__main__":
+    for i in range(4,2,-1):
+        print(i)

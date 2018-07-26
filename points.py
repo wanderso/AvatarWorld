@@ -1,9 +1,28 @@
 import math
+import fractions
 
 class Points_Per_Rank:
     def __init__(self):
         self.points_per_rank_numerator = 1
         self.points_per_rank_denominator = 1
+
+    def __add__(self, other):
+        newPPR = Points_Per_Rank()
+        frac_1 = fractions.Fraction(self.points_per_rank_numerator,self.points_per_rank_denominator)
+        frac_2 = fractions.Fraction(other.points_per_rank_numerator,other.points_per_rank_denominator)
+        frac_3 = frac_1 + frac_2
+        newPPR.points_per_rank_numerator = frac_3._numerator
+        newPPR.points_per_rank_denominator = frac_3._denominator
+        return newPPR
+
+    def __sub__(self, other):
+        newPPR = Points_Per_Rank()
+        frac_1 = fractions.Fraction(self.points_per_rank_numerator,self.points_per_rank_denominator)
+        frac_2 = fractions.Fraction(other.points_per_rank_numerator,other.points_per_rank_denominator)
+        frac_3 = frac_1 - frac_2
+        newPPR.points_per_rank_numerator = frac_3._numerator
+        newPPR.points_per_rank_denominator = frac_3._denominator
+        return newPPR
 
     @classmethod
     def from_ppr(cls, ppr_old):
@@ -93,14 +112,17 @@ class Points_In_Power:
         self.rank_list.append(break_point)
         self.ppr_list.append(Points_Per_Rank.from_ppr(self.ppr_list[-1]))
 
-    def adjust_ppr_for_range(self, range_start, range_end, ppr_modifier):
+    def adjust_ppr_for_range(self, range_start, range_end, ppr_modifier, pos=True):
         self.add_ppr_break_point(range_start)
         self.add_ppr_break_point(range_end)
         current_index = 0
         adjust_start = (range_start == 0)
         for entry in self.rank_list:
             if adjust_start == True:
-                self.ppr_list[current_index].adjust_points_per_rank(ppr_modifier)
+                if pos == True:
+                    self.ppr_list[current_index] = self.ppr_list[current_index] + (ppr_modifier)
+                else:
+                    self.ppr_list[current_index] = self.ppr_list[current_index] - (ppr_modifier)
             if entry == range_start:
                 adjust_start = True
             if entry == range_end:

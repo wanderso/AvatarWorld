@@ -1,49 +1,23 @@
-import enum
 import modifiers
 import points
-
-class Power_Duration(enum.IntEnum):
-    INSTANT = 1
-    SUSTAINED = 2
-    CONCENTRATION = 3
-    CONTINUOUS = 4
-    PERMANENT = 5
-
-class Power_Action(enum.IntEnum):
-    STANDARD = 1
-    MOVE = 2
-    FREE = 3
-    REACTION = 4
-    NONE = 5
-
-class Power_Type(enum.IntEnum):
-    ATTACK = 1
-    ENHANCED_ABILITY = 4
-    ENHANCED_DEFENSE = 3
-    ENHANCED_SKILL = 5
-    PROTECTION = 2
-
-class Power_Range(enum.IntEnum):
-    PERSONAL = 1
-    CLOSE = 2
-    RANGED = 3
-    PERCEPTION = 4
+import value_enums
 
 
 class Power:
     points_per_rank_default = None
+    default_range = None
+    default_action = None
+    default_duration = None
+
     def __init__(self, name, pow_type):
         self.name = name
         self.descriptors = {}
-        self.duration = None
-        self.action = Power_Action.NONE
-        self.range = None
+        self.duration = type(self).default_duration
+        self.action = type(self).default_action
+        self.range = type(self).default_range
         self.power_type = pow_type
         self.rank = 1
         self.points = 0
-        self.points_per_rank = 0.0
-        self.points_per_rank_numerator = 0
-        self.points_per_rank_denominator = 1
         self.points_flat = 0
         self.power_modifiers = []
         self.available = True
@@ -51,35 +25,8 @@ class Power:
         self.natural_power = False
         self.points_in_power = None
 
-    def adjust_points_per_rank(self, modifier):
-        if self.points_per_rank_denominator > 1:
-            if modifier > 0:
-                point_test = self.points_per_rank_denominator - modifier
-                if point_test <= 0:
-                    self.points_per_rank_denominator = 1
-                    self.points_per_rank_numerator = (1 - point_test)
-                else:
-                    self.points_per_rank_denominator = point_test
-            else:
-                self.points_per_rank_denominator -= modifier
-        else:
-            if modifier > 0:
-                self.points_per_rank_numerator += modifier
-            else:
-                point_test = self.points_per_rank_numerator + modifier
-                if point_test <= 0:
-                    self.points_per_rank_numerator = 1
-                    self.points_per_rank_denominator = (1 - point_test)
-                else:
-                    self.points_per_rank_numerator = point_test
-        self.calculate_points()
-
-
     def calculate_points(self):
         return self.get_points_in_power().get_points_total()
-
-    def get_points_per_rank(self):
-        return self.points_per_rank_numerator / self.points_per_rank_denominator
 
     def get_available(self):
         return self.available
@@ -100,8 +47,7 @@ class Power:
         return self.range
 
     def get_points(self):
-        self.points = self.points_in_power.get_points_total()
-        return self.points
+        return self.get_points_in_power().get_points_total()
 
     def get_character_sheet_repr(self):
         return repr(self)
@@ -111,17 +57,20 @@ class Power:
 
 class Attack(Power):
     points_per_rank_default = 1
+    default_range = value_enums.Power_Range.CLOSE
+    default_action = value_enums.Power_Action.STANDARD
+    default_duration = value_enums.Power_Duration.INSTANT
+
+    default_plain_text = "Damage"
+
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")
-        self.duration = Power_Duration.INSTANT
-        self.action = Power_Action.STANDARD
         self.attack_skill = skill
         self.rank = rank
         self.defense = defense
         self.resistance = resistance
         self.recovery = recovery
         self.modifiers = modifier_values
-        self.range = Power_Range.CLOSE
 
         self.points = rank
 
@@ -138,12 +87,19 @@ class Attack(Power):
             if self.modifiers['Ranged'] == "default":
                 self.modifiers['Ranged'] = rank
             ranged = modifiers.Increased_Range(self, self.modifiers['Ranged'])
-            ranged.adjust_points_per_rank()
+            self.power_modifiers.append(ranged)
 
         if ('Perception-Ranged') in self.modifiers:
             if self.modifiers['Perception-Ranged'] == "default":
                 self.modifiers['Perception-Ranged'] = rank
-#                self.adjust_points_per_rank(2)
+            if 'Ranged' not in self.modifiers:
+                self.modifiers['Ranged'] = 0
+            if self.modifiers['Ranged'] < self.modifiers['Perception-Ranged']:
+                ranged_addl = modifiers.Increased_Range(self, self.modifiers['Perception-Ranged'], starting_rank=self.modifiers['Ranged'])
+                self.modifiers['Ranged'] = self.modifiers['Perception-Ranged']
+                self.power_modifiers.append(ranged_addl)
+            perception_ranged = modifiers.Increased_Range(self, self.modifiers['Perception-Ranged'])
+            self.power_modifiers.append(perception_ranged)
 
         if ('Multiattack') in self.modifiers:
             if self.modifiers['Multiattack'] == "default":
@@ -160,27 +116,54 @@ class Attack(Power):
                 self.modifiers['Reaction'] = rank
 #                self.adjust_points_per_rank(3)
 
-        self.calculate_points()
 
 
     def get_character_sheet_repr(self):
         return_string = "%s: " % self.get_name()
-        addl_string = "Damage %d" % self.get_rank()
+        addl_string = "%s %d" % (type(self).default_plain_text, self.get_rank())
         """Shadow Hankyū: Subtle 2 Precise Ranged Damage 8, Accurate 8, Affects Corporeal 8, Indirect 4 Limited to (from and to shadows) (37 points)"""
 
         # The magic happens
 
-        predicate_list = ['Perception-Ranged', 'Ranged', 'Multiattack', 'Reaction', 'Selective']
+        # Set power range
+
+        if self.range != type(self).default_range:
+            range_expansion = False
+            check_range = None
+            if self.range < type(self).default_range:
+                check_range = range(self.range, self.default_range)
+                for entry in check_range:
+                    if self.modifiers[value_enums.Power_Range_Names.name_list[entry]] != self.get_rank():
+                        range_expansion = True
+                    print("DEADBEEF")
+                    print(value_enums.Power_Range_Names.name_list[entry])
+            else:
+                check_range = range(self.range, self.default_range, -1)
+                for entry in check_range:
+                    if self.modifiers[value_enums.Power_Range_Names.name_list[entry]] != self.get_rank():
+                        range_expansion = True
+            if range_expansion == True:
+                expansion_string = ""
+                for entry in check_range:
+                    entry_name = value_enums.Power_Range_Names.name_list[entry]
+                    expansion_string = expansion_string + "%s %d " % (entry_name, self.modifiers[entry_name])
+                addl_string = expansion_string + addl_string
+            else:
+                addl_string = "%s " % (value_enums.Power_Range_Names.name_list[self.range]) + addl_string
+
+#        predicate_list = ['Ranged', 'Perception-Ranged', 'Multiattack', 'Reaction', 'Selective']
+        predicate_list = ['Multiattack', 'Reaction', 'Selective']
+
         for analyze_val in predicate_list:
             if (analyze_val) in self.modifiers:
                 if self.modifiers[analyze_val] != self.get_rank():
-                    addl_string = ("%s %d" % (analyze_val, self.modifiers[analyze_val])) + addl_string
+                    addl_string = ("%s %d " % (analyze_val, self.modifiers[analyze_val])) + addl_string
                 else:
                     addl_string = "%s " % analyze_val + addl_string
 
 
 
-        return_string = return_string + addl_string + " (%d point" % self.points
+        return_string = return_string + addl_string + " (%d point" % self.get_points()
         if self.points != 1:
             return_string += "s"
         return_string += ")\n"
@@ -205,17 +188,17 @@ class Protection(Power):
         self.points = rank
         self.points_per_rank = 1.0
         self.modifiers = modifiers
-        self.duration = Power_Duration.PERMANENT
-        self.action = Power_Action.NONE
+        self.duration = value_enums.Power_Duration.PERMANENT
+        self.action = value_enums.Power_Action.NONE
         self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
 
     def get_rank(self):
         return self.rank
 
     def get_active(self):
-        if self.duration == Power_Duration.PERMANENT:
+        if self.duration == value_enums.Power_Duration.PERMANENT:
             return True
-        elif self.duration == Power_Duration.SUSTAINED:
+        elif self.duration == value_enums.Power_Duration.SUSTAINED:
             return True
             # So long as they've got a free action!
 

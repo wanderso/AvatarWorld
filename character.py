@@ -816,7 +816,7 @@ def menlo_cer_sim():
     ana = CharacterGenerators.default_char("Miss Trial", 10, "Balanced")
     mer = CharacterGenerators.default_char("Metal Knuckle", 10, "Balanced")
 
-    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Ranged':'default'})
+    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Ranged':8,'Perception-Ranged':5})
     ef = powers.Attack("Electron Flurry", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     sk = powers.Attack("Sack", "Melee Combat: Football", 10, "Parry", Character.get_toughness, Character.get_toughness)
@@ -866,9 +866,9 @@ def menlo_cer_sim():
 
     men.exp = 150
 
-    print("Points in the Voltaic Manipulator attack: %d" % rp.get_points())
-#    print(rp.get_points_in_power())
-    print(rp.get_range())
+    print("Points in the %s attack: %d" % (vm.get_name(), vm.calculate_points()))
+#    print(vm.get_points_in_power())
+#    print(vm.get_range())
 
     combat_sim_new(cer, men, 10000)
     men.print_character_sheet()
