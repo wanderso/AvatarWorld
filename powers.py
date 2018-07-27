@@ -50,7 +50,57 @@ class Power:
         return self.get_points_in_power().get_points_total()
 
     def get_character_sheet_repr(self):
-        return repr(self)
+        return_string = "%s: " % self.get_name()
+        addl_string = "%s %d" % (type(self).default_plain_text, self.get_rank())
+        """Shadow Hankyū: Subtle 2 Precise Ranged Damage 8, Accurate 8, Affects Corporeal 8, Indirect 4 Limited to (from and to shadows) (37 points)"""
+
+        # The magic happens
+
+        # Set power range
+
+        if self.range != type(self).default_range:
+            loop_index = 0
+            power_index = None
+            default_index = None
+
+            value_list = value_enums.Power_Range_Names.val_list
+            name_list = value_enums.Power_Range_Names.name_list
+
+            for entry in value_list:
+                if self.range == entry:
+                    power_index = entry
+                if type(self).default_range == entry:
+                    default_index = entry
+                loop_index += 1
+
+            check_range = None
+            if power_index > default_index:
+                check_range = range(default_index+1, power_index)
+            elif power_index < default_index:
+                check_range = range(power_index, default_index)
+
+            expansion_string = ""
+
+            for index in check_range:
+                if self.modifiers[name_list[index]] == self.modifiers[name_list[index+1]]:
+                    continue
+                else:
+                    if self.modifiers[name_list[index]] == self.get_rank():
+                        expansion_string = expansion_string + "%s " % (name_list[index])
+                    else:
+                        expansion_string = expansion_string + "%s %d " % (name_list[index], self.modifiers[name_list[index]])
+
+            addl_string = expansion_string + addl_string
+            if self.modifiers[name_list[power_index]] == self.get_rank():
+                addl_string = "%s " % (name_list[self.range]) + addl_string
+            else:
+                addl_string = "%s %d " % (name_list[self.range], self.modifiers[name_list[power_index]]) + addl_string
+
+        return_string = return_string + addl_string + " (%d point" % self.get_points()
+        if self.points != 1:
+            return_string += "s"
+        return_string += ")\n"
+        return return_string
     
     def get_points_in_power(self):
         return self.points_in_power
@@ -112,11 +162,17 @@ class Attack(Power):
                         break
                     modifier_index += 1
 
-                for val in range(modifier_index,max_modifier_index+1):
+                for val in range(modifier_index+1,max_modifier_index+1):
+#                    print("DEADBEEF")
+#                    print(val)
                     val_index = val
+                    if text_list[val] not in self.modifiers:
+                        self.modifiers[text_list[val]] = 0
                     if text_list[val] in self.modifiers:
                         mod_val = self.modifiers[text_list[val]]
                         for ex_val in range(val_index,max_modifier_index+1):
+                            if text_list[ex_val] not in self.modifiers:
+                                self.modifiers[text_list[ex_val]] = 0
                             ex_name = text_list[ex_val]
                             if ex_name in text_list:
                                 ex_rank = self.modifiers[text_list[ex_val]]
@@ -141,57 +197,6 @@ class Attack(Power):
             if self.modifiers['Reaction'] == "default":
                 self.modifiers['Reaction'] = rank
 #                self.adjust_points_per_rank(3)
-
-
-
-    def get_character_sheet_repr(self):
-        return_string = "%s: " % self.get_name()
-        addl_string = "%s %d" % (type(self).default_plain_text, self.get_rank())
-        """Shadow Hankyū: Subtle 2 Precise Ranged Damage 8, Accurate 8, Affects Corporeal 8, Indirect 4 Limited to (from and to shadows) (37 points)"""
-
-        # The magic happens
-
-        # Set power range
-
-        if self.range != type(self).default_range:
-            range_expansion = False
-            check_range = None
-            if self.range < type(self).default_range:
-                check_range = range(self.range, self.default_range)
-                for entry in check_range:
-                    if self.modifiers[value_enums.Power_Range_Names.name_list[entry]] != self.get_rank():
-                        range_expansion = True
-            else:
-                check_range = range(self.range, self.default_range, -1)
-                for entry in check_range:
-                    if self.modifiers[value_enums.Power_Range_Names.name_list[entry]] != self.get_rank():
-                        range_expansion = True
-            if range_expansion == True:
-                expansion_string = ""
-                for entry in check_range:
-                    entry_name = value_enums.Power_Range_Names.name_list[entry]
-                    expansion_string = expansion_string + "%s %d " % (entry_name, self.modifiers[entry_name])
-                addl_string = expansion_string + addl_string
-            else:
-                addl_string = "%s " % (value_enums.Power_Range_Names.name_list[self.range]) + addl_string
-
-#        predicate_list = ['Ranged', 'Perception-Ranged', 'Multiattack', 'Reaction', 'Selective']
-        predicate_list = ['Multiattack', 'Reaction', 'Selective']
-
-        for analyze_val in predicate_list:
-            if (analyze_val) in self.modifiers:
-                if self.modifiers[analyze_val] != self.get_rank():
-                    addl_string = ("%s %d " % (analyze_val, self.modifiers[analyze_val])) + addl_string
-                else:
-                    addl_string = "%s " % analyze_val + addl_string
-
-
-
-        return_string = return_string + addl_string + " (%d point" % self.get_points()
-        if self.points != 1:
-            return_string += "s"
-        return_string += ")\n"
-        return return_string
 
     def get_skill(self):
         return self.attack_skill

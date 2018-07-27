@@ -30,3 +30,4 @@ class Power_Range(enum.IntEnum):
 
 class Power_Range_Names:
     name_list = ["","Personal", "Close", "Ranged", "Perception-Ranged"]
+    val_list = [0,Power_Range.PERSONAL,Power_Range.CLOSE,Power_Range.RANGED,Power_Range.PERCEPTION]
