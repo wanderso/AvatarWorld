@@ -1,87 +1,51 @@
 import math
 import fractions
+import decimal
 
 class Points_Per_Rank:
-    def __init__(self):
-        self.points_per_rank_numerator = 1
-        self.points_per_rank_denominator = 1
+    def __init__(self, x=1):
+        self.x = x
 
     def __add__(self, other):
-        newPPR = Points_Per_Rank()
-        frac_1 = fractions.Fraction(self.points_per_rank_numerator,self.points_per_rank_denominator)
-        frac_2 = fractions.Fraction(other.points_per_rank_numerator,other.points_per_rank_denominator)
-        frac_3 = frac_1 + frac_2
-        newPPR.points_per_rank_numerator = frac_3._numerator
-        newPPR.points_per_rank_denominator = frac_3._denominator
-        return newPPR
+        if hasattr(other, 'x'):
+            return Points_Per_Rank(self.x + other.x)
+        else:
+            return Points_Per_Rank(self.x + other)
 
     def __sub__(self, other):
-        newPPR = Points_Per_Rank()
-        frac_1 = fractions.Fraction(self.points_per_rank_numerator,self.points_per_rank_denominator)
-        frac_2 = fractions.Fraction(other.points_per_rank_numerator,other.points_per_rank_denominator)
-        frac_3 = frac_1 - frac_2
-        newPPR.points_per_rank_numerator = frac_3._numerator
-        newPPR.points_per_rank_denominator = frac_3._denominator
-        return newPPR
+        if hasattr(other, 'x'):
+            return Points_Per_Rank(self.x - other.x)
+        else:
+            return Points_Per_Rank(self.x - other)
 
     @classmethod
     def from_ppr(cls, ppr_old):
-        ppr_new = cls()
-        ppr_new.points_per_rank_numerator = ppr_old.points_per_rank_numerator
-        ppr_new.points_per_rank_denominator = ppr_old.points_per_rank_denominator
-        return ppr_new
-
+        return cls(ppr_old.get_x())
 
     @classmethod
     def from_int(cls, int):
-        ppr_new = cls()
-        if int >= 1:
-            ppr_new.points_per_rank_numerator = int
-        else:
-            ppr_new.points_per_rank_denominator = 2 - int
-        return ppr_new
+        return cls(x=int)
 
     def adjust_points_per_rank(self, modifier):
-        if self.points_per_rank_denominator > 1:
-            if modifier > 0:
-                point_test = self.points_per_rank_denominator - modifier
-                if point_test <= 0:
-                    self.points_per_rank_denominator = 1
-                    self.points_per_rank_numerator = (1 - point_test)
-                else:
-                    self.points_per_rank_denominator = point_test
-            else:
-                self.points_per_rank_denominator -= modifier
-        elif self.points_per_rank_denominator < 1:
-            if modifier > 0:
-                self.points_per_rank_numerator += modifier
-            else:
-                point_test = self.points_per_rank_numerator + modifier
-                if point_test <= 0:
-                    self.points_per_rank_numerator = 1
-                    self.points_per_rank_denominator = (1 - point_test)
-                else:
-                    self.points_per_rank_numerator = point_test
-        else:
-            if modifier > 0:
-                self.points_per_rank_numerator += modifier
-            elif modifier < 0:
-                self.points_per_rank_denominator -= modifier
-
-    def get_points_per_rank_numerator(self):
-        return self.points_per_rank_numerator
-
-    def get_points_per_rank_denominator(self):
-        return self.points_per_rank_numerator
+        self.x += modifier
 
     def get_points_per_rank_float(self):
-        return self.points_per_rank_numerator/self.points_per_rank_denominator
+        return self.get_y()
+
+    def get_x(self):
+        return self.x
+
+    def get_y(self):
+        if self.x >= 1:
+            return self.x
+        else:
+            return 1.0/(2.0-self.x)
 
     def __str__(self):
         return "%f" % self.get_points_per_rank_float()
 
     def __repr__(self):
-        return "%d/%d" % (self.points_per_rank_numerator, self.points_per_rank_denominator)
+        return fractions.Fraction(decimal.Decimal(self.get_y())).__repr__()
 
 class Flat_Points:
     def __init__(self, flat):
@@ -147,10 +111,14 @@ class Points_In_Power:
 
 if __name__ == "__main__":
     ppr_1 = Points_Per_Rank()
+    ppr_flat = Points_Per_Rank.from_int(-2)
     ppr_1.adjust_points_per_rank(-1)
     print("Current points_per_rank in ppr1: %f" % ppr_1.get_points_per_rank_float())
     ppr_2 = Points_Per_Rank.from_ppr(ppr_1)
     print("Current points_per_rank in ppr2: %f" % ppr_2.get_points_per_rank_float())
+
+    print("Current points_per_rank in ppr_flat: %f" % ppr_flat.get_points_per_rank_float())
+
     ppr_1.adjust_points_per_rank(3)
     print("Current points_per_rank in ppr1: %f" % ppr_1.get_points_per_rank_float())
     print("Current points_per_rank in ppr2: %f" % ppr_2.get_points_per_rank_float())
@@ -164,7 +132,7 @@ if __name__ == "__main__":
     pip.add_ppr_break_point(3)
     pip.add_ppr_break_point(8)
 
-    pip.adjust_ppr_for_range(0,10,3)
+    pip.adjust_ppr_for_range(0,7,-3)
 
     print(pip.rank_list)
     print(pip.ppr_list)

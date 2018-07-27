@@ -808,7 +808,6 @@ def combat_sim_wulin(atk1, atk2, iterations):
 
 
 def menlo_cer_sim():
-
     men = CharacterGenerators.default_char("Doctor Menlo", 10, "Defense")
     srk = CharacterGenerators.default_char("Lightning Strike", 10, "Defense")
     cer = CharacterGenerators.default_char("Cerulean", 10, "Toughness")
@@ -816,7 +815,7 @@ def menlo_cer_sim():
     ana = CharacterGenerators.default_char("Miss Trial", 10, "Balanced")
     mer = CharacterGenerators.default_char("Metal Knuckle", 10, "Balanced")
 
-    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Ranged':8,'Perception-Ranged':5})
+    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Ranged':4,'Perception-Ranged':6})
     ef = powers.Attack("Electron Flurry", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     sk = powers.Attack("Sack", "Melee Combat: Football", 10, "Parry", Character.get_toughness, Character.get_toughness)

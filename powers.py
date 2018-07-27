@@ -62,6 +62,8 @@ class Attack(Power):
     default_duration = value_enums.Power_Duration.INSTANT
 
     default_plain_text = "Damage"
+    
+    allowed_modifiers = [modifiers.Increased_Range]
 
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")
@@ -82,24 +84,48 @@ class Attack(Power):
         self.points_per_rank_denominator = 1
 
         self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
+        
+        for possible_modifier_class in type(self).allowed_modifiers:
+            if possible_modifier_class.modifier_list_type == True:
+                modifier_base = possible_modifier_class.get_current_power_value(self)
+                modops = possible_modifier_class.get_modifier_options()
+                val_list = modops.get_values_list()
+                text_list = modops.get_plain_text_names_list()
+                check_modifiers_for = []
+                check_modifier_index = []
+                check_modifier_ranks = []
+                modifier_index = 0
+                max_modifier_index = modifier_index
+                for entry in text_list:
+                    if entry in self.modifiers:
+                        if self.modifiers[entry] == "default":
+                            self.modifiers[entry] = possible_modifier_class.get_default_value(self)
+                        check_modifiers_for.append(entry)
+                        check_modifier_index.append(modifier_index)
+                        check_modifier_ranks.append(self.modifiers[entry])
+                        if modifier_index > max_modifier_index:
+                            max_modifier_index = modifier_index
+                    modifier_index += 1
+                modifier_index = 0
+                for entry in val_list:
+                    if entry == modifier_base:
+                        break
+                    modifier_index += 1
 
-        if ('Ranged') in self.modifiers:
-            if self.modifiers['Ranged'] == "default":
-                self.modifiers['Ranged'] = rank
-            ranged = modifiers.Increased_Range(self, self.modifiers['Ranged'])
-            self.power_modifiers.append(ranged)
+                for val in range(modifier_index,max_modifier_index+1):
+                    val_index = val
+                    if text_list[val] in self.modifiers:
+                        mod_val = self.modifiers[text_list[val]]
+                        for ex_val in range(val_index,max_modifier_index+1):
+                            ex_name = text_list[ex_val]
+                            if ex_name in text_list:
+                                ex_rank = self.modifiers[text_list[ex_val]]
+                                if mod_val < ex_rank:
+                                    self.modifiers[text_list[val]] = ex_rank
+                                    mod_val = ex_rank
+                        new_modifier = possible_modifier_class(self, mod_val)
+                        self.power_modifiers.append(new_modifier)
 
-        if ('Perception-Ranged') in self.modifiers:
-            if self.modifiers['Perception-Ranged'] == "default":
-                self.modifiers['Perception-Ranged'] = rank
-            if 'Ranged' not in self.modifiers:
-                self.modifiers['Ranged'] = 0
-            if self.modifiers['Ranged'] < self.modifiers['Perception-Ranged']:
-                ranged_addl = modifiers.Increased_Range(self, self.modifiers['Perception-Ranged'], starting_rank=self.modifiers['Ranged'])
-                self.modifiers['Ranged'] = self.modifiers['Perception-Ranged']
-                self.power_modifiers.append(ranged_addl)
-            perception_ranged = modifiers.Increased_Range(self, self.modifiers['Perception-Ranged'])
-            self.power_modifiers.append(perception_ranged)
 
         if ('Multiattack') in self.modifiers:
             if self.modifiers['Multiattack'] == "default":
@@ -135,8 +161,6 @@ class Attack(Power):
                 for entry in check_range:
                     if self.modifiers[value_enums.Power_Range_Names.name_list[entry]] != self.get_rank():
                         range_expansion = True
-                    print("DEADBEEF")
-                    print(value_enums.Power_Range_Names.name_list[entry])
             else:
                 check_range = range(self.range, self.default_range, -1)
                 for entry in check_range:

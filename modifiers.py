@@ -4,19 +4,59 @@ import value_enums
 
 class Modifier_Options:
     def __init__(self, pt_list, val_list):
-        modifier_plain_text_names = list(pt_list)
-        modifier_values = list(val_list)
+        self.modifier_plain_text_names = list(pt_list)
+        self.modifier_values = list(val_list)
+
+    def get_plaintext_from_value(self, value):
+        index = 0
+        for entry in self.modifier_values:
+            if value == entry:
+                return self.modifier_plain_text_names[index]
+            index += 1
+        return "Plaintext not found for value %s " % repr(value)
+
+    def get_value_from_plaintext(self, plaintext):
+        index = 0
+        for entry in self.modifier_plain_text_names:
+            if plaintext == entry:
+                return self.modifier_values[index]
+            index += 1
+        return "Value not found for plaintext %s " % plaintext
+
+    def get_plain_text_names_list(self):
+        return self.modifier_plain_text_names
+
+    def get_values_list(self):
+        return self.modifier_values
 
 
 class Modifier:
     points_per_rank_modifier = None
     modifier_name = None
     modifier_needs_rank = False
+
+    modifier_list_type = False
+
+    modifier_options = None
+
     def __init__(self, power):
         self.associated_powers = [power]
         self.modifier_cost = 0
         self.modifier_modifiers = []
         self.applied = False
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        pass
+
+    @classmethod
+    def get_modifier_options(cls):
+        return cls.modifier_options
+
+    @classmethod
+    def get_default_value(cls, power):
+        return power.get_rank()
+
 
 
 class Increased_Range(Modifier):
@@ -36,7 +76,9 @@ modifier makes it perception range."""
     modifier_needs_rank = True
     modifier_name = "Increased Range"
 
-    modifier_plain_text = ['Personal','Close','Ranged','Perception']
+    modifier_list_type = True
+
+    modifier_plain_text = ['Personal','Close','Ranged','Perception-Ranged']
     modifier_values = [value_enums.Power_Range.PERSONAL,value_enums.Power_Range.CLOSE,value_enums.Power_Range.RANGED,value_enums.Power_Range.PERCEPTION]
 
     modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
@@ -46,7 +88,7 @@ modifier makes it perception range."""
         self.rank = rank
         self.starting_rank = starting_rank
         self.modifier_modifiers = []
-        self.ppr_modifiers = points.Points_Per_Rank.from_int(self.__class__.points_per_rank_modifier)
+        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
         self.ppr = Increased_Range.points_per_rank_modifier
         self.apply()
 
@@ -57,7 +99,7 @@ modifier makes it perception range."""
         if self.applied:
             return
         for power in self.associated_powers:
-            if power.range < value_enums.Power_Range.PERCEPTION:
+            if power.range < type(self).modifier_values[-1]:
                 power.range += 1
         self.adjust_points_per_rank()
         self.applied = True
@@ -67,7 +109,7 @@ modifier makes it perception range."""
             return
         for power in self.associated_powers:
             if self.get_rank() == power.get_rank():
-                if power.range > value_enums.Power_Range.PERSONAL:
+                if power.range > type(self).modifier_values[0]:
                     power.range -= 1
         self.adjust_points_per_rank(pos=False)
         self.applied = False
@@ -76,9 +118,19 @@ modifier makes it perception range."""
         return points_per_rank_modifier
 
     def adjust_points_per_rank(self, pos=True):
+        applied_already = (self.applied == True)
+        if applied_already:
+            remove()
         for power in self.associated_powers:
             pip = power.get_points_in_power()
             pip.adjust_ppr_for_range(self.starting_rank,self.rank,self.ppr_modifiers,pos=pos)
+        if applied_already:
+            apply()
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        return power.get_range()
+#        return self.power
 
     def apply_modifier_to_modifier(self, modifier):
         pass
@@ -144,6 +196,7 @@ Side Effect –1-2 per rank Failing to use the effect causes a problematic side 
 Tiring –1 per rank Effect causes a level of fatigue when used.
 Uncontrolled –1 per rank You have no control over the effect.
 Unreliable –1 per rank Effect only works about half the time (roll of 11 or more)."""
+
 
 if __name__ == "__main__":
     for i in range(4,2,-1):
