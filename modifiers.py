@@ -121,8 +121,8 @@ modifier makes it perception range."""
 
     modifier_list_type = True
 
-    modifier_plain_text = ['Personal','Close','Ranged','Perception-Ranged']
-    modifier_values = [value_enums.Power_Range.PERSONAL,value_enums.Power_Range.CLOSE,value_enums.Power_Range.RANGED,value_enums.Power_Range.PERCEPTION]
+    modifier_plain_text = value_enums.Power_Range_Names.name_list
+    modifier_values = value_enums.Power_Range_Names.val_list
 
     modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
 
@@ -144,7 +144,7 @@ modifier makes it perception range."""
             power.range += 1
 
     def when_removed(self, power):
-        if power.range > type(self).modifier_values[0]:
+        if power.range > type(self).modifier_values[1]:
             power.range -= 1
 
     @classmethod
@@ -177,8 +177,8 @@ effect, this modifier makes it continuous"""
 
     modifier_list_type = True
 
-    modifier_plain_text = ['Instant','Sustained','Concentration','Continuous','Permanent']
-    modifier_values = [value_enums.Power_Duration.INSTANT,value_enums.Power_Duration.SUSTAINED,value_enums.Power_Duration.CONCENTRATION,value_enums.Power_Duration.CONTINUOUS,value_enums.Power_Duration.PERMANENT]
+    modifier_plain_text = value_enums.Power_Duration_Names.name_list
+    modifier_values = value_enums.Power_Duration_Names.val_list
 
     modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
 
@@ -196,20 +196,70 @@ effect, this modifier makes it continuous"""
         return self.rank
 
     def when_applied(self, power):
-        if power.duration == value_enums.Power_Duration.INSTANT:
-            power.duration = value_enums.Power_Duration.CONCENTRATION
-        elif power.duration == value_enums.Power_Duration.SUSTAINED:
-            power.duration = value_enums.Power_Duration.CONTINUOUS
+        if power.duration < type(self).modifier_values[-2]:
+            power.duration += 1
 
     def when_removed(self, power):
-        if power.duration == value_enums.Power_Duration.CONCENTRATION:
-            power.duration = value_enums.Power_Duration.INSTANT
-        elif power.duration == value_enums.Power_Duration.CONTINUOUS:
-            power.duration = value_enums.Power_Duration.SUSTAINED
+        if power.duration < type(self).modifier_values[1]:
+            power.duration -= 1
 
     @classmethod
     def get_current_power_value(cls, power):
         return power.get_duration()
+
+class Increased_Action(Modifier):
+    """Using or activating an effect requires a particular amount
+of time. See Actions, page 246, for details about the different
+types of actions. Modifiers may change the action
+needed to use an effect.
+• Standard: Using the effect requires a standard action.
+• Move: Using the effect requires a move action.
+• Free: It requires a free action to use or activate the
+effect. Once an effect is activated or deactivated, it
+remains so until your next turn. As with all free actions,
+the GM may limit the total number of effects a
+hero can turn on or off in a turn.
+• Reaction: It requires no action to use the effect. It
+operates automatically in response to something
+else, such as an attack.
+• None: It requires no action to use the effect. It is always
+active."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Increased Action"
+
+    modifier_list_type = True
+
+    modifier_plain_text = value_enums.Power_Action_Names.name_list
+    modifier_values = value_enums.Power_Action_Names.val_list
+
+    modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.rank = rank
+        self.starting_rank = starting_rank
+        self.modifier_modifiers = []
+        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
+        self.ppr = Increased_Range.points_per_rank_modifier
+        self.adjust_points = self.adjust_points_per_rank
+        self.apply()
+
+    def get_rank(self):
+        return self.rank
+
+    def when_applied(self, power):
+        if power.action < type(self).modifier_values[-2]:
+            power.action += 1
+
+    def when_removed(self, power):
+        if power.action < type(self).modifier_values[1]:
+            power.action -= 1
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        return power.get_action()
+
 
 
 

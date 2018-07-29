@@ -34,6 +34,9 @@ class Power:
     def get_active(self):
         return self.active
 
+    def get_action(self):
+        return self.action
+
     def get_duration(self):
         return self.duration
 
@@ -151,6 +154,10 @@ class Power:
 
         addl_string = self.repr_process_range(self.duration, type(self).default_duration, value_enums.Power_Duration_Names.val_list, value_enums.Power_Duration_Names.name_list) + addl_string
 
+        addl_string = self.repr_process_range(self.action, type(self).default_action,
+                                              value_enums.Power_Action_Names.val_list,
+                                              value_enums.Power_Action_Names.name_list) + addl_string
+
         return_string = return_string + addl_string + " (%d point" % self.get_points()
         if self.points != 1:
             return_string += "s"
@@ -168,7 +175,7 @@ class Attack(Power):
 
     default_plain_text = "Damage"
     
-    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration]
+    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action]
 
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")

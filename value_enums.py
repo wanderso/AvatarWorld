@@ -3,8 +3,8 @@ import enum
 
 class Power_Duration(enum.IntEnum):
     INSTANT = 1
-    SUSTAINED = 2
-    CONCENTRATION = 3
+    CONCENTRATION = 2
+    SUSTAINED = 3
     CONTINUOUS = 4
     PERMANENT = 5
 
@@ -33,5 +33,10 @@ class Power_Range_Names:
     val_list = [0,Power_Range.PERSONAL,Power_Range.CLOSE,Power_Range.RANGED,Power_Range.PERCEPTION]
 
 class Power_Duration_Names:
-    name_list = ["","Instant","Sustained","Concentration","Continuous","Permanent"]
-    val_list = [0,Power_Duration.INSTANT,Power_Duration.SUSTAINED,Power_Duration.CONCENTRATION,Power_Duration.CONTINUOUS,Power_Duration.PERMANENT]
+    name_list = ["","Instant","Concentration","Sustained","Continuous","Permanent"]
+    val_list = [0,Power_Duration.INSTANT,Power_Duration.CONCENTRATION,Power_Duration.SUSTAINED,Power_Duration.CONTINUOUS,Power_Duration.PERMANENT]
+
+class Power_Action_Names:
+    name_list = ["","Standard","Move","Free","Reaction","None"]
+    val_list = [0,Power_Action.STANDARD,Power_Action.MOVE,Power_Action.FREE,Power_Action.REACTION,Power_Action.NONE]
+

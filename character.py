@@ -815,7 +815,7 @@ def menlo_cer_sim():
     ana = CharacterGenerators.default_char("Miss Trial", 10, "Balanced")
     mer = CharacterGenerators.default_char("Metal Knuckle", 10, "Balanced")
 
-    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Perception-Ranged':6, 'Ranged':8, 'Concentration':4})
+    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Perception-Ranged':'default', 'Ranged':'default', 'Continuous':'default', 'Reaction':'default'})
     ef = powers.Attack("Electron Flurry", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     sk = powers.Attack("Sack", "Melee Combat: Football", 10, "Parry", Character.get_toughness, Character.get_toughness)
@@ -872,7 +872,7 @@ def menlo_cer_sim():
     print(men.print_character_sheet())
     print(srk.print_character_sheet())
 
-    print(vm.modifiers)
+    print(vm.power_modifiers)
 
 
 def avatar_caus_sim():
