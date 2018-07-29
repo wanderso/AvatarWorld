@@ -34,6 +34,9 @@ class Power:
     def get_active(self):
         return self.active
 
+    def get_duration(self):
+        return self.duration
+
     def get_power_type(self):
         return self.power_type
 
@@ -49,92 +52,7 @@ class Power:
     def get_points(self):
         return self.get_points_in_power().get_points_total()
 
-    def get_character_sheet_repr(self):
-        return_string = "%s: " % self.get_name()
-        addl_string = "%s %d" % (type(self).default_plain_text, self.get_rank())
-        """Shadow Hankyū: Subtle 2 Precise Ranged Damage 8, Accurate 8, Affects Corporeal 8, Indirect 4 Limited to (from and to shadows) (37 points)"""
-
-        # The magic happens
-
-        # Set power range
-
-        if self.range != type(self).default_range:
-            loop_index = 0
-            power_index = None
-            default_index = None
-
-            value_list = value_enums.Power_Range_Names.val_list
-            name_list = value_enums.Power_Range_Names.name_list
-
-            for entry in value_list:
-                if self.range == entry:
-                    power_index = entry
-                if type(self).default_range == entry:
-                    default_index = entry
-                loop_index += 1
-
-            check_range = None
-            if power_index > default_index:
-                check_range = range(default_index+1, power_index)
-            elif power_index < default_index:
-                check_range = range(power_index, default_index)
-
-            expansion_string = ""
-
-            for index in check_range:
-                if self.modifiers[name_list[index]] == self.modifiers[name_list[index+1]]:
-                    continue
-                else:
-                    if self.modifiers[name_list[index]] == self.get_rank():
-                        expansion_string = expansion_string + "%s " % (name_list[index])
-                    else:
-                        expansion_string = expansion_string + "%s %d " % (name_list[index], self.modifiers[name_list[index]])
-
-            addl_string = expansion_string + addl_string
-            if self.modifiers[name_list[power_index]] == self.get_rank():
-                addl_string = "%s " % (name_list[self.range]) + addl_string
-            else:
-                addl_string = "%s %d " % (name_list[self.range], self.modifiers[name_list[power_index]]) + addl_string
-
-        return_string = return_string + addl_string + " (%d point" % self.get_points()
-        if self.points != 1:
-            return_string += "s"
-        return_string += ")\n"
-        return return_string
-    
-    def get_points_in_power(self):
-        return self.points_in_power
-
-class Attack(Power):
-    points_per_rank_default = 1
-    default_range = value_enums.Power_Range.CLOSE
-    default_action = value_enums.Power_Action.STANDARD
-    default_duration = value_enums.Power_Duration.INSTANT
-
-    default_plain_text = "Damage"
-    
-    allowed_modifiers = [modifiers.Increased_Range]
-
-    def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
-        super().__init__(name, "Attack")
-        self.attack_skill = skill
-        self.rank = rank
-        self.defense = defense
-        self.resistance = resistance
-        self.recovery = recovery
-        self.modifiers = modifier_values
-
-        self.points = rank
-
-        self.base_power_points = rank
-        
-        self.points_per_rank = 1.0
-
-        self.points_per_rank_numerator = 1
-        self.points_per_rank_denominator = 1
-
-        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
-        
+    def process_modifiers(self):
         for possible_modifier_class in type(self).allowed_modifiers:
             if possible_modifier_class.modifier_list_type == True:
                 modifier_base = possible_modifier_class.get_current_power_value(self)
@@ -163,8 +81,6 @@ class Attack(Power):
                     modifier_index += 1
 
                 for val in range(modifier_index+1,max_modifier_index+1):
-#                    print("DEADBEEF")
-#                    print(val)
                     val_index = val
                     if text_list[val] not in self.modifiers:
                         self.modifiers[text_list[val]] = 0
@@ -182,6 +98,95 @@ class Attack(Power):
                         new_modifier = possible_modifier_class(self, mod_val)
                         self.power_modifiers.append(new_modifier)
 
+
+    def repr_process_range(self, altered_value, default_value, value_list, name_list):
+        addl_string = ""
+        if altered_value != default_value:
+            loop_index = 0
+            power_index = None
+            default_index = None
+
+            for entry in value_list:
+                if altered_value == entry:
+                    power_index = entry
+                if default_value == entry:
+                    default_index = entry
+                loop_index += 1
+
+            check_range = None
+            if power_index > default_index:
+                check_range = range(default_index+1, power_index)
+            elif power_index < default_index:
+                check_range = range(power_index, default_index)
+
+            expansion_string = ""
+
+            for index in check_range:
+                if self.modifiers[name_list[index]] == self.modifiers[name_list[index+1]]:
+                    continue
+                else:
+                    if self.modifiers[name_list[index]] == self.get_rank():
+                        expansion_string = expansion_string + "%s " % (name_list[index])
+                    else:
+                        expansion_string = expansion_string + "%s %d " % (name_list[index], self.modifiers[name_list[index]])
+
+            addl_string = expansion_string + addl_string
+            if self.modifiers[name_list[power_index]] == self.get_rank():
+                addl_string = "%s " % (name_list[altered_value]) + addl_string
+            else:
+                addl_string = "%s %d " % (name_list[altered_value], self.modifiers[name_list[power_index]]) + addl_string
+        return addl_string
+
+
+    def get_character_sheet_repr(self):
+        return_string = "%s: " % self.get_name()
+        addl_string = "%s %d" % (type(self).default_plain_text, self.get_rank())
+        """Shadow Hankyū: Subtle 2 Precise Ranged Damage 8, Accurate 8, Affects Corporeal 8, Indirect 4 Limited to (from and to shadows) (37 points)"""
+
+        # The magic happens
+
+        # Set power range
+
+        addl_string = self.repr_process_range(self.range, type(self).default_range, value_enums.Power_Range_Names.val_list, value_enums.Power_Range_Names.name_list) + addl_string
+
+        addl_string = self.repr_process_range(self.duration, type(self).default_duration, value_enums.Power_Duration_Names.val_list, value_enums.Power_Duration_Names.name_list) + addl_string
+
+        return_string = return_string + addl_string + " (%d point" % self.get_points()
+        if self.points != 1:
+            return_string += "s"
+        return_string += ")\n"
+        return return_string
+    
+    def get_points_in_power(self):
+        return self.points_in_power
+
+class Attack(Power):
+    points_per_rank_default = 1
+    default_range = value_enums.Power_Range.CLOSE
+    default_action = value_enums.Power_Action.STANDARD
+    default_duration = value_enums.Power_Duration.INSTANT
+
+    default_plain_text = "Damage"
+    
+    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration]
+
+    def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
+        super().__init__(name, "Attack")
+        self.attack_skill = skill
+        self.rank = rank
+        self.defense = defense
+        self.resistance = resistance
+        self.recovery = recovery
+        self.modifiers = modifier_values
+        self.points = rank
+        self.base_power_points = rank
+        self.points_per_rank = 1.0
+        self.points_per_rank_numerator = 1
+        self.points_per_rank_denominator = 1
+
+        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
+        
+        self.process_modifiers()
 
         if ('Multiattack') in self.modifiers:
             if self.modifiers['Multiattack'] == "default":

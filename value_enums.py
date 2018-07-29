@@ -31,3 +31,7 @@ class Power_Range(enum.IntEnum):
 class Power_Range_Names:
     name_list = ["","Personal", "Close", "Ranged", "Perception-Ranged"]
     val_list = [0,Power_Range.PERSONAL,Power_Range.CLOSE,Power_Range.RANGED,Power_Range.PERCEPTION]
+
+class Power_Duration_Names:
+    name_list = ["","Instant","Sustained","Concentration","Continuous","Permanent"]
+    val_list = [0,Power_Duration.INSTANT,Power_Duration.SUSTAINED,Power_Duration.CONCENTRATION,Power_Duration.CONTINUOUS,Power_Duration.PERMANENT]

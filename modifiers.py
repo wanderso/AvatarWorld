@@ -57,6 +57,47 @@ class Modifier:
     def get_default_value(cls, power):
         return power.get_rank()
 
+    def apply(self):
+        if self.applied:
+            return
+        for power in self.associated_powers:
+            self.when_applied(power)
+        self.adjust_points()
+        self.applied = True
+
+    def remove(self):
+        if not self.applied:
+            return
+        for power in self.associated_powers:
+            self.when_removed(power)
+        self.adjust_points(pos=False)
+        self.applied = False
+
+    def when_applied(self, power):
+        pass
+
+    def when_removed(self, power):
+        pass
+
+    def adjust_points(self, pos=True):
+        pass
+
+    def adjust_points_per_rank(self, pos=True):
+        applied_already = (self.applied == True)
+        if applied_already:
+            remove()
+        for power in self.associated_powers:
+            pip = power.get_points_in_power()
+            pip.adjust_ppr_for_range(self.starting_rank,self.rank,self.ppr_modifiers,pos=pos)
+        if applied_already:
+            apply()
+
+    def apply_modifier_to_modifier(self, modifier):
+        pass
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        pass
 
 
 class Increased_Range(Modifier):
@@ -76,6 +117,8 @@ modifier makes it perception range."""
     modifier_needs_rank = True
     modifier_name = "Increased Range"
 
+
+
     modifier_list_type = True
 
     modifier_plain_text = ['Personal','Close','Ranged','Perception-Ranged']
@@ -90,50 +133,85 @@ modifier makes it perception range."""
         self.modifier_modifiers = []
         self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
         self.ppr = Increased_Range.points_per_rank_modifier
+        self.adjust_points = self.adjust_points_per_rank
         self.apply()
 
     def get_rank(self):
         return self.rank
 
-    def apply(self):
-        if self.applied:
-            return
-        for power in self.associated_powers:
-            if power.range < type(self).modifier_values[-1]:
-                power.range += 1
-        self.adjust_points_per_rank()
-        self.applied = True
+    def when_applied(self, power):
+        if power.range < type(self).modifier_values[-1]:
+            power.range += 1
 
-    def remove(self):
-        if not self.applied:
-            return
-        for power in self.associated_powers:
-            if self.get_rank() == power.get_rank():
-                if power.range > type(self).modifier_values[0]:
-                    power.range -= 1
-        self.adjust_points_per_rank(pos=False)
-        self.applied = False
-
-    def get_points_per_rank(self):
-        return points_per_rank_modifier
-
-    def adjust_points_per_rank(self, pos=True):
-        applied_already = (self.applied == True)
-        if applied_already:
-            remove()
-        for power in self.associated_powers:
-            pip = power.get_points_in_power()
-            pip.adjust_ppr_for_range(self.starting_rank,self.rank,self.ppr_modifiers,pos=pos)
-        if applied_already:
-            apply()
+    def when_removed(self, power):
+        if power.range > type(self).modifier_values[0]:
+            power.range -= 1
 
     @classmethod
     def get_current_power_value(cls, power):
         return power.get_range()
-#        return self.power
 
-    def apply_modifier_to_modifier(self, modifier):
-        pass
+
+class Increased_Duration(Modifier):
+    """Effects have a standard duration: instant, sustained, continuous,
+or permanent. See Duration at the start of this
+chapter for details. This modifier increases an effect’s duration.
+Choose one of the following options:
+• Concentration: When applied to an instant duration
+effect, this modifier makes it maintainable with concentration,
+taking a standard action each turn to do
+so. If the effect requires an initial attack check, no additional
+attack check is needed to maintain it on a target,
+but subsequent rounds of effect also do not benefit
+from critical hits. The target is affected on each
+of the effect user’s turns, making a normal resistance
+check (if any). Once the user stops concentrating for
+any reason, the effect ends and the target recovers
+normally, including resistance checks to remove ongoing
+effects.
+• Continuous: When applied to a sustained duration
+effect, this modifier makes it continuous"""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Increased Duration"
+
+    modifier_list_type = True
+
+    modifier_plain_text = ['Instant','Sustained','Concentration','Continuous','Permanent']
+    modifier_values = [value_enums.Power_Duration.INSTANT,value_enums.Power_Duration.SUSTAINED,value_enums.Power_Duration.CONCENTRATION,value_enums.Power_Duration.CONTINUOUS,value_enums.Power_Duration.PERMANENT]
+
+    modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.rank = rank
+        self.starting_rank = starting_rank
+        self.modifier_modifiers = []
+        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
+        self.ppr = Increased_Range.points_per_rank_modifier
+        self.adjust_points = self.adjust_points_per_rank
+        self.apply()
+
+    def get_rank(self):
+        return self.rank
+
+    def when_applied(self, power):
+        if power.duration == value_enums.Power_Duration.INSTANT:
+            power.duration = value_enums.Power_Duration.CONCENTRATION
+        elif power.duration == value_enums.Power_Duration.SUSTAINED:
+            power.duration = value_enums.Power_Duration.CONTINUOUS
+
+    def when_removed(self, power):
+        if power.duration == value_enums.Power_Duration.CONCENTRATION:
+            power.duration = value_enums.Power_Duration.INSTANT
+        elif power.duration == value_enums.Power_Duration.CONTINUOUS:
+            power.duration = value_enums.Power_Duration.SUSTAINED
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        return power.get_duration()
+
+
 
 
 extras = """Accurate 1 flat per rank +2 attack check bonus per rank
