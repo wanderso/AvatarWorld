@@ -44,6 +44,8 @@ class Modifier:
         self.modifier_cost = 0
         self.modifier_modifiers = []
         self.applied = False
+        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
+        self.ppr = Increased_Range.points_per_rank_modifier
 
     @classmethod
     def get_current_power_value(cls, power):
@@ -99,6 +101,9 @@ class Modifier:
     def get_current_power_value(cls, power):
         pass
 
+    def represent_modifier_on_sheet(self, power):
+        pass
+
 
 class Increased_Range(Modifier):
     """Effects have a standard range: personal, close, ranged, or
@@ -128,13 +133,13 @@ modifier makes it perception range."""
 
     def __init__(self, power, rank, starting_rank=0):
         super().__init__(power)
+        self.power_original_value = type(self).get_current_power_value(power)
         self.rank = rank
         self.starting_rank = starting_rank
-        self.modifier_modifiers = []
-        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
-        self.ppr = Increased_Range.points_per_rank_modifier
         self.adjust_points = self.adjust_points_per_rank
         self.apply()
+        self.power_new_value = type(self).get_current_power_value(power)
+
 
     def get_rank(self):
         return self.rank
@@ -150,6 +155,9 @@ modifier makes it perception range."""
     @classmethod
     def get_current_power_value(cls, power):
         return power.get_range()
+
+    def represent_modifier_on_sheet(self, power):
+        pass
 
 
 class Increased_Duration(Modifier):
@@ -184,13 +192,13 @@ effect, this modifier makes it continuous"""
 
     def __init__(self, power, rank, starting_rank=0):
         super().__init__(power)
+        self.power_original_value = type(self).get_current_power_value(power)
         self.rank = rank
         self.starting_rank = starting_rank
         self.modifier_modifiers = []
-        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
-        self.ppr = Increased_Range.points_per_rank_modifier
         self.adjust_points = self.adjust_points_per_rank
         self.apply()
+        self.power_new_value = type(self).get_current_power_value(power)
 
     def get_rank(self):
         return self.rank
@@ -237,6 +245,7 @@ active."""
 
     def __init__(self, power, rank, starting_rank=0):
         super().__init__(power)
+        self.power_original_value = type(self).get_current_power_value(power)
         self.rank = rank
         self.starting_rank = starting_rank
         self.modifier_modifiers = []
@@ -244,6 +253,7 @@ active."""
         self.ppr = Increased_Range.points_per_rank_modifier
         self.adjust_points = self.adjust_points_per_rank
         self.apply()
+        self.power_new_value = type(self).get_current_power_value(power)
 
     def get_rank(self):
         return self.rank
@@ -279,9 +289,9 @@ Extended Range 1 flat per rank Doubles ranged effect’s distances per rank.
 Feature 1 flat per rank Adds a minor capability or benefit to an effect.
 Homing 1 flat per rank Attack effect gains additional chances to hit.
 Impervious +1 per rank Resistance ignores effects with difficulty modifier of half extra rank or less.
-Increased Duration +1 per rank Improves effect’s duration.
+XXX Increased Duration +1 per rank Improves effect’s duration. XXX
 Increased Mass 1 flat per rank Effect can carry a greater amount of mass.
-Increased Range +1 per rank Improves effect’s range.
+XXX Increased Range +1 per rank Improves effect’s range. XXX
 Incurable 1 flat point Effect cannot be countered or removed using Healing or Regeneration.
 Indirect 1 flat per rank Effect can originate from a point other than the user.
 Innate 1 flat point Effect cannot be Nullified.
@@ -291,7 +301,7 @@ Multiattack +1 per rank Effect can hit multiple targets or a single target multi
 Penetrating 1 flat per rank Effect overcomes Impervious Resistance.
 Precise 1 flat point Effect can perform delicate and precise tasks.
 Reach 1 flat per rank Extend effect’s reach by 5 feet per rank.
-Reaction +1 or 3 per rank Changes effect’s required action to reaction.
+XXX Reaction +1 or 3 per rank Changes effect’s required action to reaction. XXX
 Reversible 1 flat point Effect can be removed at will as a free action.
 Ricochet 1 flat per rank Attacker can bounce effect to change direction.
 Secondary Effect +1 per rank Instant effect works on the target twice.
