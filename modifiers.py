@@ -41,6 +41,8 @@ class Modifier:
 
     def __init__(self, power):
         self.associated_powers = [power]
+        self.power_original_value = None
+        self.power_new_value = None
         self.modifier_cost = 0
         self.modifier_modifiers = []
         self.applied = False
@@ -101,8 +103,26 @@ class Modifier:
     def get_current_power_value(cls, power):
         pass
 
-    def represent_modifier_on_sheet(self, power):
-        pass
+    def get_power_original_value(self):
+        return self.power_original_value
+
+    def get_power_new_value(self):
+        return self.power_new_value
+
+    def represent_modifier_on_sheet_without_rank(self, power):
+        retstr = "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
+        return retstr
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        retstr = ""
+        for mod in self.modifier_modifiers:
+            retstr += " %s" % mod.represent_modifier_on_sheet_with_rank(power)
+        retstr += "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
+        if self.starting_rank != 0:
+            retstr = "%s %d-%d" % (retstr, self.starting_rank, self.rank)
+        else:
+            retstr = "%s %d" % (retstr, self.rank)
+        return retstr
 
 
 class Increased_Range(Modifier):
@@ -156,8 +176,9 @@ modifier makes it perception range."""
     def get_current_power_value(cls, power):
         return power.get_range()
 
-    def represent_modifier_on_sheet(self, power):
-        pass
+
+
+
 
 
 class Increased_Duration(Modifier):

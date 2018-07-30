@@ -696,6 +696,14 @@ class Character:
                 if rank_val != 1:
                     addl_str += 's'
                 addl_str += ")"
+
+            for key in self.powers:
+                pow = self.powers[key]
+                if pow.affects_defense(entry) != False:
+                    addl_str += " + (%d from %s)" % (pow.affects_defense(entry), pow.get_name())
+
+            # add power search here
+
             addl_str += "\n"
             return_string += addl_str
 
@@ -872,7 +880,6 @@ def menlo_cer_sim():
     print(men.print_character_sheet())
     print(srk.print_character_sheet())
 
-    print(vm.power_modifiers)
 
 
 def avatar_caus_sim():

@@ -1,6 +1,7 @@
 import modifiers
 import points
 import value_enums
+import defenses
 
 
 class Power:
@@ -54,6 +55,9 @@ class Power:
 
     def get_points(self):
         return self.get_points_in_power().get_points_total()
+
+    def affects_defense(self,defense):
+        return False
 
     def process_modifiers(self):
         for possible_modifier_class in type(self).allowed_modifiers:
@@ -141,22 +145,87 @@ class Power:
         return addl_string
 
 
+    def repr_process_modifiers(self):
+        modifier_lists = {}
+        modifier_values = {}
+        text_display = {}
+
+        for modifier in self.power_modifiers:
+            mod_class = type(modifier).modifier_name
+            if mod_class not in modifier_lists:
+                modifier_lists[mod_class] = [modifier]
+            else:
+                modifier_lists[mod_class].append(modifier)
+
+        for mod_type in modifier_lists:
+            mod_class = type(modifier_lists[mod_type][0])
+            mod_options = mod_class.get_modifier_options()
+            mod_plain_text = mod_options.get_plain_text_names_list()
+            mod_values = mod_options.get_values_list()
+            if mod_class.modifier_list_type == True:
+                power_values = [0] * len(mod_plain_text)
+                text_values_with_rank = [""] * len(mod_plain_text)
+                text_values_without_rank = [""] * len(mod_plain_text)
+                for entry in modifier_lists[mod_type]:
+                    index = entry.get_power_new_value()
+                    rank_val = entry.get_rank()
+                    for i in range(0, index+1):
+                        if power_values[i] < rank_val:
+                            power_values[i] = rank_val
+                            text_values_with_rank[i] = entry.represent_modifier_on_sheet_with_rank(self)
+                            text_values_without_rank[i] = entry.represent_modifier_on_sheet_without_rank(self)
+                modifier_values[mod_type] = power_values
+                max_power_val = 0
+                index = len(power_values)
+                repr_string = ""
+                for _ in range(0,len(power_values)):
+                    index -= 1
+                    if power_values[index] > max_power_val:
+                        max_power_val = power_values[index]
+                        if power_values[index] == self.get_rank():
+                            repr_string += (" %s" % (text_values_without_rank[index]))
+                        else:
+                            repr_string += (" %s" % (text_values_with_rank[index]))
+            elif mod_class.modifier_list_type == False:
+                pass
+
+            text_display[mod_type] = repr_string
+
+        return (text_display)
+
     def get_character_sheet_repr(self):
-        return_string = "%s: " % self.get_name()
-        addl_string = "%s %d" % (type(self).default_plain_text, self.get_rank())
+        return_string = "%s:" % self.get_name()
+        addl_string = " %s %d" % (type(self).default_plain_text, self.get_rank())
         """Shadow Hankyū: Subtle 2 Precise Ranged Damage 8, Accurate 8, Affects Corporeal 8, Indirect 4 Limited to (from and to shadows) (37 points)"""
 
         # The magic happens
 
         # Set power range
 
-        addl_string = self.repr_process_range(self.range, type(self).default_range, value_enums.Power_Range_Names.val_list, value_enums.Power_Range_Names.name_list) + addl_string
+        modifier_strings = self.repr_process_modifiers()
 
-        addl_string = self.repr_process_range(self.duration, type(self).default_duration, value_enums.Power_Duration_Names.val_list, value_enums.Power_Duration_Names.name_list) + addl_string
+        affects_range = ['Increased Range']
+        affects_duration = ['Increased Duration']
+        affects_action = ['Increased Action']
 
-        addl_string = self.repr_process_range(self.action, type(self).default_action,
-                                              value_enums.Power_Action_Names.val_list,
-                                              value_enums.Power_Action_Names.name_list) + addl_string
+        before_modifiers = []
+        after_modifiers = []
+
+        process_order = [after_modifiers,affects_range,affects_duration,affects_action,before_modifiers]
+
+        for mod_list in process_order:
+            for mod in mod_list:
+                if mod in modifier_strings:
+                    addl_string = modifier_strings[mod] + addl_string
+
+
+#        addl_string = self.repr_process_range(self.range, type(self).default_range, value_enums.Power_Range_Names.val_list, value_enums.Power_Range_Names.name_list) + addl_string
+
+#        addl_string = self.repr_process_range(self.duration, type(self).default_duration, value_enums.Power_Duration_Names.val_list, value_enums.Power_Duration_Names.name_list) + addl_string
+
+#        addl_string = self.repr_process_range(self.action, type(self).default_action,
+#                                             value_enums.Power_Action_Names.val_list,
+#                                             value_enums.Power_Action_Names.name_list) + addl_string
 
         return_string = return_string + addl_string + " (%d point" % self.get_points()
         if self.points != 1:
@@ -243,6 +312,11 @@ class Protection(Power):
             return True
             # So long as they've got a free action!
 
+    def affects_defense(self,defense):
+        if defense != defenses.Toughness:
+            return False
+        else:
+            return self.rank
 
     def get_character_sheet_repr(self):
         return_string = "%s: " % self.get_name()
