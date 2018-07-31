@@ -8,7 +8,92 @@ class Rank_Range:
         self.rank_range = [[starting_rank, rank]]
 
     def add_range(self, starting_rank, ending_rank):
-        pass
+        rank_index = 0
+        edited = False
+        for entry in self.rank_range:
+            start_entry = entry[0]
+            end_entry = entry[1]
+            if starting_rank > end_entry:
+                pass
+            elif starting_rank < start_entry:
+                if ending_rank < start_entry:
+                    self.rank_range.insert(rank_index,[starting_rank,ending_rank])
+                    edited = True
+                    break
+                elif ending_rank < end_entry:
+                    self.rank_range[rank_index][0] = starting_rank
+                    edited = True
+                    break
+                else:
+                    self.rank_range[rank_index][0] = starting_rank
+                    self.rank_range[rank_index][1] = ending_rank
+                    edited = True
+                    break
+            elif starting_rank > start_entry:
+                if ending_rank > end_entry:
+                    self.rank_range[rank_index][1] = ending_rank
+                    edited = True
+                    break
+            rank_index += 1
+        if edited == False:
+            self.rank_range.append([starting_rank,ending_rank])
+        self.clean_range()
+
+    def remove_range(self, starting_rank, ending_rank):
+        rank_index = 0
+        restart_loop = True
+        while restart_loop == True:
+            for entry in self.rank_range:
+                print (self.rank_range)
+                start_entry = entry[0]
+                end_entry = entry[1]
+                if starting_rank > start_entry:
+                    if starting_rank > end_entry:
+                        pass
+                    elif ending_rank >= end_entry:
+                        self.rank_range[rank_index][1] = starting_rank
+                    else:
+                        self.rank_range[rank_index][1] = starting_rank
+                        self.rank_range.pop(rank_index)
+                        self.add_range(ending_rank,end_entry)
+                        restart_loop = True
+                        break
+                elif starting_rank < start_entry:
+                    if ending_rank > start_entry:
+                        if ending_rank > end_entry:
+                            self.rank_range.pop(rank_index)
+                            restart_loop = True
+                            break
+                        else:
+                            self.rank_range[rank_index][0] = ending_rank
+                rank_index += 1
+
+        self.clean_range()
+
+    def clean_range(self):
+        cleanup_progress = True
+        while cleanup_progress:
+            edited_this_run = False
+            for index in range(0,len(self.rank_range)-1):
+                i2 = index+1
+                if self.rank_range[index][1] > self.rank_range[i2][0]:
+                    if self.rank_range[index][1] >= self.rank_range[i2][1]:
+                        self.rank_range.pop(i2)
+                        edited_this_run = True
+                        break
+                    else:
+                        self.rank_range[index][1] = self.rank_range[i2][1]
+                        self.rank_range.pop(i2)
+                        edited_this_run = True
+                        break
+                elif self.rank_range[index][1] == self.rank_range[i2][0]:
+                    self.rank_range[index][1] = self.rank_range[i2][1]
+                    self.rank_range.pop(i2)
+                    edited_this_run = True
+                    break
+            if edited_this_run == False:
+                cleanup_progress = False
+
 
 class Points_Per_Rank:
     def __init__(self, x=1):
@@ -146,3 +231,20 @@ if __name__ == "__main__":
     print(pip.ppr_list)
 
     print(pip.get_points_total())
+
+
+
+    rnge = Rank_Range(5,starting_rank=3)
+    rnge.add_range(1,2)
+    rnge.add_range(7,10)
+    print (rnge.rank_range)
+    rnge.add_range(0,10)
+    print (rnge.rank_range)
+    rnge.add_range(5,13)
+    print (rnge.rank_range)
+    rnge.add_range(15,18)
+    print (rnge.rank_range)
+    rnge.add_range(12,15)
+    print (rnge.rank_range)
+    rnge.remove_range(12,15)
+    print (rnge.rank_range)

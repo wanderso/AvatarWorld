@@ -368,6 +368,7 @@ that opponent."""
     def get_current_power_value(cls, power):
         for mod in power.get_modifiers():
             if mod.get_class_plaintext_name() == self.get_class_plaintext_name():
+                pass
 
 
 
