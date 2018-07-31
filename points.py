@@ -2,6 +2,14 @@ import math
 import fractions
 import decimal
 
+
+class Rank_Range:
+    def __init__(self, rank, starting_rank=0):
+        self.rank_range = [[starting_rank, rank]]
+
+    def add_range(self, starting_rank, ending_rank):
+        pass
+
 class Points_Per_Rank:
     def __init__(self, x=1):
         self.x = x

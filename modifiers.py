@@ -124,6 +124,9 @@ class Modifier:
             retstr = "%s %d" % (retstr, self.rank)
         return retstr
 
+    def get_class_plaintext_name(self):
+        return type(self).modifier_name
+
 
 class Increased_Range(Modifier):
     """Effects have a standard range: personal, close, ranged, or
@@ -291,6 +294,80 @@ active."""
     def get_current_power_value(cls, power):
         return power.get_action()
 
+class Multiattack(Modifier):
+    """A Multiattack effect allows you to hit multiple targets, or a
+single target multiple times, in the same standard action.
+Multiattack can apply to any effect requiring an attack
+check. There are three ways in which a Multiattack effect
+can be used:
+Single Target
+To use a Multiattack against a single target, make your
+attack check normally. If successful, increase the attack’s
+resistance check DC by +2 for two degrees of success, and
++5 for three or more. This circumstance bonus does not
+count against power level limits.
+If an Impervious Resistance would ignore the attack before
+any increase in the DC, then the attack still has no effect
+as usual; a volley of multiple shots is no more likely to
+penetrate Impervious Resistance than just one.
+Multiple Targets
+You can use Multiattack to hit multiple targets at once by
+“walking” or “spraying” the Multiattack across an arc. Roll
+one attack check per target in the arc. You suffer a penalty
+to each check equal to the total number of targets. So
+making a Multiattack against five targets is a –5 penalty
+to each attack check. If you miss one target, you may still
+attempt to hit the others.
+Covering Attack
+A Multiattack can provide cover for an ally. Take a standard
+action and choose an ally in your line of sight, who
+receives the benefits of cover against enemies in your
+line of sight and in range of your Multiattack. (You have
+to be able to shoot at them to get them to keep their
+heads down or this maneuver won’t work.) You cannot
+lay down a covering attack for an ally in close combat.
+An opponent can choose to ignore the cover provided
+by your covering attack at the cost of being automatically
+attacked by it; make a normal attack check to hit
+that opponent."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Multiattack"
+
+    modifier_list_type = False
+
+#    modifier_plain_text = value_enums.Power_Action_Names.name_list
+#    modifier_values = value_enums.Power_Action_Names.val_list
+
+#    modifier_options = Modifier_Options(modifier_plain_text, modifier_values)
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.power_original_value = type(self).get_current_power_value(power)
+        self.rank = rank
+        self.starting_rank = starting_rank
+        self.modifier_modifiers = []
+        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
+        self.ppr = Increased_Range.points_per_rank_modifier
+        self.adjust_points = self.adjust_points_per_rank
+        self.apply()
+        self.power_new_value = type(self).get_current_power_value(power)
+
+    def get_rank(self):
+        return self.rank
+
+    def when_applied(self, power):
+        if not power.get_value_in_extras_flaws(self):
+            power.add_value_to_extras_flaws(self)
+
+    def when_removed(self, power):
+        if power.get_value_in_extras_flaws(self):
+            power.remove_value_from_extras_flaws(self)
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        for mod in power.get_modifiers():
+            if mod.get_class_plaintext_name() == self.get_class_plaintext_name():
 
 
 

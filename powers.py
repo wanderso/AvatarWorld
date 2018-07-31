@@ -21,6 +21,7 @@ class Power:
         self.points = 0
         self.points_flat = 0
         self.power_modifiers = []
+        self.extras_flaws = []
         self.available = True
         self.active = True
         self.natural_power = False
@@ -41,11 +42,17 @@ class Power:
     def get_duration(self):
         return self.duration
 
-    def get_power_type(self):
-        return self.power_type
+    def get_extras_flaws(self):
+        return self.extras_flaws
+
+    def get_modifiers(self):
+        return self.power_modifiers
 
     def get_name(self):
         return self.name
+
+    def get_power_type(self):
+        return self.power_type
 
     def get_rank(self):
         return self.rank
@@ -58,6 +65,15 @@ class Power:
 
     def affects_defense(self,defense):
         return False
+
+    def get_value_in_extras_flaws(self, value):
+        return (value in self.extras_flaws)
+
+    def add_value_to_extras_flaws(self, value):
+        self.extras_flaws.append(value)
+
+    def remove_value_from_extras_flaws(self, value):
+        self.extras_flaws.remove(value)
 
     def process_modifiers(self):
         for possible_modifier_class in type(self).allowed_modifiers:
