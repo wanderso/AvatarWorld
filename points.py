@@ -40,22 +40,26 @@ class Rank_Range:
         self.clean_range()
 
     def remove_range(self, starting_rank, ending_rank):
-        rank_index = 0
         restart_loop = True
         while restart_loop == True:
+            rank_index = 0
+            edited_this_run = False
             for entry in self.rank_range:
-                print (self.rank_range)
                 start_entry = entry[0]
                 end_entry = entry[1]
                 if starting_rank > start_entry:
-                    if starting_rank > end_entry:
+                    if starting_rank >= end_entry:
                         pass
                     elif ending_rank >= end_entry:
                         self.rank_range[rank_index][1] = starting_rank
+                        self.add_range(start_entry,starting_rank)
+                        edited_this_run = True
                     else:
                         self.rank_range[rank_index][1] = starting_rank
                         self.rank_range.pop(rank_index)
                         self.add_range(ending_rank,end_entry)
+                        self.add_range(start_entry,starting_rank)
+                        edited_this_run = True
                         restart_loop = True
                         break
                 elif starting_rank < start_entry:
@@ -63,10 +67,14 @@ class Rank_Range:
                         if ending_rank > end_entry:
                             self.rank_range.pop(rank_index)
                             restart_loop = True
+                            edited_this_run = True
                             break
                         else:
                             self.rank_range[rank_index][0] = ending_rank
+                            edited_this_run = True
                 rank_index += 1
+            if edited_this_run == False:
+                restart_loop = False
 
         self.clean_range()
 
@@ -248,3 +256,15 @@ if __name__ == "__main__":
     print (rnge.rank_range)
     rnge.remove_range(12,15)
     print (rnge.rank_range)
+
+    rnge.remove_range(10,16)
+    print (rnge.rank_range)
+
+    rnge.remove_range(12,15)
+    print (rnge.rank_range)
+
+    rnge.remove_range(5,12)
+    print (rnge.rank_range)
+
+
+
