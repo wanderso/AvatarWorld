@@ -28,6 +28,12 @@ class Power_Range(enum.IntEnum):
     RANGED = 3
     PERCEPTION = 4
 
+class Power_Secondary_Effect(enum.IntEnum):
+    BASE = 1
+    SECONDARY_EFFECT = 2
+    TERTIARY_EFFECT = 3
+    PERMANENT_EFFECT = 4
+
 class Power_Range_Names:
     name_list = ["","Personal", "Close", "Ranged", "Perception-Ranged"]
     val_list = [0,Power_Range.PERSONAL,Power_Range.CLOSE,Power_Range.RANGED,Power_Range.PERCEPTION]
@@ -40,3 +46,6 @@ class Power_Action_Names:
     name_list = ["","Standard","Move","Free","Reaction","None"]
     val_list = [0,Power_Action.STANDARD,Power_Action.MOVE,Power_Action.FREE,Power_Action.REACTION,Power_Action.NONE]
 
+class Power_Secondary_Effect_Names:
+    name_list = ["","","Secondary Effect","Tertiary Effect","Permanent Effect"]
+    val_list = [0,Power_Secondary_Effect.BASE,Power_Secondary_Effect.SECONDARY_EFFECT,Power_Secondary_Effect.TERTIARY_EFFECT,Power_Secondary_Effect.PERMANENT_EFFECT]

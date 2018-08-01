@@ -99,6 +99,8 @@ class Power:
                     modifier_index += 1
                 modifier_index = 0
                 for entry in val_list:
+                    print(modifier_base)
+                    #Here's the problem.
                     if entry == modifier_base:
                         break
                     modifier_index += 1
@@ -127,7 +129,6 @@ class Power:
                         self.modifiers[entry] = possible_modifier_class.get_default_value(self)
                     new_modifier = possible_modifier_class(self, self.modifiers[entry])
                     self.power_modifiers.append(new_modifier)
-                #OK, here's the chunk of code we need to add
 
 
     def repr_process_range(self, altered_value, default_value, value_list, name_list):
@@ -237,10 +238,10 @@ class Power:
 
         affects_range = ['Increased Range']
         affects_duration = ['Increased Duration']
-        affects_action = ['Increased Action']
+        affects_action = ['Increased Action','Sustained']
 
-        before_modifiers = ['Multiattack','Selective']
-        after_modifiers = []
+        before_modifiers = ['Multiattack','Selective','Sleep','Contagious']
+        after_modifiers = ['Secondary Effect']
 
         process_order = [after_modifiers,affects_range,affects_duration,affects_action,before_modifiers]
 
@@ -275,7 +276,7 @@ class Attack(Power):
 
     default_plain_text = "Damage"
     
-    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack, modifiers.Selective]
+    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack, modifiers.Selective, modifiers.Sleep, modifiers.Contagious, modifiers.Secondary_Effect]
 
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")
@@ -288,8 +289,6 @@ class Attack(Power):
         self.points = rank
         self.base_power_points = rank
         self.points_per_rank = 1.0
-        self.points_per_rank_numerator = 1
-        self.points_per_rank_denominator = 1
 
         self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
         
@@ -308,15 +307,23 @@ class Attack(Power):
         return self.recovery
 
 class Protection(Power):
-    def __init__(self, name, rank, modifiers={}):
+    points_per_rank_default = 1
+    default_range = value_enums.Power_Range.PERSONAL
+    default_action = value_enums.Power_Action.NONE
+    default_duration = value_enums.Power_Duration.PERMANENT
+
+    default_plain_text = "Protection"
+
+    allowed_modifiers = [modifiers.Sustained]
+
+    def __init__(self, name, rank, modifier_values={}):
         super().__init__(name, "Protection")
         self.rank = rank
         self.points = rank
         self.points_per_rank = 1.0
-        self.modifiers = modifiers
-        self.duration = value_enums.Power_Duration.PERMANENT
-        self.action = value_enums.Power_Action.NONE
+        self.modifiers = modifier_values
         self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
+        self.process_modifiers()
 
     def get_rank(self):
         return self.rank
@@ -326,20 +333,9 @@ class Protection(Power):
             return True
         elif self.duration == value_enums.Power_Duration.SUSTAINED:
             return True
-            # So long as they've got a free action!
 
     def affects_defense(self,defense):
         if defense != defenses.Toughness:
             return False
         else:
             return self.rank
-
-    def get_character_sheet_repr(self):
-        return_string = "%s: " % self.get_name()
-        addl_string = "Protection %d" % self.get_rank()
-
-        return_string = return_string + addl_string + " (%d point" % self.points
-        if self.points != 1:
-            return_string += "s"
-        return_string += ")\n"
-        return return_string
