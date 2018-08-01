@@ -47,7 +47,17 @@ class Modifier:
         self.modifier_modifiers = []
         self.applied = False
         self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
-        self.ppr = Increased_Range.points_per_rank_modifier
+        self.ppr = type(self).points_per_rank_modifier
+
+    def power_single_entry_per_rank_init(self, starting_rank, rank):
+        power = self.associated_powers[0]
+        self.power_original_value = type(self).get_current_power_value(power)
+        self.range_val = points.Rank_Range(rank, starting_rank=starting_rank)
+        self.adjust_points = self.adjust_points_per_rank
+        self.apply()
+        self.power_new_value = type(self).get_current_power_value(power)
+
+
 
     @classmethod
     def get_current_power_value(cls, power):
@@ -60,6 +70,15 @@ class Modifier:
     @classmethod
     def get_default_value(cls, power):
         return power.get_rank()
+
+    def get_rank_range(self):
+        return self.range_val
+
+    def get_starting_rank(self):
+        return self.range_val.get_min()
+
+    def get_rank(self):
+        return self.range_val.get_max()
 
     def apply(self):
         if self.applied:
@@ -92,7 +111,9 @@ class Modifier:
             remove()
         for power in self.associated_powers:
             pip = power.get_points_in_power()
-            pip.adjust_ppr_for_range(self.starting_rank,self.rank,self.ppr_modifiers,pos=pos)
+            rr = self.get_rank_range()
+            for entry in rr:
+                pip.adjust_ppr_for_range(entry[0],entry[1],self.ppr_modifiers,pos=pos)
         if applied_already:
             apply()
 
@@ -110,7 +131,11 @@ class Modifier:
         return self.power_new_value
 
     def represent_modifier_on_sheet_without_rank(self, power):
-        retstr = "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
+        retstr = ""
+        if type(self).modifier_list_type == True:
+            retstr = "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
+        else:
+            retstr = "%s" % type(self).modifier_name
         return retstr
 
     def represent_modifier_on_sheet_with_rank(self, power):
@@ -118,10 +143,10 @@ class Modifier:
         for mod in self.modifier_modifiers:
             retstr += " %s" % mod.represent_modifier_on_sheet_with_rank(power)
         retstr += "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
-        if self.starting_rank != 0:
-            retstr = "%s %d-%d" % (retstr, self.starting_rank, self.rank)
+        if self.get_starting_rank() != 0:
+            retstr = "%s %d-%d" % (retstr, self.get_starting_rank(), self.get_rank())
         else:
-            retstr = "%s %d" % (retstr, self.rank)
+            retstr = "%s %d" % (retstr, self.get_rank())
         return retstr
 
     @classmethod
@@ -145,9 +170,6 @@ modifier makes it perception range."""
     points_per_rank_modifier = 1
     modifier_needs_rank = True
     modifier_name = "Increased Range"
-
-
-
     modifier_list_type = True
 
     modifier_plain_text = value_enums.Power_Range_Names.name_list
@@ -157,16 +179,17 @@ modifier makes it perception range."""
 
     def __init__(self, power, rank, starting_rank=0):
         super().__init__(power)
-        self.power_original_value = type(self).get_current_power_value(power)
-        self.rank = rank
-        self.starting_rank = starting_rank
-        self.adjust_points = self.adjust_points_per_rank
-        self.apply()
-        self.power_new_value = type(self).get_current_power_value(power)
+        self.power_single_entry_per_rank_init(starting_rank, rank)
 
+
+    def get_starting_rank(self):
+        return self.range_val.get_min()
 
     def get_rank(self):
-        return self.rank
+        return self.range_val.get_max()
+
+    def get_rank_range(self):
+        return self.range_val
 
     def when_applied(self, power):
         if power.range < type(self).modifier_values[-1]:
@@ -207,7 +230,6 @@ effect, this modifier makes it continuous"""
     points_per_rank_modifier = 1
     modifier_needs_rank = True
     modifier_name = "Increased Duration"
-
     modifier_list_type = True
 
     modifier_plain_text = value_enums.Power_Duration_Names.name_list
@@ -217,16 +239,10 @@ effect, this modifier makes it continuous"""
 
     def __init__(self, power, rank, starting_rank=0):
         super().__init__(power)
-        self.power_original_value = type(self).get_current_power_value(power)
-        self.rank = rank
-        self.starting_rank = starting_rank
-        self.modifier_modifiers = []
-        self.adjust_points = self.adjust_points_per_rank
-        self.apply()
-        self.power_new_value = type(self).get_current_power_value(power)
+        self.power_single_entry_per_rank_init(starting_rank, rank)
 
-    def get_rank(self):
-        return self.rank
+    def get_rank_range(self):
+        return self.range_val
 
     def when_applied(self, power):
         if power.duration < type(self).modifier_values[-2]:
@@ -260,7 +276,6 @@ active."""
     points_per_rank_modifier = 1
     modifier_needs_rank = True
     modifier_name = "Increased Action"
-
     modifier_list_type = True
 
     modifier_plain_text = value_enums.Power_Action_Names.name_list
@@ -270,18 +285,10 @@ active."""
 
     def __init__(self, power, rank, starting_rank=0):
         super().__init__(power)
-        self.power_original_value = type(self).get_current_power_value(power)
-        self.rank = rank
-        self.starting_rank = starting_rank
-        self.modifier_modifiers = []
-        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
-        self.ppr = Increased_Range.points_per_rank_modifier
-        self.adjust_points = self.adjust_points_per_rank
-        self.apply()
-        self.power_new_value = type(self).get_current_power_value(power)
+        self.power_single_entry_per_rank_init(starting_rank, rank)
 
-    def get_rank(self):
-        return self.rank
+    def get_rank_range(self):
+        return self.range_val
 
     def when_applied(self, power):
         if power.action < type(self).modifier_values[-2]:
@@ -337,25 +344,12 @@ that opponent."""
 
     modifier_list_type = False
 
-#    modifier_plain_text = value_enums.Power_Action_Names.name_list
-#    modifier_values = value_enums.Power_Action_Names.val_list
-
-#    modifier_options = Modifier_Options(modifier_plain_text, modifier_values)
-
     def __init__(self, power, rank, starting_rank=0):
         super().__init__(power)
-        self.power_original_value = type(self).get_current_power_value(power)
-        self.rank = rank
-        self.starting_rank = starting_rank
-        self.modifier_modifiers = []
-        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
-        self.ppr = Increased_Range.points_per_rank_modifier
-        self.adjust_points = self.adjust_points_per_rank
-        self.apply()
-        self.power_new_value = type(self).get_current_power_value(power)
+        self.power_single_entry_per_rank_init(starting_rank, rank)
 
-    def get_rank(self):
-        return self.rank
+    def get_rank_range(self):
+        return self.range_val
 
     def when_applied(self, power):
         if not power.get_value_in_extras_flaws(self):
@@ -370,11 +364,49 @@ that opponent."""
         ret_rank = points.Rank_Range(0,0)
         for mod in power.get_modifiers():
             if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
-                r = mod.get_rank()
-                strt = mod.starting_rank
-                ret_rank.add_range(r,strt)
+                r = mod.get_rank_range()
+                ret_rank += r
         return ret_rank
 
+class Selective(Modifier):
+    """A resistible effect with this extra is discriminating, allowing
+you to decide who is and is not affected by it. This is
+most useful for area effects (see the Area extra). You must
+be able to accurately perceive a target in order to decide
+whether or not to affect it. For a degree of selectivity with
+non-resistible effects, use the Precise modifier."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Selective"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.power_single_entry_per_rank_init(starting_rank,rank)
+
+    def get_rank(self):
+        return self.rank
+
+    def get_rank_range(self):
+        return self.range_val
+
+    def when_applied(self, power):
+        if not power.get_value_in_extras_flaws(self):
+            power.add_value_to_extras_flaws(self)
+
+    def when_removed(self, power):
+        if power.get_value_in_extras_flaws(self):
+            power.remove_value_from_extras_flaws(self)
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        ret_rank = points.Rank_Range(0, 0)
+        for mod in power.get_modifiers():
+            if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
+                r = mod.get_rank_range()
+                ret_rank += r
+        return ret_rank
 
 
 
@@ -401,7 +433,7 @@ Indirect 1 flat per rank Effect can originate from a point other than the user.
 Innate 1 flat point Effect cannot be Nullified.
 Insidious 1 flat point Result of the effect is more difficult to detect.
 Linked 0 flat points Two or more effects work together as one.
-Multiattack +1 per rank Effect can hit multiple targets or a single target multiple times.
+XXX Multiattack +1 per rank Effect can hit multiple targets or a single target multiple times. XXX
 Penetrating 1 flat per rank Effect overcomes Impervious Resistance.
 Precise 1 flat point Effect can perform delicate and precise tasks.
 Reach 1 flat per rank Extend effect’s reach by 5 feet per rank.
@@ -409,7 +441,7 @@ XXX Reaction +1 or 3 per rank Changes effect’s required action to reaction. XX
 Reversible 1 flat point Effect can be removed at will as a free action.
 Ricochet 1 flat per rank Attacker can bounce effect to change direction.
 Secondary Effect +1 per rank Instant effect works on the target twice.
-Selective +1 per rank Resistible effect works only on the targets you choose.
+XXX Selective +1 per rank Resistible effect works only on the targets you choose. XXX
 Sleep +0 per rank Effect leaves targets asleep rather than incapacitated.
 Split 1 flat per rank Effect can split into multiple, smaller, effects.
 Subtle 1-2 flat points Effect is less noticeable (1 point) or not noticeable (2 points).

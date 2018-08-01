@@ -212,13 +212,13 @@ class Power:
                             repr_string += (" %s" % (text_values_with_rank[index]))
             elif mod_class.modifier_list_type == False:
                 mod_list = modifier_lists[mod_type]
-                #max_power_val = modifier_lists[index]
-                #if power_values[index] == self.get_rank():
-                #    repr_string += (" %s" % (text_values_without_rank[index]))
-                #else:
-                #    repr_string += (" %s" % (text_values_with_rank[index]))
-                # Here is where we need to proceed - TODO
-                pass
+                rr_pow = mod_class.get_current_power_value(self)
+                if rr_pow == points.Rank_Range(self.get_rank()):
+                    repr_string = (" %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self)))
+                    pass
+                else:
+                    repr_string = (" %s %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self), rr_pow))
+
 
             text_display[mod_type] = repr_string
 
@@ -239,7 +239,7 @@ class Power:
         affects_duration = ['Increased Duration']
         affects_action = ['Increased Action']
 
-        before_modifiers = ['Multiattack']
+        before_modifiers = ['Multiattack','Selective']
         after_modifiers = []
 
         process_order = [after_modifiers,affects_range,affects_duration,affects_action,before_modifiers]
@@ -275,7 +275,7 @@ class Attack(Power):
 
     default_plain_text = "Damage"
     
-    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack]
+    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack, modifiers.Selective]
 
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")
@@ -294,22 +294,6 @@ class Attack(Power):
         self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
         
         self.process_modifiers()
-
-        if ('Multiattack') in self.modifiers:
-            print("Deadbeef")
-            if self.modifiers['Multiattack'] == "default":
-                self.modifiers['Multiattack'] = rank
-#                self.adjust_points_per_rank(1)
-
-        if ('Selective') in self.modifiers:
-            if self.modifiers['Selective'] == "default":
-                self.modifiers['Selective'] = rank
-#                self.adjust_points_per_rank(1)
-
-        if ('Reaction') in self.modifiers:
-            if self.modifiers['Reaction'] == "default":
-                self.modifiers['Reaction'] = rank
-#                self.adjust_points_per_rank(3)
 
     def get_skill(self):
         return self.attack_skill

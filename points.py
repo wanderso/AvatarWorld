@@ -5,9 +5,66 @@ import decimal
 
 class Rank_Range:
     def __init__(self, rank, starting_rank=0):
-        self.rank_range = [[starting_rank, rank]]
+        if starting_rank > rank:
+            self.rank_range = [[rank, starting_rank]]
+        elif rank > starting_rank:
+            self.rank_range = [[starting_rank, rank]]
+        else:
+            self.rank_range = []
 
-    def add_range(self, starting_rank, ending_rank):
+    def __add__(self, other):
+        rr_new = Rank_Range(0)
+        for entry in self.rank_range:
+            rr_new.add_range(entry[0],entry[1])
+        for entry in other.rank_range:
+            rr_new.add_range(entry[0],entry[1])
+        return rr_new
+
+    def __sub__(self, other):
+        rr_new = Rank_Range(0)
+        for entry in self.rank_range:
+            rr_new.add_range(entry[0], entry[1])
+        for entry in other.rank_range:
+            rr_new.remove_range(entry[0], entry[1])
+        return rr_new
+
+    def __eq__(self, other):
+        return (self.rank_range == other.rank_range)
+
+    def __str__(self):
+        ret_str = ""
+        for entry in self.rank_range:
+            ret_str += "%d-%d, " % (entry[0], entry[1])
+        if len(ret_str) == 0:
+            pass
+        elif ret_str[0] == "0":
+            ret_str = ret_str[2:-2]
+        else:
+            ret_str = ret_str[:-2]
+        return ret_str
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+    def __next__(self):
+        if self.index >= len(self.rank_range):
+            raise StopIteration
+        self.index += 1
+        return self.rank_range[self.index-1]
+
+    def get_min(self):
+        return self.rank_range[0][0]
+
+    def get_max(self):
+        return self.rank_range[-1][-1]
+
+    def add_range(self, starting_rank_var, ending_rank_var):
+        starting_rank = starting_rank_var
+        ending_rank = ending_rank_var
+        if starting_rank > ending_rank:
+            starting_rank = ending_rank_var
+            ending_rank = starting_rank_var
         rank_index = 0
         edited = False
         for entry in self.rank_range:
@@ -39,7 +96,12 @@ class Rank_Range:
             self.rank_range.append([starting_rank,ending_rank])
         self.clean_range()
 
-    def remove_range(self, starting_rank, ending_rank):
+    def remove_range(self, starting_rank_var, ending_rank_var):
+        starting_rank = starting_rank_var
+        ending_rank = ending_rank_var
+        if starting_rank > ending_rank:
+            starting_rank = ending_rank_var
+            ending_rank = starting_rank_var
         restart_loop = True
         while restart_loop == True:
             rank_index = 0
@@ -251,20 +313,20 @@ if __name__ == "__main__":
     rnge.add_range(5,13)
     print (rnge.rank_range)
     rnge.add_range(15,18)
-    print (rnge.rank_range)
+    print(str(rnge))
     rnge.add_range(12,15)
-    print (rnge.rank_range)
+    print(str(rnge))
     rnge.remove_range(12,15)
-    print (rnge.rank_range)
-
+    print(str(rnge))
     rnge.remove_range(10,16)
-    print (rnge.rank_range)
-
+    print(str(rnge))
     rnge.remove_range(12,15)
-    print (rnge.rank_range)
-
+    print(str(rnge))
     rnge.remove_range(5,12)
-    print (rnge.rank_range)
-
+    print (str(rnge))
+    rnge2 = Rank_Range(8,starting_rank=10)
+    print (str(rnge2))
+    rnge3 = rnge + rnge2
+    print (str(rnge3))
 
 
