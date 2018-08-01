@@ -120,6 +120,14 @@ class Power:
                                     mod_val = ex_rank
                         new_modifier = possible_modifier_class(self, mod_val)
                         self.power_modifiers.append(new_modifier)
+            else:
+                entry = possible_modifier_class.get_class_plaintext_name()
+                if entry in self.modifiers:
+                    if self.modifiers[entry] == "default":
+                        self.modifiers[entry] = possible_modifier_class.get_default_value(self)
+                    new_modifier = possible_modifier_class(self, self.modifiers[entry])
+                    self.power_modifiers.append(new_modifier)
+                #OK, here's the chunk of code we need to add
 
 
     def repr_process_range(self, altered_value, default_value, value_list, name_list):
@@ -175,10 +183,10 @@ class Power:
 
         for mod_type in modifier_lists:
             mod_class = type(modifier_lists[mod_type][0])
-            mod_options = mod_class.get_modifier_options()
-            mod_plain_text = mod_options.get_plain_text_names_list()
-            mod_values = mod_options.get_values_list()
             if mod_class.modifier_list_type == True:
+                mod_options = mod_class.get_modifier_options()
+                mod_plain_text = mod_options.get_plain_text_names_list()
+                mod_values = mod_options.get_values_list()
                 power_values = [0] * len(mod_plain_text)
                 text_values_with_rank = [""] * len(mod_plain_text)
                 text_values_without_rank = [""] * len(mod_plain_text)
@@ -203,6 +211,13 @@ class Power:
                         else:
                             repr_string += (" %s" % (text_values_with_rank[index]))
             elif mod_class.modifier_list_type == False:
+                mod_list = modifier_lists[mod_type]
+                #max_power_val = modifier_lists[index]
+                #if power_values[index] == self.get_rank():
+                #    repr_string += (" %s" % (text_values_without_rank[index]))
+                #else:
+                #    repr_string += (" %s" % (text_values_with_rank[index]))
+                # Here is where we need to proceed - TODO
                 pass
 
             text_display[mod_type] = repr_string
@@ -224,7 +239,7 @@ class Power:
         affects_duration = ['Increased Duration']
         affects_action = ['Increased Action']
 
-        before_modifiers = []
+        before_modifiers = ['Multiattack']
         after_modifiers = []
 
         process_order = [after_modifiers,affects_range,affects_duration,affects_action,before_modifiers]
@@ -260,7 +275,7 @@ class Attack(Power):
 
     default_plain_text = "Damage"
     
-    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action]
+    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack]
 
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")
@@ -281,6 +296,7 @@ class Attack(Power):
         self.process_modifiers()
 
         if ('Multiattack') in self.modifiers:
+            print("Deadbeef")
             if self.modifiers['Multiattack'] == "default":
                 self.modifiers['Multiattack'] = rank
 #                self.adjust_points_per_rank(1)

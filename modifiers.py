@@ -124,8 +124,9 @@ class Modifier:
             retstr = "%s %d" % (retstr, self.rank)
         return retstr
 
-    def get_class_plaintext_name(self):
-        return type(self).modifier_name
+    @classmethod
+    def get_class_plaintext_name(cls):
+        return cls.modifier_name
 
 
 class Increased_Range(Modifier):
@@ -366,9 +367,13 @@ that opponent."""
 
     @classmethod
     def get_current_power_value(cls, power):
+        ret_rank = points.Rank_Range(0,0)
         for mod in power.get_modifiers():
-            if mod.get_class_plaintext_name() == self.get_class_plaintext_name():
-                pass
+            if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
+                r = mod.get_rank()
+                strt = mod.starting_rank
+                ret_rank.add_range(r,strt)
+        return ret_rank
 
 
 
