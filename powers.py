@@ -2,7 +2,7 @@ import modifiers
 import points
 import value_enums
 import defenses
-
+from time import sleep
 
 class Power:
     points_per_rank_default = None
@@ -99,8 +99,6 @@ class Power:
                     modifier_index += 1
                 modifier_index = 0
                 for entry in val_list:
-                    print(modifier_base)
-                    #Here's the problem.
                     if entry == modifier_base:
                         break
                     modifier_index += 1
