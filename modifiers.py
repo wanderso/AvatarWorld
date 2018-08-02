@@ -497,6 +497,29 @@ from one victim to another."""
         self.when_applied = self.when_applied_stored_in_extras
         self.when_removed = self.when_removed_stored_in_extras
 
+class Fades(Modifier):
+    """Each time you use an effect with this flaw, it loses 1 rank
+of effectiveness. For effects with a duration longer than
+instant, each round is considered “one use.” Once the effect
+reaches 0 ranks, it stops working. A faded effect can
+be “recovered” in some fashion, such as recharging, rest,
+repair, reloading, and so forth. The GM decides when and
+how a faded effect recovers, but it should generally occur
+outside of combat and take at least an hour’s time. The GM
+may allow a hero to recover a faded effect immediately
+and completely by spending a hero point."""
+    points_per_rank_modifier = -1
+    modifier_needs_rank = True
+    modifier_name = "Fades"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.power_single_entry_per_rank_init(starting_rank,rank)
+        self.when_applied = self.when_applied_stored_in_extras
+        self.when_removed = self.when_removed_stored_in_extras
+
 class Sustained(Modifier):
     """Applied to a permanent duration effect, this modifier makes
 it sustained duration, requiring a free action to use (rather
