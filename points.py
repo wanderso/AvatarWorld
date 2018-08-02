@@ -234,7 +234,7 @@ class Flat_Points:
     def __init__(self, flat):
         self.flat_points = flat
 
-    def get_points(self):
+    def get_points_total(self):
         return self.flat_points
 
 class Points_In_Power:
@@ -286,8 +286,14 @@ class Points_In_Power:
             current_entry = entry
             current_index += 1
         for entry in self.flat_list:
-            current_total += entry.get_points()
+            current_total += entry.get_points_total()
         return math.ceil(current_total)
+
+    def add_flat_points(self, fp):
+        self.flat_list.append(fp)
+
+    def remove_flat_points(self, fp):
+        self.flat_list.remove(fp)
 
     def __repr__(self):
         return str(self.rank_list) + " " + str(self.ppr_list)

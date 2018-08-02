@@ -63,6 +63,9 @@ class Power:
     def get_points(self):
         return self.get_points_in_power().get_points_total()
 
+    def add_flat_modifier(self, mod):
+        pip = self.get_points_in_power()
+
     def affects_defense(self,defense):
         return False
 
@@ -218,7 +221,7 @@ class Power:
             elif mod_class.modifier_list_type == False:
                 mod_list = modifier_lists[mod_type]
                 rr_pow = mod_class.get_current_power_value(self)
-                if rr_pow == points.Rank_Range(self.get_rank()):
+                if (rr_pow == points.Rank_Range(self.get_rank())) and mod_class.flat_modifier == False:
                     repr_string = (" %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self)))
                     pass
                 else:
@@ -244,7 +247,7 @@ class Power:
         affects_duration = ['Increased Duration']
         affects_action = ['Increased Action','Sustained']
 
-        before_modifiers = ['Multiattack','Selective','Sleep','Contagious']
+        before_modifiers = ['Multiattack','Selective','Sleep','Contagious','Accurate','Subtle']
         after_modifiers = ['Secondary Effect']
         display_power = ['Display Power']
 
@@ -283,7 +286,8 @@ class Attack(Power):
 
     default_plain_text = "Damage"
     
-    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack, modifiers.Selective, modifiers.Sleep, modifiers.Contagious, modifiers.Secondary_Effect]
+    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack, modifiers.Selective,
+                         modifiers.Sleep, modifiers.Contagious, modifiers.Secondary_Effect, modifiers.Accurate, modifiers.Subtle]
 
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")
