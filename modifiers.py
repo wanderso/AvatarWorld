@@ -69,9 +69,6 @@ class Modifier:
             for i in range(self.get_starting_rank(),self.get_rank()):
                 self.points.adjust_ppr_for_range(self.get_starting_rank(), i, 1)
             self.points.adjust_ppr_for_range(self.get_starting_rank(), self.get_rank(), 1, pos=False)
-            print("PPR List:")
-            print(self.points.ppr_list)
-            print(self.points.rank_list)
         self.flat_points = points.Flat_Points(self.points.get_points_total())
         self.adjust_points = self.adjust_points_for_flat
         self.apply()
@@ -590,19 +587,15 @@ Insidious effect may remain unaware of the danger until
 it’s too late!
 An Insidious effect is detectable either by a DC 20 skill
 check (usually Perception, although skills like Expertise,
-Insight, or Treatment may apply in other cases) or a par
--
-ticular unusual sense, such as an Insidious magical effect
-noticeable by Detect Magic or Magical Awareness.
+Insight, or Treatment may apply in other cases) or a
+particular unusual sense, such as an Insidious magical
+effect noticeable by Detect Magic or Magical Awareness.
 Note that Insidious does not make the effect itself harder
-to notice; apply the Subtle modifier for that. So it is pos
--
-sible for an active Insidious effect to be noticeable: the tar
--
-get can perceive the use of the effect, but not its results:
-the effect appears “harmless” or doesn’t seem to “do any
--
-thing” since the target cannot detect the results."""
+to notice; apply the Subtle modifier for that. So it is possible
+for an active Insidious effect to be noticeable: the target
+can perceive the use of the effect, but not its results:
+the effect appears “harmless” or doesn’t seem to “do
+anything” since the target cannot detect the results."""
     points_per_rank_modifier = 1
     modifier_needs_rank = True
     modifier_name = "Insidious"
