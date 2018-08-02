@@ -69,6 +69,10 @@ class Modifier:
         return cls.modifier_options
 
     @classmethod
+    def get_power_default(cls, power):
+        return 0
+
+    @classmethod
     def get_default_value(cls, power):
         return power.get_rank()
 
@@ -164,12 +168,23 @@ class Modifier:
 
     @classmethod
     def get_current_power_value(cls, power):
-        ret_rank = points.Rank_Range(0, 0)
-        for mod in power.get_modifiers():
-            if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
-                r = mod.get_rank_range()
-                ret_rank += r
-        return ret_rank
+        if cls.modifier_list_type == True:
+            rrs = []
+            power_val = cls.get_power_default(power)
+            rrpr = points.Rank_Range_With_Points(power.get_rank())
+            for mod in power.get_extras_flaws():
+                if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
+                    rrs.append(mod.get_rank_range())
+            for r in rrs:
+                rrpr.add_rank_range(r)
+            return power_val + rrpr.return_max_int()
+        else:
+            ret_rank = points.Rank_Range(0, 0)
+            for mod in power.get_modifiers():
+                if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
+                    r = mod.get_rank_range()
+                    ret_rank += r
+            return ret_rank
 
 
 class Increased_Range(Modifier):
@@ -208,13 +223,12 @@ modifier makes it perception range."""
             power.range -= 1
 
     @classmethod
+    def get_power_default(cls, power):
+        return type(power).default_range
+
+    @classmethod
     def get_current_power_value(cls, power):
         return power.get_range()
-
-
-
-
-
 
 class Increased_Duration(Modifier):
     """Effects have a standard duration: instant, sustained, continuous,
@@ -258,6 +272,10 @@ effect, this modifier makes it continuous"""
             power.duration -= 1
 
     @classmethod
+    def get_power_default(cls, power):
+        return type(power).default_duration
+
+    @classmethod
     def get_current_power_value(cls, power):
         return power.get_duration()
 
@@ -298,13 +316,20 @@ the Affliction and the Secondary Damage."""
         self.when_removed_stored_in_extras(power)
 
     @classmethod
+    def get_power_default(cls,power):
+        return cls.modifier_options.get_values_list()[1]
+
+    @classmethod
     def get_current_power_value(cls, power):
         rrs = []
-        power_val = cls.modifier_options.get_values_list()[1]
+        power_val = cls.get_power_default(power)
+        rrpr = points.Rank_Range_With_Points(power.get_rank())
         for mod in power.get_extras_flaws():
             if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
                 rrs.append(mod.get_rank_range())
-        return power_val + len(rrs)
+        for r in rrs:
+            rrpr.add_rank_range(r)
+        return power_val + rrpr.return_max_int()
 
 class Increased_Action(Modifier):
     """Using or activating an effect requires a particular amount
@@ -344,6 +369,10 @@ active."""
     def when_removed(self, power):
         if power.action < type(self).modifier_values[1]:
             power.action -= 1
+
+    @classmethod
+    def get_power_default(cls, power):
+        return type(power).default_action
 
     @classmethod
     def get_current_power_value(cls, power):
@@ -526,7 +555,7 @@ Reach 1 flat per rank Extend effect’s reach by 5 feet per rank.
 XXX Reaction +1 or 3 per rank Changes effect’s required action to reaction. XXX
 Reversible 1 flat point Effect can be removed at will as a free action.
 Ricochet 1 flat per rank Attacker can bounce effect to change direction.
-Secondary Effect +1 per rank Instant effect works on the target twice.
+XXX Secondary Effect +1 per rank Instant effect works on the target twice. XXX
 XXX Selective +1 per rank Resistible effect works only on the targets you choose. XXX
 XXX Sleep +0 per rank Effect leaves targets asleep rather than incapacitated. XXX
 Split 1 flat per rank Effect can split into multiple, smaller, effects.
