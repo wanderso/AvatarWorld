@@ -823,7 +823,7 @@ def menlo_cer_sim():
     ana = CharacterGenerators.default_char("Miss Trial", 10, "Balanced")
     mer = CharacterGenerators.default_char("Metal Knuckle", 10, "Balanced")
 
-    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Sleep': 'default', 'Perception-Ranged':'default', 'Ranged':'default', 'Continuous':'default', 'Reaction':'default', 'Multiattack':'default', 'Selective':'default'})
+    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Sleep': 'default', 'Secondary Effect':'default', 'Perception-Ranged':'default', 'Ranged':'default', 'Continuous':'default', 'Reaction':'default', 'Multiattack':'default', 'Selective':'default'})
     ef = powers.Attack("Electron Flurry", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     sk = powers.Attack("Sack", "Melee Combat: Football", 10, "Parry", Character.get_toughness, Character.get_toughness)
@@ -877,6 +877,8 @@ def menlo_cer_sim():
 
     combat_sim_new(cer, men, 10000)
     men.print_character_sheet()
+
+    print(vm.get_modifiers())
 
     print(men.print_character_sheet())
 #    print(srk.print_character_sheet())

@@ -288,15 +288,26 @@ the Affliction and the Secondary Damage."""
     def __init__(self, power, rank, starting_rank=0):
         super().__init__(power)
         self.power_single_entry_per_rank_init(starting_rank, rank)
+        self.when_applied = self.when_applied_stored_in_extras
+        self.when_removed = self.when_removed_stored_in_extras
+
+#    def when_applied(self, power):
+#        pass
+
+#    def when_removed(self, power):
+#        pass
 
     @classmethod
     def get_current_power_value(cls, power):
         rrs = []
         power_val = cls.modifier_options.get_values_list()[1]
+        print(power_val)
         for mod in power.get_modifiers():
             if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
                 rrs.append(mod.get_rank_range())
-        return power_val
+        print(power.get_modifiers())
+        print("%s %d " % (power.get_name(), len(rrs)))
+        return power_val + len(rrs)
 
 class Increased_Action(Modifier):
     """Using or activating an effect requires a particular amount
