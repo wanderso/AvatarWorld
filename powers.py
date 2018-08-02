@@ -247,7 +247,7 @@ class Power:
         affects_duration = ['Increased Duration']
         affects_action = ['Increased Action','Sustained']
 
-        before_modifiers = ['Multiattack','Selective','Sleep','Contagious','Accurate','Subtle', 'Fades']
+        before_modifiers = ['Multiattack','Selective','Sleep','Contagious','Accurate','Fades','Subtle','Noticeable']
         after_modifiers = ['Secondary Effect']
         display_power = ['Display Power']
 
@@ -287,7 +287,8 @@ class Attack(Power):
     default_plain_text = "Damage"
     
     allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack, modifiers.Selective,
-                         modifiers.Sleep, modifiers.Contagious, modifiers.Secondary_Effect, modifiers.Accurate, modifiers.Subtle, modifiers.Fades]
+                         modifiers.Sleep, modifiers.Contagious, modifiers.Secondary_Effect, modifiers.Accurate, modifiers.Subtle, modifiers.Fades,
+                         modifiers.Noticeable]
 
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")

@@ -38,6 +38,7 @@ class Modifier:
     flat_modifier = False
     modifier_list_type = False
     modifier_pyramid_type = False
+    modifier_is_flaw = False
 
     modifier_options = None
 
@@ -69,7 +70,10 @@ class Modifier:
             for i in range(self.get_starting_rank(),self.get_rank()):
                 self.points.adjust_ppr_for_range(self.get_starting_rank(), i, 1)
             self.points.adjust_ppr_for_range(self.get_starting_rank(), self.get_rank(), 1, pos=False)
-        self.flat_points = points.Flat_Points(self.points.get_points_total())
+        total_p = self.points.get_points_total()
+        if type(self).modifier_is_flaw:
+            total_p = -1 * total_p
+        self.flat_points = points.Flat_Points(total_p)
         self.adjust_points = self.adjust_points_for_flat
         self.apply()
         self.power_new_value = type(self).get_current_power_value(power)
@@ -661,6 +665,32 @@ Rank 2 makes the effect completely undetectable"""
         def when_removed(self, power):
             self.when_removed_stored_in_extras(power)
 
+class Noticeable(Modifier):
+    """A continuous or permanent effect with this modifier is
+noticeable in some sort of way (see Noticing Power Effects
+at the start of the chapter). Choose a noticeable
+display for the effect. For example Noticeable Protection
+may take the form of armored plates or a tough, leathery-looking
+hide, making it clear the character is tougher
+than normal."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Noticeable"
+    modifier_list_type = False
+    flat_modifier = True
+    modifier_pyramid_type = True
+    modifier_is_flaw = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.generate_flat_points_rank(starting_rank, rank)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
 class Split(Modifier):
     """With this modifier, a resistible effect that works on one target
 can split between two. The attacker chooses how many
@@ -800,12 +830,12 @@ Check Required –1 flat per rank Must succeed on a check to use effect.
 Concentration –1 per rank Sustained effect becomes concentration duration.
 Diminished Range –1 flat per rank Reduces short, medium, and long ranges for the effect.
 Distracting –1 per rank Vulnerable while using effect.
-Fades –1 per rank Effect loses 1 rank each time it is used.
+XXX Fades –1 per rank Effect loses 1 rank each time it is used. XXX
 Feedback –1 per rank Suffer damage when your effect’s manifestation is damaged.
 Grab-Based –1 per rank Effect requires a successful grab attack to use.
 Increased Action –1-3 per rank Increases action required to use effect.
 Limited –1 per rank Effect loses about half its effectiveness.
-Noticeable –1 flat point Continuous or permanent effect is noticeable.
+XXX Noticeable –1 flat point Continuous or permanent effect is noticeable. XXX
 Permanent –1 per rank Effect cannot be turned off or improved with extra effort.
 Quirk –1 flat per rank A minor flaw attached to an effect. The opposite of a Feature.
 Reduced Range –1-2 per rank Effect’s range decreases.
