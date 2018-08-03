@@ -42,40 +42,53 @@ class Modifier:
 
     modifier_options = None
 
-    def __init__(self, power):
-        self.associated_powers = [power]
+    def __init__(self):
+        self.linked_to = []
         self.power_original_value = None
         self.power_new_value = None
         self.modifier_modifiers = []
-        self.applied = False
 
-    def power_single_entry_per_rank_init(self, starting_rank, rank):
-        power = self.associated_powers[0]
+    def set_modifier_rank(self, starting_rank=0, rank=1):
         self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
-        self.ppr = type(self).points_per_rank_modifier
-        self.power_original_value = type(self).get_current_power_value(power)
         self.range_val = points.Rank_Range(rank, starting_rank=starting_rank)
+
+        self.points_in_modifier = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(0))
+        self.points_in_modifier.adjust_ppr_for_range(starting_rank,rank,self.ppr_modifiers)
+
+    def link_modifier_per_rank(self, starting_rank, rank, target):
+        is_power = (issubclass(type(target), powers.Power))
+
+        if is_power:
+            self.power_original_value = type(self).get_current_power_value(target)
+
+        self.set_modifier_rank(starting_rank=starting_rank,rank=rank)
+
         self.adjust_points = self.adjust_points_per_rank
-        self.apply()
-        self.power_new_value = type(self).get_current_power_value(power)
+        self.apply(target)
 
-    def generate_flat_points_rank(self, starting_rank, rank):
-        power = self.associated_powers[0]
-        self.range_val = points.Rank_Range(rank, starting_rank=starting_rank)
-        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
-        self.ppr = type(self).points_per_rank_modifier
+        if is_power:
+            self.power_new_value = type(self).get_current_power_value(target)
+
+    def link_modifier_flat_with_rank(self, starting_rank, rank, power):
         self.power_original_value = type(self).get_current_power_value(power)
-        self.points = points.Points_In_Power(self.get_rank(),self.ppr_modifiers)
+
+        self.set_modifier_rank(starting_rank=starting_rank,rank=rank)
+
         if type(self).modifier_pyramid_type == True:
             for i in range(self.get_starting_rank(),self.get_rank()):
-                self.points.adjust_ppr_for_range(self.get_starting_rank(), i, 1)
-            self.points.adjust_ppr_for_range(self.get_starting_rank(), self.get_rank(), 1, pos=False)
-        total_p = self.points.get_points_total()
+                self.points_in_modifier.adjust_ppr_for_range(self.get_starting_rank(), i, 1)
+            self.points_in_modifier.adjust_ppr_for_range(self.get_starting_rank(), self.get_rank(), 1, pos=False)
+
+        total_p = self.points_in_modifier.get_points_total()
+
         if type(self).modifier_is_flaw:
             total_p = -1 * total_p
+
         self.flat_points = points.Flat_Points(total_p)
+
         self.adjust_points = self.adjust_points_for_flat
-        self.apply()
+        self.apply(power)
+
         self.power_new_value = type(self).get_current_power_value(power)
 
     @classmethod
@@ -106,27 +119,47 @@ class Modifier:
     def get_rank(self):
         return self.range_val.get_max()
 
-    def apply(self):
-        if self.applied:
+    def apply(self, target):
+        if target in self.linked_to:
             return
-        for power in self.associated_powers:
-            self.when_applied(power)
-        self.adjust_points()
-        self.applied = True
+        if(issubclass(type(target), powers.Power)):
+            self.when_applied(target)
+            self.adjust_points(target)
+        elif (issubclass(type(target), Modifier)):
+            self.when_applied_to_modifier(target)
+            self.adjust_points_with_modifier(target, pos=False)
+        target.append_modifier(self)
+        self.linked_to.append(target)
 
-    def remove(self):
-        if not self.applied:
+    def remove(self, target):
+        if target in self.linked_to:
             return
-        for power in self.associated_powers:
-            self.when_removed(power)
-        self.adjust_points(pos=False)
-        self.applied = False
+        if (issubclass(type(target), powers.Power)):
+            self.when_removed(target)
+            self.adjust_points(target, pos=False)
+        elif (issubclass(type(target), Modifier)):
+            self.when_removed_from_modifier(target)
+            self.adjust_points_with_modifier(target, pos=False)
+        target.remove_modifier(self)
+        self.linked_to.remove(target)
 
-    def when_applied(self, power):
+    def when_applied(self, target):
         pass
 
-    def when_removed(self, power):
+    def when_removed(self, target):
         pass
+
+    def when_applied_to_modifier(self, target):
+        pass
+
+    def when_removed_from_modifier(self, target):
+        pass
+
+    def append_modifier(self,target):
+        self.modifier_modifiers.append(target)
+
+    def remove_modifier(self,target):
+        self.modifier_modifiers.remove(target)
 
     def when_applied_stored_in_extras(self, power):
         if not power.get_value_in_extras_flaws(self):
@@ -136,33 +169,36 @@ class Modifier:
         if power.get_value_in_extras_flaws(self):
             power.remove_value_from_extras_flaws(self)
 
-    def adjust_points(self, pos=True):
+    def adjust_points(self, power, pos=True):
         pass
 
-    def adjust_points_for_flat(self, pos=True):
-        applied_already = (self.applied == True)
+    def adjust_points_for_flat(self, power, pos=True):
+        applied_already = (power in self.linked_to)
         if applied_already:
-            remove()
-        for power in self.associated_powers:
-            pip = power.get_points_in_power()
-            if pos == True:
-                pip.add_flat_points(self.flat_points)
-            else:
-                pip.remove_flat_points(self.flat_points)
+            self.remove(power)
+        pip = power.get_points_in_power()
+        if pos == True:
+            pip.add_flat_points(self.flat_points)
+        else:
+            pip.remove_flat_points(self.flat_points)
         if applied_already:
-            apply()
+            self.apply(power)
 
-    def adjust_points_per_rank(self, pos=True):
-        applied_already = (self.applied == True)
+    def adjust_points_per_rank(self, power, pos=True):
+        applied_already = (power in self.linked_to)
         if applied_already:
-            remove()
-        for power in self.associated_powers:
-            pip = power.get_points_in_power()
-            rr = self.get_rank_range()
-            for entry in rr:
-                pip.adjust_ppr_for_range(entry[0],entry[1],self.ppr_modifiers,pos=pos)
+            self.remove(power)
+        power.add_pip_to_power(self.points_in_modifier, pos=pos)
         if applied_already:
-            apply()
+            self.apply(power)
+
+    def adjust_points_with_modifier(self, mod, pos=True):
+        applied_already = (mod in self.linked_to)
+        if applied_already:
+            self.remove(mod)
+        self.points_in_modifier += mod.points_in_modifier
+        if applied_already:
+            self.apply(power)
 
     def apply_modifier_to_modifier(self, modifier):
         pass
@@ -188,13 +224,16 @@ class Modifier:
     def represent_modifier_on_sheet_with_rank(self, power):
         retstr = ""
         for mod in self.modifier_modifiers:
-            retstr += " %s" % mod.represent_modifier_on_sheet_with_rank(power)
-        retstr += "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
+            retstr += " %s%s" % (type(mod).get_class_plaintext_name(), mod.represent_modifier_on_sheet_with_rank(power))
+            print(retstr)
+        if type(self).modifier_list_type == True:
+            retstr += "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
         if self.get_starting_rank() != 0:
             retstr = "%s %d-%d" % (retstr, self.get_starting_rank(), self.get_rank())
         else:
             retstr = "%s %d" % (retstr, self.get_rank())
         return retstr
+
 
     @classmethod
     def get_class_plaintext_name(cls):
@@ -245,8 +284,8 @@ modifier makes it perception range."""
     modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
 
     def when_applied(self, power):
         if power.range < type(self).modifier_values[-1]:
@@ -294,8 +333,8 @@ effect, this modifier makes it continuous"""
     modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
 
     def when_applied(self, power):
         if power.duration < type(self).modifier_values[-2]:
@@ -340,8 +379,8 @@ the Affliction and the Secondary Damage."""
     modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
 
     def when_applied(self, power):
         self.when_applied_stored_in_extras(power)
@@ -393,8 +432,8 @@ active."""
     modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
 
     def when_applied(self, power):
         if power.action < type(self).modifier_values[-2]:
@@ -455,8 +494,8 @@ that opponent."""
     modifier_list_type = False
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
         self.when_applied = self.when_applied_stored_in_extras
         self.when_removed = self.when_removed_stored_in_extras
 
@@ -474,8 +513,8 @@ non-resistible effects, use the Precise modifier."""
     modifier_list_type = False
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank,rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
         self.when_applied = self.when_applied_stored_in_extras
         self.when_removed = self.when_removed_stored_in_extras
 
@@ -496,8 +535,8 @@ from one victim to another."""
     modifier_list_type = False
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank,rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
         self.when_applied = self.when_applied_stored_in_extras
         self.when_removed = self.when_removed_stored_in_extras
 
@@ -519,8 +558,8 @@ and completely by spending a hero point."""
     modifier_list_type = False
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank,rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
         self.when_applied = self.when_applied_stored_in_extras
         self.when_removed = self.when_removed_stored_in_extras
 
@@ -548,8 +587,8 @@ a modicum of concentration to maintain."""
     modifier_list_type = False
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank,rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
 
     def when_applied(self, power):
         self.when_applied_stored_in_extras(power)
@@ -573,8 +612,8 @@ See the description of asleep under Conditions."""
     modifier_list_type = False
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.power_single_entry_per_rank_init(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
 
     def when_applied(self, power):
         self.when_applied_stored_in_extras(power)
@@ -593,8 +632,8 @@ level limits maximum attack bonus with any given effect."""
     flat_modifier = True
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.generate_flat_points_rank(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
         def when_applied(self, power):
             self.when_applied_stored_in_extras(power)
@@ -631,8 +670,8 @@ anything” since the target cannot detect the results."""
     modifier_pyramid_type = True
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.generate_flat_points_rank(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
         def when_applied(self, power):
             self.when_applied_stored_in_extras(power)
@@ -656,8 +695,8 @@ Rank 2 makes the effect completely undetectable"""
     modifier_pyramid_type = True
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.generate_flat_points_rank(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
         def when_applied(self, power):
             self.when_applied_stored_in_extras(power)
@@ -682,8 +721,8 @@ than normal."""
     modifier_is_flaw = True
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.generate_flat_points_rank(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
         def when_applied(self, power):
             self.when_applied_stored_in_extras(power)
@@ -712,8 +751,8 @@ Split rank equals the effect’s rank."""
     flat_modifier = True
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.generate_flat_points_rank(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
         def when_applied(self, power):
             self.when_applied_stored_in_extras(power)
@@ -751,8 +790,8 @@ each time you set it."""
     flat_modifier = True
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.generate_flat_points_rank(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
         def when_applied(self, power):
             self.when_applied_stored_in_extras(power)
@@ -776,8 +815,8 @@ with a particular effect and this modifier."""
     flat_modifier = True
 
     def __init__(self, power, rank, starting_rank=0):
-        super().__init__(power)
-        self.generate_flat_points_rank(starting_rank, rank)
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
         def when_applied(self, power):
             self.when_applied_stored_in_extras(power)
@@ -847,6 +886,36 @@ Tiring –1 per rank Effect causes a level of fatigue when used.
 Uncontrolled –1 per rank You have no control over the effect.
 Unreliable –1 per rank Effect only works about half the time (roll of 11 or more)."""
 
+
+
+class Modifier_Description:
+    mods_dict = {"Increased Range": Increased_Range,
+                 "Increased Duration": Increased_Duration,
+                 "Secondary Effect": Secondary_Effect,
+                 "Increased Action": Increased_Action,
+                 "Multiattack": Multiattack,
+                 "Selective": Selective,
+                 "Contagious": Contagious,
+                 "Fades": Fades,
+                 "Sustained": Sustained,
+                 "Sleep": Sleep,
+                 "Accurate": Accurate,
+                 "Insidious": Insidious,
+                 "Subtle": Subtle,
+                 "Noticeable": Noticeable,
+                 "Split": Split,
+                 "Triggered": Triggered,
+                 "Variable_Descriptor": Variable_Descriptor}
+
+    def __init__(self, dict_input):
+        self.modifier_name = dict_input['modifier']
+        self.modifier_class = type(self).mods_dict[self.modifier_name]
+        if modifier_class.modifier_needs_rank == True:
+            self.modifier_rank = dict_input['rank']
+            if 'starting rank' in dict_input:
+                self.modifier_starting_rank = dict_input['starting rank']
+            else:
+                self.modifier_starting_rank = 0
 
 if __name__ == "__main__":
     for i in range(4,2,-1):

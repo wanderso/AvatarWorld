@@ -243,6 +243,48 @@ class Points_In_Power:
         self.ppr_list = [Points_Per_Rank.from_ppr(starting_ppr)]
         self.flat_list = []
 
+    def __add__(self, other):
+        retpip = Points_In_Power(0,Points_Per_Rank.from_int(0))
+        retpip.rank_list = list(self.rank_list)
+        retpip.ppr_list = list(self.ppr_list)
+        retpip.flat_list = list(self.flat_list)
+
+        current_value = 0
+        current_index = 0
+        for entry in other.rank_list:
+            retpip.add_ppr_break_point(entry)
+            retpip.adjust_ppr_for_range(current_value,entry,other.ppr_list[current_index],pos=True)
+            current_value = entry
+            current_index += 1
+
+        for entry in other.flat_list:
+            retpip.add_flat_points(entry)
+        return retpip
+
+    def __sub__(self, other):
+        retpip = Points_In_Power(0,Points_Per_Rank.from_int(0))
+
+        retpip.rank_list = list(self.rank_list)
+        retpip.ppr_list = list(self.ppr_list)
+        retpip.flat_list = list(self.flat_list)
+
+        current_value = 0
+        current_index = 0
+        for entry in other.rank_list:
+            retpip.add_ppr_break_point(entry)
+            retpip.adjust_ppr_for_range(current_value,entry,other.ppr_list[current_index],pos=False)
+            current_value = entry
+            current_index += 1
+
+        for entry in other.flat_list:
+            if entry in retpip.flat_list:
+                retpip.remove_flat_points(entry)
+            else:
+                retpip.add_flat_points(Flat_Points(-entry.get_points_total()))
+        return retpip
+
+
+
     def dictify(self):
         return {
                 "rank_list": self.rank_list,
@@ -334,6 +376,16 @@ if __name__ == "__main__":
     print(pip.ppr_list)
 
     print(pip.get_points_total())
+
+    pip2 = Points_In_Power(10, Points_Per_Rank())
+    print(pip2.get_points_total())
+
+    pip3 = pip2 - pip2
+    print("DEADBEEF")
+    print(pip3.get_points_total())
+    print(pip3.rank_list)
+    print(pip3.ppr_list)
+
 
 
 
