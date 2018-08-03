@@ -243,6 +243,13 @@ class Points_In_Power:
         self.ppr_list = [Points_Per_Rank.from_ppr(starting_ppr)]
         self.flat_list = []
 
+    def dictify(self):
+        return {
+                "rank_list": self.rank_list,
+                "ppr_list": self.ppr_list,
+                "flat_list": self.flat_list
+                }
+
     def add_ppr_break_point(self, break_point):
         if break_point in self.rank_list or break_point == 0:
             return

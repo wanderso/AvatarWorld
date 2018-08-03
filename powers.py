@@ -306,6 +306,20 @@ class Attack(Power):
         
         self.process_modifiers()
 
+    def dictify(self):
+        return {
+                "attack_skill": self.attack_skill,
+                "rank" : self.rank,
+                "defense": self.defense,
+                "resistance": self.resistance,
+                "recovery": self.recovery,
+                "modifiers": self.modifiers,
+                "points": self.points,
+                "base_power_points": self.base_power_points,
+                "points_per_rank": self.points,
+                "points_in_power": self.points_in_power
+                }
+
     def get_skill(self):
         return self.attack_skill
 

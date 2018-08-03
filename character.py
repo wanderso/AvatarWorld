@@ -745,7 +745,22 @@ class Character:
                 "spent": self.spent_points,
 
                 "max_stamina": self.max_stamina,
-                "max_wounds": self.max_wounds 
+                "max_wounds": self.max_wounds,
+
+                "abilities": self.abilities,
+
+                "skills": self.skills,
+                "skill_ranks": self.skill_ranks,
+
+                "advantages_natural": self.advantages_natural,
+
+                "advantages": self.advantages,
+
+                "powers": self.powers,
+                "attacks": self.attacks,
+
+                "conditions": self.conditions
+
         }
 
 
@@ -903,18 +918,24 @@ def menlo_cer_sim():
 
     combat_sim_new(cer, men, 10000)
 
-    print(json.dumps(men, default=lambda c: c.dictify()))
+    print(json.dumps(men, default=dictifier))
 #    men.print_character_sheet()
 
  #   print(men.print_character_sheet())
-    print(vm.get_modifiers())
+    #print(vm.get_modifiers())
 
-    print(men.print_character_sheet())
+    #print(men.print_character_sheet())
 #    print(srk.print_character_sheet())
   #  print(vm.power_modifiers)
 
 
 
+def dictifier(c):
+    print(type(c))
+    if (getattr(c, "dictify", None) != None):
+        return c.dictify()
+    else:
+        return repr(c)
 
 def avatar_caus_sim():
 
