@@ -4,7 +4,9 @@ import skills
 import ability
 import defenses
 import advantages
-import pickle
+import json
+
+from characterencoder import serialize_whole_character
 #https://pastebin.com/azrdkPdB blorp
 
 class Dice:
@@ -716,11 +718,50 @@ class Character:
 
         return return_string
 
-    def save_character_to_file(self, file_name):
-        pass
+    def dictify(self):
+        return {
+                "__type": "character",
+                "name": self.name,
+                "is_minion": self.minion,
 
-    def load_character_from_file(self, file_name):
-        pass
+                "dodge_ranks": self.dodge_ranks,
+                "parry_ranks": self.parry_ranks,
+                "fortitude_ranks": self.fortitude_ranks,
+                "will_ranks": self.will_ranks,
+
+                "initiative": self.initiative,
+                "dodge": self.dodge,
+                "parry": self.parry,
+                "toughness": self.toughness,
+                "fortitude": self.fortitude,
+                "will": self.will,
+
+                "bruise": self.bruise,
+                "stamina": self.stamina,
+                "wounds": self.wounds,
+
+                "pl": self.pl,
+                "exp": self.exp,
+                "spent": self.spent_points,
+
+                "max_stamina": self.max_stamina,
+                "max_wounds": self.max_wounds,
+
+                "abilities": self.abilities,
+
+                "skills": self.skills,
+                "skill_ranks": self.skill_ranks,
+
+                "advantages_natural": self.advantages_natural,
+
+                "advantages": self.advantages,
+
+                "powers": self.powers,
+                "attacks": self.attacks,
+
+                "conditions": self.conditions
+
+        }
 
 
 
@@ -876,16 +917,25 @@ def menlo_cer_sim():
     print("Points in the %s attack: %d" % (vm.get_name(), vm.calculate_points()))
 
     combat_sim_new(cer, men, 10000)
-    men.print_character_sheet()
 
-    print(vm.get_modifiers())
+    print(json.dumps(men, default=dictifier))
+#    men.print_character_sheet()
 
-    print(men.print_character_sheet())
+ #   print(men.print_character_sheet())
+    #print(vm.get_modifiers())
+
+    #print(men.print_character_sheet())
 #    print(srk.print_character_sheet())
-    print(vm.power_modifiers)
+  #  print(vm.power_modifiers)
 
 
 
+def dictifier(c):
+    print(type(c))
+    if (getattr(c, "dictify", None) != None):
+        return c.dictify()
+    else:
+        return repr(c)
 
 def avatar_caus_sim():
 

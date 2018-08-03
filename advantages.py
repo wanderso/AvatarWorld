@@ -26,6 +26,16 @@ class Advantage:
         self.advantage_rank = 0
         self.advantage_func_list = None
 
+    def dictify(self):
+        return {
+                "advantage_cost": self.advantage_cost,
+                "instance_cost_type": self.instance_cost_type,
+                "advantage_rank": self.advantage_rank,
+                "advantage_func_list": self.advantage_func_list,
+                "calculate_cost": self.calculate_cost,
+                "representation": self.representation
+                }
+
     def representation(self):
         if self.instance_cost_type == Cost_Type.NO_RANK:
             return self.advantage_name
