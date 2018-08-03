@@ -34,8 +34,11 @@ class Modifier:
     points_per_rank_modifier = None
     modifier_name = None
     modifier_needs_rank = False
-
+    reverse_text_order = False
+    flat_modifier = False
     modifier_list_type = False
+    modifier_pyramid_type = False
+    modifier_is_flaw = False
 
     modifier_options = None
 
@@ -43,21 +46,37 @@ class Modifier:
         self.associated_powers = [power]
         self.power_original_value = None
         self.power_new_value = None
-        self.modifier_cost = 0
         self.modifier_modifiers = []
         self.applied = False
-        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
-        self.ppr = type(self).points_per_rank_modifier
 
     def power_single_entry_per_rank_init(self, starting_rank, rank):
         power = self.associated_powers[0]
+        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
+        self.ppr = type(self).points_per_rank_modifier
         self.power_original_value = type(self).get_current_power_value(power)
         self.range_val = points.Rank_Range(rank, starting_rank=starting_rank)
         self.adjust_points = self.adjust_points_per_rank
         self.apply()
         self.power_new_value = type(self).get_current_power_value(power)
 
-
+    def generate_flat_points_rank(self, starting_rank, rank):
+        power = self.associated_powers[0]
+        self.range_val = points.Rank_Range(rank, starting_rank=starting_rank)
+        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
+        self.ppr = type(self).points_per_rank_modifier
+        self.power_original_value = type(self).get_current_power_value(power)
+        self.points = points.Points_In_Power(self.get_rank(),self.ppr_modifiers)
+        if type(self).modifier_pyramid_type == True:
+            for i in range(self.get_starting_rank(),self.get_rank()):
+                self.points.adjust_ppr_for_range(self.get_starting_rank(), i, 1)
+            self.points.adjust_ppr_for_range(self.get_starting_rank(), self.get_rank(), 1, pos=False)
+        total_p = self.points.get_points_total()
+        if type(self).modifier_is_flaw:
+            total_p = -1 * total_p
+        self.flat_points = points.Flat_Points(total_p)
+        self.adjust_points = self.adjust_points_for_flat
+        self.apply()
+        self.power_new_value = type(self).get_current_power_value(power)
 
     @classmethod
     def get_current_power_value(cls, power):
@@ -68,8 +87,15 @@ class Modifier:
         return cls.modifier_options
 
     @classmethod
+    def get_power_default(cls, power):
+        return 0
+
+    @classmethod
     def get_default_value(cls, power):
-        return power.get_rank()
+        if cls.flat_modifier == False:
+            return power.get_rank()
+        else:
+            return 1
 
     def get_rank_range(self):
         return self.range_val
@@ -112,6 +138,19 @@ class Modifier:
 
     def adjust_points(self, pos=True):
         pass
+
+    def adjust_points_for_flat(self, pos=True):
+        applied_already = (self.applied == True)
+        if applied_already:
+            remove()
+        for power in self.associated_powers:
+            pip = power.get_points_in_power()
+            if pos == True:
+                pip.add_flat_points(self.flat_points)
+            else:
+                pip.remove_flat_points(self.flat_points)
+        if applied_already:
+            apply()
 
     def adjust_points_per_rank(self, pos=True):
         applied_already = (self.applied == True)
@@ -163,12 +202,23 @@ class Modifier:
 
     @classmethod
     def get_current_power_value(cls, power):
-        ret_rank = points.Rank_Range(0, 0)
-        for mod in power.get_modifiers():
-            if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
-                r = mod.get_rank_range()
-                ret_rank += r
-        return ret_rank
+        if cls.modifier_list_type == True:
+            rrs = []
+            power_val = cls.get_power_default(power)
+            rrpr = points.Rank_Range_With_Points(power.get_rank())
+            for mod in power.get_extras_flaws():
+                if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
+                    rrs.append(mod.get_rank_range())
+            for r in rrs:
+                rrpr.add_rank_range(r)
+            return power_val + rrpr.return_max_int()
+        else:
+            ret_rank = points.Rank_Range(0, 0)
+            for mod in power.get_modifiers():
+                if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
+                    r = mod.get_rank_range()
+                    ret_rank += r
+            return ret_rank
 
 
 class Increased_Range(Modifier):
@@ -207,13 +257,12 @@ modifier makes it perception range."""
             power.range -= 1
 
     @classmethod
+    def get_power_default(cls, power):
+        return type(power).default_range
+
+    @classmethod
     def get_current_power_value(cls, power):
         return power.get_range()
-
-
-
-
-
 
 class Increased_Duration(Modifier):
     """Effects have a standard duration: instant, sustained, continuous,
@@ -257,6 +306,10 @@ effect, this modifier makes it continuous"""
             power.duration -= 1
 
     @classmethod
+    def get_power_default(cls, power):
+        return type(power).default_duration
+
+    @classmethod
     def get_current_power_value(cls, power):
         return power.get_duration()
 
@@ -279,6 +332,7 @@ the Affliction and the Secondary Damage."""
     modifier_needs_rank = True
     modifier_name = "Secondary Effect"
     modifier_list_type = True
+    reverse_text_order = True
 
     modifier_plain_text = value_enums.Power_Secondary_Effect_Names.name_list
     modifier_values = value_enums.Power_Secondary_Effect_Names.val_list
@@ -289,14 +343,27 @@ the Affliction and the Secondary Damage."""
         super().__init__(power)
         self.power_single_entry_per_rank_init(starting_rank, rank)
 
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    @classmethod
+    def get_power_default(cls,power):
+        return cls.modifier_options.get_values_list()[1]
+
     @classmethod
     def get_current_power_value(cls, power):
         rrs = []
-        power_val = cls.modifier_options.get_values_list()[1]
-        for mod in power.get_modifiers():
+        power_val = cls.get_power_default(power)
+        rrpr = points.Rank_Range_With_Points(power.get_rank())
+        for mod in power.get_extras_flaws():
             if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
                 rrs.append(mod.get_rank_range())
-        return power_val
+        for r in rrs:
+            rrpr.add_rank_range(r)
+        return power_val + rrpr.return_max_int()
 
 class Increased_Action(Modifier):
     """Using or activating an effect requires a particular amount
@@ -336,6 +403,10 @@ active."""
     def when_removed(self, power):
         if power.action < type(self).modifier_values[1]:
             power.action -= 1
+
+    @classmethod
+    def get_power_default(cls, power):
+        return type(power).default_action
 
     @classmethod
     def get_current_power_value(cls, power):
@@ -430,6 +501,29 @@ from one victim to another."""
         self.when_applied = self.when_applied_stored_in_extras
         self.when_removed = self.when_removed_stored_in_extras
 
+class Fades(Modifier):
+    """Each time you use an effect with this flaw, it loses 1 rank
+of effectiveness. For effects with a duration longer than
+instant, each round is considered “one use.” Once the effect
+reaches 0 ranks, it stops working. A faded effect can
+be “recovered” in some fashion, such as recharging, rest,
+repair, reloading, and so forth. The GM decides when and
+how a faded effect recovers, but it should generally occur
+outside of combat and take at least an hour’s time. The GM
+may allow a hero to recover a faded effect immediately
+and completely by spending a hero point."""
+    points_per_rank_modifier = -1
+    modifier_needs_rank = True
+    modifier_name = "Fades"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.power_single_entry_per_rank_init(starting_rank,rank)
+        self.when_applied = self.when_applied_stored_in_extras
+        self.when_removed = self.when_removed_stored_in_extras
+
 class Sustained(Modifier):
     """Applied to a permanent duration effect, this modifier makes
 it sustained duration, requiring a free action to use (rather
@@ -488,7 +582,211 @@ See the description of asleep under Conditions."""
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
 
-extras = """Accurate 1 flat per rank +2 attack check bonus per rank
+class Accurate(Modifier):
+    """An effect with this extra is especially accurate; you get +2
+per Accurate rank to attack checks made with it. The power
+level limits maximum attack bonus with any given effect."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Accurate"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.generate_flat_points_rank(starting_rank, rank)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
+class Insidious(Modifier):
+    """This modifier is similar to the Subtle modifier (later in
+this section), except Insidious makes the result of an
+effect harder to detect rather than the effect itself. For
+example, a target suffering from Insidious Damage isn’t
+even aware he’s been damaged. Someone affected by an
+Insidious Weaken feels fine until some deficiency makes
+it obvious that he’s weaker, and so forth. A target of an
+Insidious effect may remain unaware of the danger until
+it’s too late!
+An Insidious effect is detectable either by a DC 20 skill
+check (usually Perception, although skills like Expertise,
+Insight, or Treatment may apply in other cases) or a
+particular unusual sense, such as an Insidious magical
+effect noticeable by Detect Magic or Magical Awareness.
+Note that Insidious does not make the effect itself harder
+to notice; apply the Subtle modifier for that. So it is possible
+for an active Insidious effect to be noticeable: the target
+can perceive the use of the effect, but not its results:
+the effect appears “harmless” or doesn’t seem to “do
+anything” since the target cannot detect the results."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Insidious"
+    modifier_list_type = False
+    flat_modifier = True
+    modifier_pyramid_type = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.generate_flat_points_rank(starting_rank, rank)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
+
+class Subtle(Modifier):
+    """Subtle effects are not as noticeable. A subtle effect may
+be used to catch a target unaware and may in some cases
+qualify for a surprise attack. Rank 1 makes an effect difficult
+to notice; a DC 20 Perception check is required, or the effect
+is noticeable only to certain exotic senses (at the GM’s discretion).
+Rank 2 makes the effect completely undetectable"""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Subtle"
+    modifier_list_type = False
+    flat_modifier = True
+    modifier_pyramid_type = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.generate_flat_points_rank(starting_rank, rank)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
+class Noticeable(Modifier):
+    """A continuous or permanent effect with this modifier is
+noticeable in some sort of way (see Noticing Power Effects
+at the start of the chapter). Choose a noticeable
+display for the effect. For example Noticeable Protection
+may take the form of armored plates or a tough, leathery-looking
+hide, making it clear the character is tougher
+than normal."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Noticeable"
+    modifier_list_type = False
+    flat_modifier = True
+    modifier_pyramid_type = True
+    modifier_is_flaw = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.generate_flat_points_rank(starting_rank, rank)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
+class Split(Modifier):
+    """With this modifier, a resistible effect that works on one target
+can split between two. The attacker chooses how many
+ranks to apply to each target up to the effect’s total rank. So
+a rank 10 effect could be split 5/5, 4/6, 2/8, or any other total
+adding up to 10. If an attack check is required, the attacker
+makes one, comparing the results against each target. The
+effect works on each target at its reduced rank.
+Each additional rank of this modifier allows the power
+to split an additional time, so rank 2 allows an effect to
+split among three targets, then four, and so forth. An effect
+cannot split to less than 1 rank per target, and cannot
+apply more than one split to the same target. Thus maximum
+Split rank equals the effect’s rank."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Split"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.generate_flat_points_rank(starting_rank, rank)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
+class Triggered(Modifier):
+    """You can “set” an instant duration effect with this modifier
+to activate under particular circumstances, such as in re196
+Mutants & Master Mutants & Mastermminds D Deluxe Hero’s Handbook eluxe Hero’s Handbook
+Chapter 6: Powers Chapter 6: Powers
+sponse to a particular danger, after a set amount of time,
+in response to a particular event, and so forth—chosen
+when you apply the modifier. Once chosen, the trigger
+cannot be changed.
+The circumstances must be detectable by your senses.
+You can acquire Senses Limited and Linked to Triggered
+effects, if desired. Setting the effect requires the same action
+as using it normally.
+A Triggered effect lying in wait may be detected with a
+Perception check (DC 10 + effect rank) and in some cases
+disarmed with a successful skill or power check (such as
+Sleight of Hand, Technology, Nullify or another countering
+effect) with a DC of (10 + effect rank).
+A Triggered effect is good for one use per rank in this
+modifier. After its last activation, it stops working.
+You can apply an additional rank of Triggered to have a
+Variable Trigger, allowing you to change the effect’s trigger
+each time you set it."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Triggered"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.generate_flat_points_rank(starting_rank, rank)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
+class Variable_Descriptor(Modifier):
+    """You can change the descriptors of an effect with this modifier,
+varying them as a free action once per round. With rank
+1, you can apply any of a closely related group of descriptors,
+such as weather, electromagnetic, temperature, and
+so forth. With rank 2, you can apply any of a broad group,
+such as any mental, magical, or technological descriptor.
+The GM decides if a given descriptor is appropriate in conjunction
+with a particular effect and this modifier."""
+    points_per_rank_modifier = 1
+    modifier_needs_rank = True
+    modifier_name = "Variable_Descriptor"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__(power)
+        self.generate_flat_points_rank(starting_rank, rank)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
+
+extras = """XXX Accurate 1 flat per rank +2 attack check bonus per rank XXX
 Affects Corporeal 1 flat per rank Effect works on corporeal beings with rank equal to extra rank.
 Affects Insubstantial 1-2 flat points Effect works on insubstantial beings at half (1 rank) or full (2 ranks) effect.
 Affects Objects +0-1 per rank Fortitude resisted effect works on objects.
@@ -518,26 +816,26 @@ Reach 1 flat per rank Extend effect’s reach by 5 feet per rank.
 XXX Reaction +1 or 3 per rank Changes effect’s required action to reaction. XXX
 Reversible 1 flat point Effect can be removed at will as a free action.
 Ricochet 1 flat per rank Attacker can bounce effect to change direction.
-Secondary Effect +1 per rank Instant effect works on the target twice.
+XXX Secondary Effect +1 per rank Instant effect works on the target twice. XXX
 XXX Selective +1 per rank Resistible effect works only on the targets you choose. XXX
 XXX Sleep +0 per rank Effect leaves targets asleep rather than incapacitated. XXX
-Split 1 flat per rank Effect can split into multiple, smaller, effects.
-Subtle 1-2 flat points Effect is less noticeable (1 point) or not noticeable (2 points).
+XXX Split 1 flat per rank Effect can split into multiple, smaller, effects. XXX
+XXX Subtle 1-2 flat points Effect is less noticeable (1 point) or not noticeable (2 points). XXX
 XXX Sustained +0 per rank Makes a permanent effect sustained. XXX
-Triggered 1 flat per rank Effect can be set for later activation.
-Variable Descriptor 1-2 flat points Effect can change descriptors"""
+XXX Triggered 1 flat per rank Effect can be set for later activation. XXX
+XXX Variable Descriptor 1-2 flat points Effect can change descriptors XXX"""
 
 flaws = """Activation –1-2 flat points Effect requires a move (1 point) or standard (2 points) action to activate.
 Check Required –1 flat per rank Must succeed on a check to use effect.
 Concentration –1 per rank Sustained effect becomes concentration duration.
 Diminished Range –1 flat per rank Reduces short, medium, and long ranges for the effect.
 Distracting –1 per rank Vulnerable while using effect.
-Fades –1 per rank Effect loses 1 rank each time it is used.
+XXX Fades –1 per rank Effect loses 1 rank each time it is used. XXX
 Feedback –1 per rank Suffer damage when your effect’s manifestation is damaged.
 Grab-Based –1 per rank Effect requires a successful grab attack to use.
 Increased Action –1-3 per rank Increases action required to use effect.
 Limited –1 per rank Effect loses about half its effectiveness.
-Noticeable –1 flat point Continuous or permanent effect is noticeable.
+XXX Noticeable –1 flat point Continuous or permanent effect is noticeable. XXX
 Permanent –1 per rank Effect cannot be turned off or improved with extra effort.
 Quirk –1 flat per rank A minor flaw attached to an effect. The opposite of a Feature.
 Reduced Range –1-2 per rank Effect’s range decreases.

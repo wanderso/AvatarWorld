@@ -63,6 +63,9 @@ class Power:
     def get_points(self):
         return self.get_points_in_power().get_points_total()
 
+    def add_flat_modifier(self, mod):
+        pip = self.get_points_in_power()
+
     def affects_defense(self,defense):
         return False
 
@@ -198,21 +201,27 @@ class Power:
                             text_values_with_rank[i] = entry.represent_modifier_on_sheet_with_rank(self)
                             text_values_without_rank[i] = entry.represent_modifier_on_sheet_without_rank(self)
                 modifier_values[mod_type] = power_values
-                max_power_val = 0
-                index = len(power_values)
                 repr_string = ""
+                representation_list = []
+                index = len(power_values)
+                max_power_val = 0
                 for _ in range(0,len(power_values)):
                     index -= 1
                     if power_values[index] > max_power_val:
                         max_power_val = power_values[index]
                         if power_values[index] == self.get_rank():
-                            repr_string += (" %s" % (text_values_without_rank[index]))
+                            representation_list.append(" %s" % (text_values_without_rank[index]))
                         else:
-                            repr_string += (" %s" % (text_values_with_rank[index]))
+                            representation_list.append (" %s" % (text_values_with_rank[index]))
+                if mod_class.reverse_text_order == True:
+                    representation_list = reversed(representation_list)
+                for entry in representation_list:
+                    repr_string += entry
+                # The bug's in here
             elif mod_class.modifier_list_type == False:
                 mod_list = modifier_lists[mod_type]
                 rr_pow = mod_class.get_current_power_value(self)
-                if rr_pow == points.Rank_Range(self.get_rank()):
+                if (rr_pow == points.Rank_Range(self.get_rank())) and mod_class.flat_modifier == False:
                     repr_string = (" %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self)))
                     pass
                 else:
@@ -225,7 +234,7 @@ class Power:
 
     def get_character_sheet_repr(self):
         return_string = "%s:" % self.get_name()
-        addl_string = " %s %d" % (type(self).default_plain_text, self.get_rank())
+        addl_string = ""
         """Shadow Hankyū: Subtle 2 Precise Ranged Damage 8, Accurate 8, Affects Corporeal 8, Indirect 4 Limited to (from and to shadows) (37 points)"""
 
         # The magic happens
@@ -238,14 +247,17 @@ class Power:
         affects_duration = ['Increased Duration']
         affects_action = ['Increased Action','Sustained']
 
-        before_modifiers = ['Multiattack','Selective','Sleep','Contagious']
+        before_modifiers = ['Multiattack','Selective','Sleep','Contagious','Accurate','Fades','Subtle','Noticeable']
         after_modifiers = ['Secondary Effect']
+        display_power = ['Display Power']
 
-        process_order = [after_modifiers,affects_range,affects_duration,affects_action,before_modifiers]
+        process_order = [after_modifiers,display_power,affects_range,affects_duration,affects_action,before_modifiers]
 
         for mod_list in process_order:
             for mod in mod_list:
-                if mod in modifier_strings:
+                if mod == 'Display Power':
+                    addl_string = " %s %d" % (type(self).default_plain_text, self.get_rank()) + addl_string
+                elif mod in modifier_strings:
                     addl_string = modifier_strings[mod] + addl_string
 
 
@@ -274,7 +286,9 @@ class Attack(Power):
 
     default_plain_text = "Damage"
     
-    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack, modifiers.Selective, modifiers.Sleep, modifiers.Contagious, modifiers.Secondary_Effect]
+    allowed_modifiers = [modifiers.Increased_Range, modifiers.Increased_Duration, modifiers.Increased_Action, modifiers.Multiattack, modifiers.Selective,
+                         modifiers.Sleep, modifiers.Contagious, modifiers.Secondary_Effect, modifiers.Accurate, modifiers.Subtle, modifiers.Fades,
+                         modifiers.Noticeable]
 
     def __init__(self, name, skill, rank, defense, resistance, recovery, modifier_values={}):
         super().__init__(name, "Attack")

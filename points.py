@@ -164,6 +164,26 @@ class Rank_Range:
             if edited_this_run == False:
                 cleanup_progress = False
 
+class Rank_Range_With_Points():
+    def __init__(self, rank, starting_rank=0):
+        self.points = Points_In_Power(rank,Points_Per_Rank.from_int(0))
+        self.points.adjust_ppr_for_range(starting_rank, rank, 1)
+
+    def add_rank_range(self, rr):
+        for entry in rr.rank_range:
+            starting_val = entry[0]
+            ending_val = entry[1]
+            self.points.adjust_ppr_for_range(starting_val,ending_val,1)
+
+    def return_max_int(self):
+        ret_val = 0
+        for entry in self.points.ppr_list:
+            if ret_val < entry.get_x():
+                ret_val = entry.get_x()
+        return int(ret_val) - 1
+
+    def __repr__(self):
+        return str(self.points.rank_list) + " " + str(self.points.ppr_list)
 
 class Points_Per_Rank:
     def __init__(self, x=1):
@@ -214,7 +234,7 @@ class Flat_Points:
     def __init__(self, flat):
         self.flat_points = flat
 
-    def get_points(self):
+    def get_points_total(self):
         return self.flat_points
 
 class Points_In_Power:
@@ -266,8 +286,14 @@ class Points_In_Power:
             current_entry = entry
             current_index += 1
         for entry in self.flat_list:
-            current_total += entry.get_points()
+            current_total += entry.get_points_total()
         return math.ceil(current_total)
+
+    def add_flat_points(self, fp):
+        self.flat_list.append(fp)
+
+    def remove_flat_points(self, fp):
+        self.flat_list.remove(fp)
 
     def __repr__(self):
         return str(self.rank_list) + " " + str(self.ppr_list)
@@ -328,5 +354,14 @@ if __name__ == "__main__":
     print (str(rnge2))
     rnge3 = rnge + rnge2
     print (str(rnge3))
+
+    rrpr = Rank_Range_With_Points(12)
+    print(rrpr)
+
+    rrpr.add_rank_range(rnge3)
+    print(rrpr)
+    rrpr.add_rank_range(rnge)
+    print(rrpr)
+    print(rrpr.return_max_int())
 
 
