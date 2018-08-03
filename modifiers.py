@@ -193,12 +193,21 @@ class Modifier:
             self.apply(power)
 
     def adjust_points_with_modifier(self, mod, pos=True):
+        #TODO - this is broken - make it match with Adjust Points Per Rank above
+
         applied_already = (mod in self.linked_to)
+        ll = list(mod.linked_to)
         if applied_already:
             self.remove(mod)
-        self.points_in_modifier += mod.points_in_modifier
+        for entry in mod.linked_to:
+            mod.remove(entry)
+        mod.points_in_modifier += self.points_in_modifier
+        print(mod)
+        print(mod.points_in_modifier)
         if applied_already:
             self.apply(power)
+        for entry in ll:
+            mod.apply(entry)
 
     def apply_modifier_to_modifier(self, modifier):
         pass
@@ -222,6 +231,7 @@ class Modifier:
         return retstr
 
     def represent_modifier_on_sheet_with_rank(self, power):
+        #TODO - this is also broken
         retstr = ""
         for mod in self.modifier_modifiers:
             retstr += " %s%s" % (type(mod).get_class_plaintext_name(), mod.represent_modifier_on_sheet_with_rank(power))
