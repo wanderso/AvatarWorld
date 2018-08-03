@@ -935,6 +935,7 @@ def dictifier(c):
     if (getattr(c, "dictify", None) != None):
         return c.dictify()
     else:
+        print("You need to implement dictify for " + type(c).__name__)
         return repr(c)
 
 def avatar_caus_sim():
