@@ -49,6 +49,11 @@ class Modifier:
         self.modifier_modifiers = []
         self.applied = False
 
+    def dictify(self):
+        toreturn = vars(self)
+        toreturn.pop('associated_powers', None) #avoid circular reference
+        return toreturn 
+
     def power_single_entry_per_rank_init(self, starting_rank, rank):
         power = self.associated_powers[0]
         self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)

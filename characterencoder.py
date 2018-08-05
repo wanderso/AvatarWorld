@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 
-def serialize_whole_character(char):
-    if isinstance(char, character.Character):
-        return serialize_character(char)
-    else:
-        type_name = char.__class__.__name__
-        raise TypeError("Buddy, you're going to have to try harder than that to serialize " + type_name)
+import json
+import enum
 
+class CharacterSerializer(json.JSONEncoder):
+    def default(self, obj):
+        print("Trying to serialize " + type(obj).__name__)
+        if getattr(obj, "dictify", None) != None:
+            return {key: value for key, value in obj.dictify().items() if not callable(value)}
+        elif isinstance(obj, enum.Enum):
+            return obj.value
+        elif isinstance(obj, Fraction):
+            return repr(obj)
+        else:
+            return json.JSONEncoder.default(self, obj)
 
 

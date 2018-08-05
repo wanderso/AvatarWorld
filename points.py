@@ -12,6 +12,9 @@ class Rank_Range:
         else:
             self.rank_range = []
 
+    def dictify(self):
+        return {"rank_range" : repr(self.rank_range)}
+
     def __add__(self, other):
         rr_new = Rank_Range(0)
         for entry in self.rank_range:
@@ -189,7 +192,11 @@ class Points_Per_Rank:
     def __init__(self, x=1):
         self.x = x
 
+    def dictify(self):
+        return {"Points_Per_Rank" : repr(self)}
+
     def __add__(self, other):
+
         if hasattr(other, 'x'):
             return Points_Per_Rank(self.x + other.x)
         else:
@@ -237,6 +244,9 @@ class Flat_Points:
     def get_points_total(self):
         return self.flat_points
 
+    def dictify(self):
+        return vars(self)
+
 class Points_In_Power:
     def __init__(self, power_ranks, starting_ppr):
         self.rank_list = [power_ranks]
@@ -244,11 +254,12 @@ class Points_In_Power:
         self.flat_list = []
 
     def dictify(self):
-        return {
-                "rank_list": self.rank_list,
-                "ppr_list": self.ppr_list,
-                "flat_list": self.flat_list
-                }
+        return vars(self)
+        #return {
+        #        "rank_list": self.rank_list,
+        #        "ppr_list": self.ppr_list,
+        #        "flat_list": self.flat_list
+        #        }
 
     def add_ppr_break_point(self, break_point):
         if break_point in self.rank_list or break_point == 0:

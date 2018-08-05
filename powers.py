@@ -26,6 +26,9 @@ class Power:
         self.active = True
         self.natural_power = False
         self.points_in_power = None
+        
+    def dictify(self):
+        return vars(self)
 
     def calculate_points(self):
         return self.get_points_in_power().get_points_total()
