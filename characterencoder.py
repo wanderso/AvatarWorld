@@ -10,8 +10,6 @@ class CharacterSerializer(json.JSONEncoder):
             return {key: value for key, value in obj.dictify().items() if not callable(value)}
         elif isinstance(obj, enum.Enum):
             return obj.value
-        elif isinstance(obj, Fraction):
-            return repr(obj)
         else:
             return json.JSONEncoder.default(self, obj)
 
