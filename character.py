@@ -5,7 +5,6 @@ import ability
 import defenses
 import advantages
 import json
-import enum
 
 import characterencoder
 #https://pastebin.com/azrdkPdB blorp
