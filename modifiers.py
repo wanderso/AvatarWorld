@@ -110,6 +110,12 @@ class Modifier:
         else:
             return 1
 
+    def calculate_points(self):
+        return self.points_in_modifier.get_points_total()
+
+    def get_linked_to_list(self):
+        return self.linked_to
+
     def get_rank_range(self):
         return self.range_val
 
@@ -126,13 +132,14 @@ class Modifier:
             self.when_applied(target)
             self.adjust_points(target)
         elif (issubclass(type(target), Modifier)):
+            lln = list(target.get_linked_to_list())
             self.when_applied_to_modifier(target)
-            self.adjust_points_with_modifier(target, pos=False)
+            self.adjust_points_with_modifier(target, pos=True)
         target.append_modifier(self)
         self.linked_to.append(target)
 
     def remove(self, target):
-        if target in self.linked_to:
+        if not (target in self.linked_to):
             return
         if (issubclass(type(target), powers.Power)):
             self.when_removed(target)
@@ -174,40 +181,55 @@ class Modifier:
 
     def adjust_points_for_flat(self, power, pos=True):
         applied_already = (power in self.linked_to)
-        if applied_already:
-            self.remove(power)
         pip = power.get_points_in_power()
         if pos == True:
             pip.add_flat_points(self.flat_points)
         else:
             pip.remove_flat_points(self.flat_points)
-        if applied_already:
-            self.apply(power)
 
     def adjust_points_per_rank(self, power, pos=True):
         applied_already = (power in self.linked_to)
-        if applied_already:
-            self.remove(power)
         power.add_pip_to_power(self.points_in_modifier, pos=pos)
-        if applied_already:
-            self.apply(power)
 
     def adjust_points_with_modifier(self, mod, pos=True):
-        #TODO - this is broken - make it match with Adjust Points Per Rank above
-
-        applied_already = (mod in self.linked_to)
-        ll = list(mod.linked_to)
-        if applied_already:
-            self.remove(mod)
-        for entry in mod.linked_to:
-            mod.remove(entry)
+        for target in mod.linked_to:
+            if (issubclass(type(target), powers.Power)):
+                value = 0
+                pip_t = target.get_points_in_power()
+                for entry in mod.points_in_modifier:
+                    print(entry)
+                    if entry[0] == 'Flat Values':
+                        for v in entry[1]:
+                            pass
+                    else:
+                        print(pip_t)
+                        pip_t.adjust_ppr_for_range(value, entry[0], entry[1].get_points_per_rank_float(), pos=(not pos))
+                        print(pip_t)
+                        value = entry[0]
+            elif (issubclass(type(target), Modifier)):
+                pass
+        if (mod.get_rank_range().get_max() <= self.get_rank_range().get_max()):
+            print("Could be trouble")
         mod.points_in_modifier += self.points_in_modifier
-        print(mod)
-        print(mod.points_in_modifier)
-        if applied_already:
-            self.apply(power)
-        for entry in ll:
-            mod.apply(entry)
+        for target in mod.linked_to:
+            if (issubclass(type(target), powers.Power)):
+#                target.add_pip_to_power(mod.points_in_modifier, pos)
+                value = 0
+                pip_t = target.get_points_in_power()
+                for entry in mod.points_in_modifier:
+                    print(entry)
+                    if entry[0] == 'Flat Values':
+                        for v in entry[1]:
+                            pass
+                    else:
+                        print(pip_t)
+                        pip_t.adjust_ppr_for_range(value, entry[0], entry[1].get_points_per_rank_float(), pos=(pos))
+                        print(pip_t)
+
+                        value = entry[0]
+            elif (issubclass(type(target), Modifier)):
+                pass
+
 
     def apply_modifier_to_modifier(self, modifier):
         pass
@@ -224,24 +246,39 @@ class Modifier:
 
     def represent_modifier_on_sheet_without_rank(self, power):
         retstr = ""
+        modstr = ""
+        for mod in self.modifier_modifiers:
+            modstr += "%s" % (type(mod).get_class_plaintext_name())
+            rr = mod.get_rank_range()
+            if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                modstr += " %s" % (str(rr))
+            modstr += ", "
         if type(self).modifier_list_type == True:
-            retstr = "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
+            retstr += "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
         else:
-            retstr = "%s" % type(self).modifier_name
+            retstr += "%s" % type(self).modifier_name
+        if modstr == "":
+            pass
+        else:
+            retstr = "%s (%s)" % (retstr, modstr[:-2])
         return retstr
 
     def represent_modifier_on_sheet_with_rank(self, power):
         #TODO - this is also broken
         retstr = ""
+        modstr = ""
         for mod in self.modifier_modifiers:
-            retstr += " %s%s" % (type(mod).get_class_plaintext_name(), mod.represent_modifier_on_sheet_with_rank(power))
-            print(retstr)
+            modstr += " %s%s " % (mod.represent_modifier_on_sheet_with_rank(power), type(mod).get_class_plaintext_name())
         if type(self).modifier_list_type == True:
             retstr += "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
         if self.get_starting_rank() != 0:
             retstr = "%s %d-%d" % (retstr, self.get_starting_rank(), self.get_rank())
         else:
             retstr = "%s %d" % (retstr, self.get_rank())
+        if modstr == "":
+            pass
+        else:
+            retstr = "%s (%s)" % (retstr, modstr)
         return retstr
 
 

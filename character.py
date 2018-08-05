@@ -929,9 +929,12 @@ def menlo_cer_sim():
 #    print(vars(men))
 
     modifier_z = powers.modifiers.Secondary_Effect(vm,10,starting_rank=0)
-    modifier_j = powers.modifiers.Fades(modifier_z,10,starting_rank=0)
-    print(modifier_z)
-    print(vm.power_modifiers)
+
+#    print(vm.get_character_sheet_repr())
+
+    modifier_j = powers.modifiers.Fades(modifier_z,12,starting_rank=0)
+#    print(modifier_z)
+#   print(vm.power_modifiers)
 
     print(vm.get_character_sheet_repr())
 

@@ -220,8 +220,10 @@ class Power:
                     if power_values[index] > max_power_val:
                         max_power_val = power_values[index]
                         if power_values[index] == self.get_rank():
+ #                           print (text_values_without_rank[index])
                             representation_list.append(" %s" % (text_values_without_rank[index]))
                         else:
+#                            print(text_values_with_rank[index])
                             representation_list.append (" %s" % (text_values_with_rank[index]))
                 if mod_class.reverse_text_order == True:
                     representation_list = reversed(representation_list)
