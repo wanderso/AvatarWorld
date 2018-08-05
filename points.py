@@ -190,10 +190,12 @@ class Points_Per_Rank:
         self.x = x
 
     def __add__(self, other):
+        x_val_new = None
         if hasattr(other, 'x'):
-            return Points_Per_Rank(self.x + other.x)
+            x_val_new = (self.x + other.x)
         else:
-            return Points_Per_Rank(self.x + other)
+            x_val_new = (self.x + other)
+        return Points_Per_Rank(x_val_new)
 
     def __sub__(self, other):
         if hasattr(other, 'x'):
@@ -214,6 +216,9 @@ class Points_Per_Rank:
 
     def get_points_per_rank_float(self):
         return self.get_y()
+
+    def get_points_per_rank_fraction(self):
+        return fractions.Fraction(decimal.Decimal(self.get_y()))
 
     def get_x(self):
         return self.x
@@ -237,11 +242,67 @@ class Flat_Points:
     def get_points_total(self):
         return self.flat_points
 
+    def __str__(self):
+        return str(self.flat_points)
+
 class Points_In_Power:
     def __init__(self, power_ranks, starting_ppr):
         self.rank_list = [power_ranks]
         self.ppr_list = [Points_Per_Rank.from_ppr(starting_ppr)]
         self.flat_list = []
+
+    def __add__(self, other):
+        retpip = Points_In_Power(0,Points_Per_Rank.from_int(0))
+        retpip.rank_list = list(self.rank_list)
+        retpip.ppr_list = list(self.ppr_list)
+        retpip.flat_list = list(self.flat_list)
+
+        current_value = 0
+        current_index = 0
+        for entry in other.rank_list:
+            retpip.add_ppr_break_point(entry)
+            retpip.adjust_ppr_for_range(current_value,entry,other.ppr_list[current_index],pos=True)
+            current_value = entry
+            current_index += 1
+
+        for entry in other.flat_list:
+            retpip.add_flat_points(entry)
+        return retpip
+
+    def __sub__(self, other):
+        retpip = Points_In_Power(0,Points_Per_Rank.from_int(0))
+
+        retpip.rank_list = list(self.rank_list)
+        retpip.ppr_list = list(self.ppr_list)
+        retpip.flat_list = list(self.flat_list)
+
+        current_value = 0
+        current_index = 0
+        for entry in other.rank_list:
+            retpip.add_ppr_break_point(entry)
+            retpip.adjust_ppr_for_range(current_value,entry,other.ppr_list[current_index],pos=False)
+            current_value = entry
+            current_index += 1
+
+        for entry in other.flat_list:
+            if entry in retpip.flat_list:
+                retpip.remove_flat_points(entry)
+            else:
+                retpip.add_flat_points(Flat_Points(-entry.get_points_total()))
+        return retpip
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+    def __next__(self):
+        if self.index > len(self.rank_list):
+            raise StopIteration
+        elif self.index == len(self.rank_list):
+            self.index += 1
+            return ("Flat Values", self.flat_list)
+        self.index += 1
+        return (self.rank_list[self.index-1],self.ppr_list[self.index-1])
 
     def dictify(self):
         return {
@@ -264,9 +325,17 @@ class Points_In_Power:
                 self.ppr_list.insert(current_index,Points_Per_Rank.from_ppr(self.ppr_list[current_index]))
                 return
         self.rank_list.append(break_point)
-        self.ppr_list.append(Points_Per_Rank.from_ppr(self.ppr_list[-1]))
+#        self.ppr_list.append(Points_Per_Rank.from_ppr(self.ppr_list[-1]))
+        self.ppr_list.append(Points_Per_Rank.from_int(0))
 
     def adjust_ppr_for_range(self, range_start, range_end, ppr_modifier, pos=True):
+        if range_end > self.rank_list[-1]:
+            print("Overextending PPR!")
+            print("Overextending PPR!")
+            print("Overextending PPR!")
+            print("Overextending PPR!")
+            print(type(ppr_modifier))
+
         self.add_ppr_break_point(range_start)
         self.add_ppr_break_point(range_end)
         current_index = 0
@@ -303,72 +372,104 @@ class Points_In_Power:
         self.flat_list.remove(fp)
 
     def __repr__(self):
-        return str(self.rank_list) + " " + str(self.ppr_list)
+        retstr = str(self.rank_list) + " * " + str(self.ppr_list)
+        if len(self.flat_list)!= 0:
+            retstr = retstr + " + ["
+            for entry in self.flat_list:
+                retstr = retstr + str(entry) + "+"
+            retstr = retstr[:-1] + "]"
+        return retstr
 
 if __name__ == "__main__":
-    ppr_1 = Points_Per_Rank()
-    ppr_flat = Points_Per_Rank.from_int(-2)
-    ppr_1.adjust_points_per_rank(-1)
-    print("Current points_per_rank in ppr1: %f" % ppr_1.get_points_per_rank_float())
-    ppr_2 = Points_Per_Rank.from_ppr(ppr_1)
-    print("Current points_per_rank in ppr2: %f" % ppr_2.get_points_per_rank_float())
+    pip1 = Points_In_Power(10, Points_Per_Rank())
+    pip2 = Points_In_Power(10, Points_Per_Rank.from_int(0))
 
-    print("Current points_per_rank in ppr_flat: %f" % ppr_flat.get_points_per_rank_float())
+    print (pip1)
 
-    ppr_1.adjust_points_per_rank(3)
-    print("Current points_per_rank in ppr1: %f" % ppr_1.get_points_per_rank_float())
-    print("Current points_per_rank in ppr2: %f" % ppr_2.get_points_per_rank_float())
+    print (pip2)
 
-    pip = Points_In_Power(10,Points_Per_Rank())
+    print (pip1 + pip2)
 
-    print(pip.rank_list)
-    print(pip.ppr_list)
+    ppr1 = Points_Per_Rank()
+    ppr2 = Points_Per_Rank.from_int(-1)
 
-    pip.add_ppr_break_point(5)
-    pip.add_ppr_break_point(3)
-    pip.add_ppr_break_point(8)
+    print (ppr1)
+    print (ppr2)
+    print (ppr1 + ppr2)
 
-    pip.adjust_ppr_for_range(0,7,-3)
-
-    print(pip.rank_list)
-    print(pip.ppr_list)
-
-    print(pip.get_points_total())
-
-
-
-    rnge = Rank_Range(5,starting_rank=3)
-    rnge.add_range(1,2)
-    rnge.add_range(7,10)
-    print (rnge.rank_range)
-    rnge.add_range(0,10)
-    print (rnge.rank_range)
-    rnge.add_range(5,13)
-    print (rnge.rank_range)
-    rnge.add_range(15,18)
-    print(str(rnge))
-    rnge.add_range(12,15)
-    print(str(rnge))
-    rnge.remove_range(12,15)
-    print(str(rnge))
-    rnge.remove_range(10,16)
-    print(str(rnge))
-    rnge.remove_range(12,15)
-    print(str(rnge))
-    rnge.remove_range(5,12)
-    print (str(rnge))
-    rnge2 = Rank_Range(8,starting_rank=10)
-    print (str(rnge2))
-    rnge3 = rnge + rnge2
-    print (str(rnge3))
-
-    rrpr = Rank_Range_With_Points(12)
-    print(rrpr)
-
-    rrpr.add_rank_range(rnge3)
-    print(rrpr)
-    rrpr.add_rank_range(rnge)
-    print(rrpr)
-    print(rrpr.return_max_int())
+    # ppr_1 = Points_Per_Rank()
+    # ppr_flat = Points_Per_Rank.from_int(-2)
+    # ppr_1.adjust_points_per_rank(-1)
+    # print("Current points_per_rank in ppr1: %f" % ppr_1.get_points_per_rank_float())
+    # ppr_2 = Points_Per_Rank.from_ppr(ppr_1)
+    # print("Current points_per_rank in ppr2: %f" % ppr_2.get_points_per_rank_float())
+    #
+    # print("Current points_per_rank in ppr_flat: %f" % ppr_flat.get_points_per_rank_float())
+    #
+    # ppr_1.adjust_points_per_rank(3)
+    # print("Current points_per_rank in ppr1: %f" % ppr_1.get_points_per_rank_float())
+    # print("Current points_per_rank in ppr2: %f" % ppr_2.get_points_per_rank_float())
+    #
+    # pip = Points_In_Power(10,Points_Per_Rank())
+    #
+    # print(pip.rank_list)
+    # print(pip.ppr_list)
+    #
+    # pip.add_ppr_break_point(5)
+    # pip.add_ppr_break_point(3)
+    # pip.add_ppr_break_point(8)
+    #
+    # pip.adjust_ppr_for_range(0,7,-3)
+    #
+    # print(pip.rank_list)
+    # print(pip.ppr_list)
+    #
+    # print(pip.get_points_total())
+    #
+    # pip2 = Points_In_Power(10, Points_Per_Rank())
+    # print(pip2.get_points_total())
+    #
+    # pip3 = pip2 - pip2
+    # print("DEADBEEF")
+    # print(pip3.get_points_total())
+    # print(pip3.rank_list)
+    # print(pip3.ppr_list)
+    #
+    #
+    #
+    #
+    # rnge = Rank_Range(5,starting_rank=3)
+    # rnge.add_range(1,2)
+    # rnge.add_range(7,10)
+    # print (rnge.rank_range)
+    # rnge.add_range(0,10)
+    # print (rnge.rank_range)
+    # rnge.add_range(5,13)
+    # print (rnge.rank_range)
+    # rnge.add_range(15,18)
+    # print(str(rnge))
+    # rnge.add_range(12,15)
+    # print(str(rnge))
+    # rnge.remove_range(12,15)
+    # print(str(rnge))
+    # rnge.remove_range(10,16)
+    # print(str(rnge))
+    # rnge.remove_range(12,15)
+    # print(str(rnge))
+    # rnge.remove_range(5,12)
+    # print (str(rnge))
+    # rnge2 = Rank_Range(8,starting_rank=10)
+    # print (str(rnge2))
+    # rnge3 = rnge + rnge2
+    # print (str(rnge3))
+    #
+    # rrpr = Rank_Range_With_Points(12)
+    # print(rrpr)
+    #
+    # rrpr.add_rank_range(rnge3)
+    # print(rrpr)
+    # rrpr.add_rank_range(rnge)
+    # print(rrpr)
+    # print(rrpr.return_max_int())
 
 

@@ -51,6 +51,9 @@ class Power:
     def get_name(self):
         return self.name
 
+    def get_points_in_power(self):
+        return self.points_in_power
+
     def get_power_type(self):
         return self.power_type
 
@@ -63,9 +66,6 @@ class Power:
     def get_points(self):
         return self.get_points_in_power().get_points_total()
 
-    def add_flat_modifier(self, mod):
-        pip = self.get_points_in_power()
-
     def affects_defense(self,defense):
         return False
 
@@ -77,6 +77,18 @@ class Power:
 
     def remove_value_from_extras_flaws(self, value):
         self.extras_flaws.remove(value)
+
+    def add_pip_to_power(self, pip, pos=True):
+        if pos == True:
+            self.points_in_power = self.points_in_power + pip
+        elif pos == False:
+            self.points_in_power = self.points_in_power - pip
+
+    def append_modifier(self, new_modifier):
+        self.power_modifiers.append(new_modifier)
+
+    def remove_modifier(self, old_modifier):
+        self.power_modifiers.remove(old_modifier)
 
     def process_modifiers(self):
         for possible_modifier_class in type(self).allowed_modifiers:
@@ -122,14 +134,12 @@ class Power:
                                     self.modifiers[text_list[val]] = ex_rank
                                     mod_val = ex_rank
                         new_modifier = possible_modifier_class(self, mod_val)
-                        self.power_modifiers.append(new_modifier)
             else:
                 entry = possible_modifier_class.get_class_plaintext_name()
                 if entry in self.modifiers:
                     if self.modifiers[entry] == "default":
                         self.modifiers[entry] = possible_modifier_class.get_default_value(self)
                     new_modifier = possible_modifier_class(self, self.modifiers[entry])
-                    self.power_modifiers.append(new_modifier)
 
 
     def repr_process_range(self, altered_value, default_value, value_list, name_list):
@@ -210,8 +220,10 @@ class Power:
                     if power_values[index] > max_power_val:
                         max_power_val = power_values[index]
                         if power_values[index] == self.get_rank():
+ #                           print (text_values_without_rank[index])
                             representation_list.append(" %s" % (text_values_without_rank[index]))
                         else:
+#                            print(text_values_with_rank[index])
                             representation_list.append (" %s" % (text_values_with_rank[index]))
                 if mod_class.reverse_text_order == True:
                     representation_list = reversed(representation_list)
@@ -274,9 +286,7 @@ class Power:
             return_string += "s"
         return_string += ")\n"
         return return_string
-    
-    def get_points_in_power(self):
-        return self.points_in_power
+
 
 class Attack(Power):
     points_per_rank_default = 1
