@@ -270,6 +270,14 @@ class Points_Per_Rank_X_Modifier:
     def get_modifier(self):
         return self.xmod
 
+    def get_y(self):
+        if self.xmod is None:
+            return 0.0
+        elif self.xmod >= 1:
+            return self.xmod
+        else:
+            return 1.0 / (2.0 - self.xmod)
+
 class Points_Flat_Modifier:
     def __init__(self, flat_points):
         self.flat_points = flat_points
@@ -308,7 +316,21 @@ class Points_Modifier_Adjuster:
         value = 0
         index = 0
         for entry in other.rank_list:
+            retpma.adjust_x_for_ranks(other.point_adjust_list[index],entry,value,True)
+            value = entry
+        return retpma
+
+    def __sub__(self, other):
+        retpma = Points_Modifier_Adjuster(max(self.rank_list[-1],other.rank_list[-1]))
+        value = 0
+        index = 0
+        for entry in self.rank_list:
             retpma.adjust_x_for_ranks(self.point_adjust_list[index],entry,value,True)
+            value = entry
+        value = 0
+        index = 0
+        for entry in other.rank_list:
+            retpma.adjust_x_for_ranks(other.point_adjust_list[index],entry,value,False)
             value = entry
         return retpma
 
@@ -320,6 +342,7 @@ class Points_Modifier_Adjuster:
         self.add_ppr_break_point(starting_rank)
         current_index = 0
         adjust_start = (starting_rank == 0)
+
         for entry in self.rank_list:
             if adjust_start == True:
                 if pos == True:
@@ -331,6 +354,7 @@ class Points_Modifier_Adjuster:
             if entry == rank:
                 adjust_start = False
             current_index += 1
+
 
     def add_ppr_break_point(self, break_point):
         if break_point in self.rank_list or break_point == 0:
@@ -411,7 +435,7 @@ class Points_In_Power:
                 retpip.remove_flat_points(other)
             else:
                 retpip.add_flat_points(Flat_Points(-other.get_points_total()))
-        elif type(other) == Points_Per_Rank_X_Modifier:
+        elif type(other) == Points_Modifier_Adjuster:
             current_value = 0
             current_index = 0
             for entry in other.rank_list:
@@ -433,6 +457,21 @@ class Points_In_Power:
             return ("Flat Values", self.flat_list)
         self.index += 1
         return (self.rank_list[self.index-1],self.ppr_list[self.index-1])
+
+    def points_modifier_adjust_by_y(self, other, pos=True):
+        retpip = Points_In_Power(0, Points_Per_Rank.from_int(0))
+
+        retpip.rank_list = list(self.rank_list)
+        retpip.ppr_list = list(self.ppr_list)
+        retpip.flat_list = list(self.flat_list)
+
+        current_value = 0
+        current_index = 0
+        for entry in other.rank_list:
+            retpip.add_ppr_break_point(entry)
+            retpip.adjust_ppr_for_range(current_value, entry, other.point_adjust_list[current_index], False, pos=pos)
+            current_value = entry
+            current_index += 1
 
     def dictify(self):
         return {

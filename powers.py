@@ -200,6 +200,7 @@ class Power:
                 mod_plain_text = mod_options.get_plain_text_names_list()
                 mod_values = mod_options.get_values_list()
                 power_values = [0] * len(mod_plain_text)
+                modifier_modifier_values = [[]] * len(mod_plain_text)
                 text_values_with_rank = [""] * len(mod_plain_text)
                 text_values_without_rank = [""] * len(mod_plain_text)
                 for entry in modifier_lists[mod_type]:
@@ -210,21 +211,34 @@ class Power:
                             power_values[i] = rank_val
                             text_values_with_rank[i] = entry.represent_modifier_on_sheet_with_rank(self)
                             text_values_without_rank[i] = entry.represent_modifier_on_sheet_without_rank(self)
+                for entry in modifier_lists[mod_type]:
+                    index = entry.get_power_new_value()
+                    modifier_modifier_values[index] = entry.get_modifier_modifiers()
                 modifier_values[mod_type] = power_values
                 repr_string = ""
                 representation_list = []
                 index = len(power_values)
                 max_power_val = 0
+                max_power_index = len(power_values)-1
+
+                print(power_values)
+                print(modifier_modifier_values)
                 for _ in range(0,len(power_values)):
                     index -= 1
                     if power_values[index] > max_power_val:
                         max_power_val = power_values[index]
+                        max_power_index = index
                         if power_values[index] == self.get_rank():
  #                           print (text_values_without_rank[index])
                             representation_list.append(" %s" % (text_values_without_rank[index]))
                         else:
 #                            print(text_values_with_rank[index])
                             representation_list.append (" %s" % (text_values_with_rank[index]))
+                    elif modifier_modifier_values[index] != modifier_modifier_values[max_power_index]:
+                        if power_values[index] == self.get_rank():
+                            representation_list.append(" %s" % (text_values_without_rank[index]))
+                        else:
+                            representation_list.append(" %s" % (text_values_with_rank[index]))
                 if mod_class.reverse_text_order == True:
                     representation_list = reversed(representation_list)
                 for entry in representation_list:

@@ -110,6 +110,9 @@ class Modifier:
         else:
             return 1
 
+    def get_modifier_modifiers(self):
+        return self.modifier_modifiers
+
     def calculate_points(self):
         return self.points_in_modifier.get_points_total()
 
@@ -191,25 +194,24 @@ class Modifier:
         power.add_pip_to_power(self.points_in_modifier, pos=pos)
 
     def adjust_points_with_modifier(self, mod, pos=True):
+        # Errors probably in here.
         for target in mod.linked_to:
             if (issubclass(type(target), powers.Power)):
-                value = 0
                 pip_t = target.get_points_in_power()
-                pip_t -= self.points_in_modifier
+                pip_t.points_modifier_adjust_by_y(mod.points_in_modifier,pos=(not pos))
             elif (issubclass(type(target), Modifier)):
-                pass
-        if (mod.get_rank_range().get_max() <= self.get_rank_range().get_max()):
+                pip_t = target.points_in_modifier
+                mod.adjust_points_with_modifier(target, pos=(not pos))
+        if (mod.get_rank_range().get_max() < self.get_rank_range().get_max()):
             print("Could be trouble")
         mod.points_in_modifier += self.points_in_modifier
         for target in mod.linked_to:
             if (issubclass(type(target), powers.Power)):
-#                target.add_pip_to_power(mod.points_in_modifier, pos)
-                value = 0
                 pip_t = target.get_points_in_power()
-                pip_t += self.points_in_modifier
+                pip_t.points_modifier_adjust_by_y(mod.points_in_modifier,pos=pos)
             elif (issubclass(type(target), Modifier)):
-                pass
-
+                pip_t = target.points_in_modifier
+                mod.adjust_points_with_modifier(target, pos=pos)
 
     def apply_modifier_to_modifier(self, modifier):
         pass
@@ -228,7 +230,7 @@ class Modifier:
         retstr = ""
         modstr = ""
         for mod in self.modifier_modifiers:
-            modstr += "%s" % (type(mod).get_class_plaintext_name())
+            modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
             rr = mod.get_rank_range()
             if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
                 modstr += " %s" % (str(rr))
