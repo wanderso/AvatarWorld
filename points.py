@@ -173,7 +173,7 @@ class Rank_Range_With_Points():
         for entry in rr.rank_range:
             starting_val = entry[0]
             ending_val = entry[1]
-            self.points.adjust_x_for_ranks(Points_Per_Rank_X_Modifier(1),starting_val,ending_val)
+            self.points.adjust_x_for_ranks(Points_Per_Rank_X_Modifier(1),ending_val,starting_val,pos=True)
 
     def return_max_int(self):
         ret_val = 0
@@ -183,7 +183,7 @@ class Rank_Range_With_Points():
         return int(ret_val) - 1
 
     def __repr__(self):
-        return str(self.points.rank_list) + " " + str(self.points.ppr_list)
+        return str(self.points)
 
 class Points_Per_Rank:
     def __init__(self, x=1):
