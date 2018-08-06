@@ -49,11 +49,11 @@ class Modifier:
         self.modifier_modifiers = []
 
     def set_modifier_rank(self, starting_rank=0, rank=1):
-        self.ppr_modifiers = points.Points_Per_Rank.from_int(type(self).points_per_rank_modifier)
+        self.base_modifier = type(self).points_per_rank_modifier
         self.range_val = points.Rank_Range(rank, starting_rank=starting_rank)
 
-        self.points_in_modifier = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(0))
-        self.points_in_modifier.adjust_ppr_for_range(starting_rank,rank,self.ppr_modifiers)
+        self.points_in_modifier = points.Points_Modifier_Adjuster(rank)
+        self.points_in_modifier.adjust_x_for_ranks(self.base_modifier, rank, starting_rank=starting_rank, pos=True)
 
     def link_modifier_per_rank(self, starting_rank, rank, target):
         is_power = (issubclass(type(target), powers.Power))
@@ -70,16 +70,16 @@ class Modifier:
             self.power_new_value = type(self).get_current_power_value(target)
 
     def link_modifier_flat_with_rank(self, starting_rank, rank, power):
+        self.base_modifier = type(self).points_per_rank_modifier
+        self.range_val = points.Rank_Range(rank, starting_rank=starting_rank)
+
         self.power_original_value = type(self).get_current_power_value(power)
 
-        self.set_modifier_rank(starting_rank=starting_rank,rank=rank)
+        total_p = (self.get_rank()-self.get_starting_rank())
 
         if type(self).modifier_pyramid_type == True:
             for i in range(self.get_starting_rank(),self.get_rank()):
-                self.points_in_modifier.adjust_ppr_for_range(self.get_starting_rank(), i, 1)
-            self.points_in_modifier.adjust_ppr_for_range(self.get_starting_rank(), self.get_rank(), 1, pos=False)
-
-        total_p = self.points_in_modifier.get_points_total()
+                total_p += i
 
         if type(self).modifier_is_flaw:
             total_p = -1 * total_p
@@ -188,7 +188,6 @@ class Modifier:
             pip.remove_flat_points(self.flat_points)
 
     def adjust_points_per_rank(self, power, pos=True):
-        applied_already = (power in self.linked_to)
         power.add_pip_to_power(self.points_in_modifier, pos=pos)
 
     def adjust_points_with_modifier(self, mod, pos=True):
@@ -196,16 +195,7 @@ class Modifier:
             if (issubclass(type(target), powers.Power)):
                 value = 0
                 pip_t = target.get_points_in_power()
-                for entry in mod.points_in_modifier:
-                    print(entry)
-                    if entry[0] == 'Flat Values':
-                        for v in entry[1]:
-                            pass
-                    else:
-                        print(pip_t)
-                        pip_t.adjust_ppr_for_range(value, entry[0], entry[1].get_points_per_rank_float(), pos=(not pos))
-                        print(pip_t)
-                        value = entry[0]
+                pip_t -= self.points_in_modifier
             elif (issubclass(type(target), Modifier)):
                 pass
         if (mod.get_rank_range().get_max() <= self.get_rank_range().get_max()):
@@ -216,17 +206,7 @@ class Modifier:
 #                target.add_pip_to_power(mod.points_in_modifier, pos)
                 value = 0
                 pip_t = target.get_points_in_power()
-                for entry in mod.points_in_modifier:
-                    print(entry)
-                    if entry[0] == 'Flat Values':
-                        for v in entry[1]:
-                            pass
-                    else:
-                        print(pip_t)
-                        pip_t.adjust_ppr_for_range(value, entry[0], entry[1].get_points_per_rank_float(), pos=(pos))
-                        print(pip_t)
-
-                        value = entry[0]
+                pip_t += self.points_in_modifier
             elif (issubclass(type(target), Modifier)):
                 pass
 
@@ -320,7 +300,7 @@ of this extra, for +2 cost per rank.
 makes it a ranged effect.
 • Perception: When applied to a ranged effect, this
 modifier makes it perception range."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Increased Range"
     modifier_list_type = True
@@ -369,7 +349,7 @@ normally, including resistance checks to remove ongoing
 effects.
 • Continuous: When applied to a sustained duration
 effect, this modifier makes it continuous"""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Increased Duration"
     modifier_list_type = True
@@ -414,7 +394,7 @@ with a different effect, however. So, for example, if you hit
 a target with a Secondary Damage Effect then, on the following
 round, hit with an Affliction, the target suffers both
 the Affliction and the Secondary Damage."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Secondary Effect"
     modifier_list_type = True
@@ -468,7 +448,7 @@ operates automatically in response to something
 else, such as an attack.
 • None: It requires no action to use the effect. It is always
 active."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Increased Action"
     modifier_list_type = True
@@ -534,7 +514,7 @@ An opponent can choose to ignore the cover provided
 by your covering attack at the cost of being automatically
 attacked by it; make a normal attack check to hit
 that opponent."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Multiattack"
 
@@ -553,7 +533,7 @@ most useful for area effects (see the Area extra). You must
 be able to accurately perceive a target in order to decide
 whether or not to affect it. For a degree of selectivity with
 non-resistible effects, use the Precise modifier."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Selective"
 
@@ -575,7 +555,7 @@ Examples of effects with this extra include “sticky” Afflictions
 trapping anyone touching them, disease- or toxinbased
 Weaken effects, or even a Nullify effect spreading
 from one victim to another."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Contagious"
 
@@ -598,7 +578,7 @@ how a faded effect recovers, but it should generally occur
 outside of combat and take at least an hour’s time. The GM
 may allow a hero to recover a faded effect immediately
 and completely by spending a hero point."""
-    points_per_rank_modifier = -1
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
     modifier_needs_rank = True
     modifier_name = "Fades"
 
@@ -627,7 +607,7 @@ turned on and off, improved with extra effort, and
 used for power stunts. It might represent a power
 like a personal force field, or increased density requiring
 a modicum of concentration to maintain."""
-    points_per_rank_modifier = 0
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(0)
     modifier_needs_rank = True
     modifier_name = "Sustained"
 
@@ -652,7 +632,7 @@ class Sleep(Modifier):
 incapacitated condition, the effect leaves them asleep
 whenever it would normally render them incapacitated.
 See the description of asleep under Conditions."""
-    points_per_rank_modifier = 0
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(0)
     modifier_needs_rank = True
     modifier_name = "Sleep"
 
@@ -672,7 +652,7 @@ class Accurate(Modifier):
     """An effect with this extra is especially accurate; you get +2
 per Accurate rank to attack checks made with it. The power
 level limits maximum attack bonus with any given effect."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Accurate"
     modifier_list_type = False
@@ -709,7 +689,7 @@ for an active Insidious effect to be noticeable: the target
 can perceive the use of the effect, but not its results:
 the effect appears “harmless” or doesn’t seem to “do
 anything” since the target cannot detect the results."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Insidious"
     modifier_list_type = False
@@ -734,7 +714,7 @@ qualify for a surprise attack. Rank 1 makes an effect difficult
 to notice; a DC 20 Perception check is required, or the effect
 is noticeable only to certain exotic senses (at the GM’s discretion).
 Rank 2 makes the effect completely undetectable"""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Subtle"
     modifier_list_type = False
@@ -759,7 +739,7 @@ display for the effect. For example Noticeable Protection
 may take the form of armored plates or a tough, leathery-looking
 hide, making it clear the character is tougher
 than normal."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Noticeable"
     modifier_list_type = False
@@ -791,7 +771,7 @@ split among three targets, then four, and so forth. An effect
 cannot split to less than 1 rank per target, and cannot
 apply more than one split to the same target. Thus maximum
 Split rank equals the effect’s rank."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Split"
     modifier_list_type = False
@@ -830,7 +810,7 @@ modifier. After its last activation, it stops working.
 You can apply an additional rank of Triggered to have a
 Variable Trigger, allowing you to change the effect’s trigger
 each time you set it."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Triggered"
     modifier_list_type = False
@@ -855,7 +835,7 @@ so forth. With rank 2, you can apply any of a broad group,
 such as any mental, magical, or technological descriptor.
 The GM decides if a given descriptor is appropriate in conjunction
 with a particular effect and this modifier."""
-    points_per_rank_modifier = 1
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Variable_Descriptor"
     modifier_list_type = False

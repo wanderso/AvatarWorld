@@ -25,7 +25,7 @@ class Power:
         self.available = True
         self.active = True
         self.natural_power = False
-        self.points_in_power = None
+        self.points_in_power = points.Points_In_Power(self.rank, points.Points_Per_Rank.from_int(type(self).points_per_rank_default))
 
     def calculate_points(self):
         return self.get_points_in_power().get_points_total()
@@ -311,8 +311,7 @@ class Attack(Power):
         self.points = rank
         self.base_power_points = rank
         self.points_per_rank = 1.0
-
-        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
+        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(type(self).points_per_rank_default))
         
         self.process_modifiers()
 
@@ -358,7 +357,7 @@ class Protection(Power):
         self.points = rank
         self.points_per_rank = 1.0
         self.modifiers = modifier_values
-        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
+        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(type(self).points_per_rank_default))
         self.process_modifiers()
 
     def get_rank(self):

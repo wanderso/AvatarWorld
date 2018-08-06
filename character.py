@@ -921,6 +921,8 @@ def menlo_cer_sim():
 #    print(json.dumps(men, default=dictifier))
     men.print_character_sheet()
 
+
+    print(vm.get_points_in_power())
     print(men.print_character_sheet())
     #print(vm.get_modifiers())
 
