@@ -235,6 +235,21 @@ class Points_Per_Rank:
     def __repr__(self):
         return fractions.Fraction(decimal.Decimal(self.get_y())).__repr__()
 
+class Points_Per_Rank_Modifier:
+    def __init__(self, xmod):
+        self.xmod = xmod
+
+    def __add__(self, other):
+        return Points_Per_Rank_Modifier(self.xmod + other.xmod)
+
+    def __sub__(self, other):
+        return Points_Per_Rank_Modifier(self.xmod - other.xmod)
+
+    def __eq__(self, other):
+        return self.xmod == other.xmod
+
+    
+
 class Flat_Points:
     def __init__(self, flat):
         self.flat_points = flat
