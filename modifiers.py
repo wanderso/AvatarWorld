@@ -712,7 +712,70 @@ the GM’s discretion, someone holding, carrying, or wearing
 an object can make a Dodge resistance check against
 the effect, representing pulling the object out of the way
 at the last moment."""
-    pass
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Affects Objects"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        rrs = []
+        power_val = cls.get_power_default(power)
+        rrpr = points.Rank_Range_With_Points(power.get_rank())
+        for mod in power.get_extras_flaws():
+            if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
+                rrs.append(mod.get_rank_range())
+        for r in rrs:
+            rrpr.add_rank_range(r)
+        return power_val + rrpr.return_max_int()
+
+    def represent_modifier_on_sheet_without_rank(self, power):
+        retstr = ""
+        modstr = ""
+        only_val = False
+        for mod in self.modifier_modifiers:
+            if type(mod) == Limited:
+                only_val = True
+            else:
+                modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
+                rr = mod.get_rank_range()
+                if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                    modstr += " %s" % (str(rr))
+                modstr += ", "
+        if only_val == False:
+            retstr = "Affects Objects"
+        else:
+            retstr = "Affects Only Objects"
+        if modstr != "":
+            retstr = "%s (%s)" % (retstr, modstr[:-2])
+        return retstr
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        retstr = ""
+        modstr = ""
+        for mod in self.modifier_modifiers:
+            modstr += " %s%s " % (mod.represent_modifier_on_sheet_with_rank(power), type(mod).get_class_plaintext_name())
+        if self.get_starting_rank() != 0:
+            retstr = "%s %d-%d" % (retstr, self.get_starting_rank(), self.get_rank())
+        else:
+            retstr = "%s %d" % (retstr, self.get_rank())
+        if modstr == "":
+            pass
+        else:
+            retstr = "%s (%s)" % (retstr, modstr)
+        return retstr
+
 
 
 class Accurate(Modifier):
@@ -729,11 +792,11 @@ level limits maximum attack bonus with any given effect."""
         super().__init__()
         self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
-        def when_applied(self, power):
-            self.when_applied_stored_in_extras(power)
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
 
-        def when_removed(self, power):
-            self.when_removed_stored_in_extras(power)
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
 
 class Insidious(Modifier):
     """This modifier is similar to the Subtle modifier (later in
@@ -767,11 +830,11 @@ anything” since the target cannot detect the results."""
         super().__init__()
         self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
-        def when_applied(self, power):
-            self.when_applied_stored_in_extras(power)
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
 
-        def when_removed(self, power):
-            self.when_removed_stored_in_extras(power)
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
 
 
 class Subtle(Modifier):
@@ -792,11 +855,11 @@ Rank 2 makes the effect completely undetectable"""
         super().__init__()
         self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
-        def when_applied(self, power):
-            self.when_applied_stored_in_extras(power)
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
 
-        def when_removed(self, power):
-            self.when_removed_stored_in_extras(power)
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
 
 class Noticeable(Modifier):
     """A continuous or permanent effect with this modifier is
@@ -818,11 +881,11 @@ than normal."""
         super().__init__()
         self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
-        def when_applied(self, power):
-            self.when_applied_stored_in_extras(power)
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
 
-        def when_removed(self, power):
-            self.when_removed_stored_in_extras(power)
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
 
 class Split(Modifier):
     """With this modifier, a resistible effect that works on one target
@@ -848,11 +911,11 @@ Split rank equals the effect’s rank."""
         super().__init__()
         self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
-        def when_applied(self, power):
-            self.when_applied_stored_in_extras(power)
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
 
-        def when_removed(self, power):
-            self.when_removed_stored_in_extras(power)
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
 
 class Triggered(Modifier):
     """You can “set” an instant duration effect with this modifier
@@ -887,11 +950,11 @@ each time you set it."""
         super().__init__()
         self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
-        def when_applied(self, power):
-            self.when_applied_stored_in_extras(power)
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
 
-        def when_removed(self, power):
-            self.when_removed_stored_in_extras(power)
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
 
 class Variable_Descriptor(Modifier):
     """You can change the descriptors of an effect with this modifier,
@@ -912,11 +975,11 @@ with a particular effect and this modifier."""
         super().__init__()
         self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
-        def when_applied(self, power):
-            self.when_applied_stored_in_extras(power)
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
 
-        def when_removed(self, power):
-            self.when_removed_stored_in_extras(power)
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
 
 
 extras = """XXX Accurate 1 flat per rank +2 attack check bonus per rank XXX
