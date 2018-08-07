@@ -650,6 +650,71 @@ See the description of asleep under Conditions."""
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
 
+class Affects_Corporeal(Modifier):
+    """An incorporeal being can use an effect with this extra on
+the corporeal world (see the Insubstantial effect description).
+When an effect is used against a corporeal target,
+the effect’s rank is equal to the rank of this extra, up to a
+maximum of the effect’s full rank. Characters with lower
+ranks 1–3 of Insubstantial do not require this extra for
+their effects to work on the physical world, although they
+can apply it to their Strength rank to allow them to exert
+some Strength while Insubstantial."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Affects Corporeal"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
+class Affects_Incorporeal(Modifier):
+    """An effect with this extra works on insubstantial targets,
+in addition to having its normal effect on corporeal targets.
+Rank 1 allows the effect to work at half its normal
+rank against insubstantial targets (rounded down); rank 2
+allows the effect to function at its full rank against them"""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Affects Incorporeal"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+        def when_applied(self, power):
+            self.when_applied_stored_in_extras(power)
+
+        def when_removed(self, power):
+            self.when_removed_stored_in_extras(power)
+
+class Affects_Objects(Modifier):
+    """This modifier allows effects normally resisted by Fortitude
+to work on non-living objects (those with no Stamina).
+Generally, this extra applies to effects like Heal or Weaken,
+allowing them to work on objects in the same way as they
+do living creatures. If the effect Affects Only Objects,
+working on objects but not on living creatures, it has a net
+modifier of +0.
+Objects do not get resistance checks; the effect works on
+the targeted object at its maximum degree of success. At
+the GM’s discretion, someone holding, carrying, or wearing
+an object can make a Dodge resistance check against
+the effect, representing pulling the object out of the way
+at the last moment."""
+    pass
+
+
 class Accurate(Modifier):
     """An effect with this extra is especially accurate; you get +2
 per Accurate rank to attack checks made with it. The power
@@ -855,8 +920,8 @@ with a particular effect and this modifier."""
 
 
 extras = """XXX Accurate 1 flat per rank +2 attack check bonus per rank XXX
-Affects Corporeal 1 flat per rank Effect works on corporeal beings with rank equal to extra rank.
-Affects Insubstantial 1-2 flat points Effect works on insubstantial beings at half (1 rank) or full (2 ranks) effect.
+XXX Affects Corporeal 1 flat per rank Effect works on corporeal beings with rank equal to extra rank. XXX
+XXX Affects Insubstantial 1-2 flat points Effect works on insubstantial beings at half (1 rank) or full (2 ranks) effect. XXX
 Affects Objects +0-1 per rank Fortitude resisted effect works on objects.
 Affects Others +0-1 per rank Personal effect works on others.
 Alternate Effect 1-2 flat points Substitute one effect for another in a power.

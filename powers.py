@@ -220,30 +220,28 @@ class Power:
                 index = len(power_values)
                 max_power_val = 0
                 max_power_index = len(power_values)-1
-
-                print(power_values)
-                print(modifier_modifier_values)
+                last_power_index = []
                 for _ in range(0,len(power_values)):
                     index -= 1
                     if power_values[index] > max_power_val:
                         max_power_val = power_values[index]
                         max_power_index = index
                         if power_values[index] == self.get_rank():
- #                           print (text_values_without_rank[index])
                             representation_list.append(" %s" % (text_values_without_rank[index]))
                         else:
-#                            print(text_values_with_rank[index])
                             representation_list.append (" %s" % (text_values_with_rank[index]))
-                    elif modifier_modifier_values[index] != modifier_modifier_values[max_power_index]:
+                    elif modifier_modifier_values[index] != last_power_index:
+
                         if power_values[index] == self.get_rank():
                             representation_list.append(" %s" % (text_values_without_rank[index]))
                         else:
                             representation_list.append(" %s" % (text_values_with_rank[index]))
+                    last_power_index = modifier_modifier_values[index]
+
                 if mod_class.reverse_text_order == True:
                     representation_list = reversed(representation_list)
                 for entry in representation_list:
                     repr_string += entry
-                # The bug's in here
             elif mod_class.modifier_list_type == False:
                 mod_list = modifier_lists[mod_type]
                 rr_pow = mod_class.get_current_power_value(self)
