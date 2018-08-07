@@ -25,7 +25,7 @@ class Power:
         self.available = True
         self.active = True
         self.natural_power = False
-        self.points_in_power = None
+        self.points_in_power = points.Points_In_Power(self.rank, points.Points_Per_Rank.from_int(type(self).points_per_rank_default))
 
     def calculate_points(self):
         return self.get_points_in_power().get_points_total()
@@ -200,6 +200,7 @@ class Power:
                 mod_plain_text = mod_options.get_plain_text_names_list()
                 mod_values = mod_options.get_values_list()
                 power_values = [0] * len(mod_plain_text)
+                modifier_modifier_values = [[]] * len(mod_plain_text)
                 text_values_with_rank = [""] * len(mod_plain_text)
                 text_values_without_rank = [""] * len(mod_plain_text)
                 for entry in modifier_lists[mod_type]:
@@ -210,26 +211,37 @@ class Power:
                             power_values[i] = rank_val
                             text_values_with_rank[i] = entry.represent_modifier_on_sheet_with_rank(self)
                             text_values_without_rank[i] = entry.represent_modifier_on_sheet_without_rank(self)
+                for entry in modifier_lists[mod_type]:
+                    index = entry.get_power_new_value()
+                    modifier_modifier_values[index] = entry.get_modifier_modifiers()
                 modifier_values[mod_type] = power_values
                 repr_string = ""
                 representation_list = []
                 index = len(power_values)
                 max_power_val = 0
+                max_power_index = len(power_values)-1
+                last_power_index = []
                 for _ in range(0,len(power_values)):
                     index -= 1
                     if power_values[index] > max_power_val:
                         max_power_val = power_values[index]
+                        max_power_index = index
                         if power_values[index] == self.get_rank():
- #                           print (text_values_without_rank[index])
                             representation_list.append(" %s" % (text_values_without_rank[index]))
                         else:
-#                            print(text_values_with_rank[index])
                             representation_list.append (" %s" % (text_values_with_rank[index]))
+                    elif modifier_modifier_values[index] != last_power_index:
+
+                        if power_values[index] == self.get_rank():
+                            representation_list.append(" %s" % (text_values_without_rank[index]))
+                        else:
+                            representation_list.append(" %s" % (text_values_with_rank[index]))
+                    last_power_index = modifier_modifier_values[index]
+
                 if mod_class.reverse_text_order == True:
                     representation_list = reversed(representation_list)
                 for entry in representation_list:
                     repr_string += entry
-                # The bug's in here
             elif mod_class.modifier_list_type == False:
                 mod_list = modifier_lists[mod_type]
                 rr_pow = mod_class.get_current_power_value(self)
@@ -311,8 +323,7 @@ class Attack(Power):
         self.points = rank
         self.base_power_points = rank
         self.points_per_rank = 1.0
-
-        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
+        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(type(self).points_per_rank_default))
         
         self.process_modifiers()
 
@@ -358,7 +369,7 @@ class Protection(Power):
         self.points = rank
         self.points_per_rank = 1.0
         self.modifiers = modifier_values
-        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(1))
+        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(type(self).points_per_rank_default))
         self.process_modifiers()
 
     def get_rank(self):

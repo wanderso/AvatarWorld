@@ -916,25 +916,18 @@ def menlo_cer_sim():
 
     print("Points in the %s attack: %d" % (vm.get_name(), vm.calculate_points()))
 
-#    combat_sim_new(cer, men, 10000)
-
-#    print(json.dumps(men, default=dictifier))
     men.print_character_sheet()
 
+    print(vm.get_points_in_power())
     print(men.print_character_sheet())
-    #print(vm.get_modifiers())
-
-    #print(men.print_character_sheet())
-#    print(srk.print_character_sheet())
-#    print(vars(men))
 
     modifier_z = powers.modifiers.Secondary_Effect(vm,10,starting_rank=0)
 
-#    print(vm.get_character_sheet_repr())
+    modifier_e = powers.modifiers.Sleep(modifier_z, 10, starting_rank=0)
 
-    modifier_j = powers.modifiers.Fades(modifier_z,12,starting_rank=0)
-#    print(modifier_z)
-#   print(vm.power_modifiers)
+    modifier_j = powers.modifiers.Fades(modifier_z, 10, starting_rank=0)
+
+    modifier_k = powers.modifiers.Multiattack(modifier_j, 10, starting_rank=0)
 
     print(vm.get_character_sheet_repr())
 
