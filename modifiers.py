@@ -39,6 +39,7 @@ class Modifier:
     modifier_list_type = False
     modifier_pyramid_type = False
     modifier_is_flaw = False
+    modifier_needs_description = False
 
     modifier_options = None
 
@@ -591,6 +592,48 @@ and completely by spending a hero point."""
         self.link_modifier_per_rank(starting_rank, rank, power)
         self.when_applied = self.when_applied_stored_in_extras
         self.when_removed = self.when_removed_stored_in_extras
+
+class Limited(Modifier):
+    """An effect with this flaw is not effective all the time. Limited
+powers generally break down into two types: those
+usable only in certain situations and those usable only on
+certain things. For example Only While Singing Loudly,
+Only While Flying, Only on Men (or Women), Only Against
+Fire, Not Usable on Yellow Things, and so forth. As a general
+rule, the effect must lose about half its usefulness to
+qualify for this modifier. Anything less limiting is better
+handled as an occasional complication.
+Partially Limited
+If your effect is only somewhat effective in particular circumstances,
+apply the flaw to only some of its ranks. For
+example, an attack effect that does less damage against
+targets with Protection (to represent a diminished ability
+to penetrate armor, for example) applies the Limited flaw
+to only those ranks that are ineffective."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Limited"
+    modifier_list_type = False
+    modifier_needs_description = True
+
+    def __init__(self, power, rank, condition, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+        self.process_condition(condition)
+        self.when_applied = self.when_applied_stored_in_extras
+        self.when_removed = self.when_removed_stored_in_extras
+
+    def process_condition(self, condition):
+        self.condition_plain_text = condition.plaintext
+        self.condition_check = condition.funct
+
+
+    class Limited_Condition:
+        def __init__(self, init_list):
+            self.plaintext = init_list[0]
+            self.funct = init_list[1]
+
+
 
 class Sustained(Modifier):
     """Applied to a permanent duration effect, this modifier makes
