@@ -809,7 +809,7 @@ at the last moment."""
         elif self.affects_only == self.get_rank_range():
             retstr = "Affects Only Objects"
         else:
-            retstr = "This may get confusing."
+            retstr = "Affects Objects %s (Affects Only Objects %s)" % (self.get_rank_range()-self.affects_only,self.affects_only)
         if modstr != "":
             retstr = "%s (%s)" % (retstr, modstr[:-2])
         return retstr
@@ -817,7 +817,10 @@ at the last moment."""
     def represent_modifier_on_sheet_with_rank(self, power):
         retstr = self.represent_modifier_on_sheet_without_rank(power)
         newarray = retstr.split("(")
-        retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
+        if (self.affects_only.is_empty() == True) or (self.affects_only == self.get_rank_range()):
+            retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
+        else:
+            retstr = "%s" (newarray[0])
         if len(newarray) != 1:
             for str in newarray[1:]:
                 retstr += ("(" + str)
