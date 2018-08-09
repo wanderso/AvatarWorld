@@ -91,6 +91,12 @@ class Modifier:
 
         self.power_new_value = type(self).get_current_power_value(power)
 
+    def alter_x_modifiers(self, adjustval, rank, starting_rank=0):
+        for power in self.linked_to:
+            self.remove(power)
+            self.points_in_modifier.adjust_x_for_ranks(points.Points_Per_Rank_X_Modifier(-1), rank, starting_rank=starting_rank, pos=True)
+            self.apply(power)
+
     @classmethod
     def get_current_power_value(cls, power):
         pass
@@ -246,22 +252,31 @@ class Modifier:
         return retstr
 
     def represent_modifier_on_sheet_with_rank(self, power):
-        #TODO - this is also broken
-        retstr = ""
-        modstr = ""
-        for mod in self.modifier_modifiers:
-            modstr += " %s%s " % (mod.represent_modifier_on_sheet_with_rank(power), type(mod).get_class_plaintext_name())
-        if type(self).modifier_list_type == True:
-            retstr += "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
-        if self.get_starting_rank() != 0:
-            retstr = "%s %d-%d" % (retstr, self.get_starting_rank(), self.get_rank())
-        else:
-            retstr = "%s %d" % (retstr, self.get_rank())
-        if modstr == "":
-            pass
-        else:
-            retstr = "%s (%s)" % (retstr, modstr)
+        retstr = self.represent_modifier_on_sheet_without_rank(power)
+        newarray = retstr.split("(")
+        retstr = "%s %s" % (newarray[0], self.get_rank_range())
+        if len(newarray) != 1:
+            for str in newarray[1:]:
+                retstr += ("(" + str)
         return retstr
+
+    # def represent_modifier_on_sheet_with_rank(self, power):
+    #     #TODO - this is also broken
+    #     retstr = ""
+    #     modstr = ""
+    #     for mod in self.modifier_modifiers:
+    #         modstr += " %s%s " % (mod.represent_modifier_on_sheet_with_rank(power), type(mod).get_class_plaintext_name())
+    #     if type(self).modifier_list_type == True:
+    #         retstr += "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
+    #     if self.get_starting_rank() != 0:
+    #         retstr = "%s %d-%d" % (retstr, self.get_starting_rank(), self.get_rank())
+    #     else:
+    #         retstr = "%s %d" % (retstr, self.get_rank())
+    #     if modstr == "":
+    #         pass
+    #     else:
+    #         retstr = "%s (%s)" % (retstr, modstr)
+    #     return retstr
 
 
     @classmethod
@@ -692,11 +707,11 @@ allows the effect to function at its full rank against them"""
         super().__init__()
         self.link_modifier_flat_with_rank(starting_rank, rank, power)
 
-        def when_applied(self, power):
-            self.when_applied_stored_in_extras(power)
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
 
-        def when_removed(self, power):
-            self.when_removed_stored_in_extras(power)
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
 
 class Affects_Objects(Modifier):
     """This modifier allows effects normally resisted by Fortitude
@@ -712,15 +727,16 @@ the GM’s discretion, someone holding, carrying, or wearing
 an object can make a Dodge resistance check against
 the effect, representing pulling the object out of the way
 at the last moment."""
-    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
     modifier_needs_rank = True
     modifier_name = "Affects Objects"
     modifier_list_type = False
-    flat_modifier = True
+    flat_modifier = False
 
     def __init__(self, power, rank, starting_rank=0):
         super().__init__()
-        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+        self.link_modifier_per_rank(starting_rank, rank, power)
+        self.affects_only = points.Rank_Range(0,0)
 
     def when_applied(self, power):
         self.when_applied_stored_in_extras(power)
@@ -728,17 +744,22 @@ at the last moment."""
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
 
-    @classmethod
-    def get_current_power_value(cls, power):
-        rrs = []
-        power_val = cls.get_power_default(power)
-        rrpr = points.Rank_Range_With_Points(power.get_rank())
-        for mod in power.get_extras_flaws():
-            if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
-                rrs.append(mod.get_rank_range())
-        for r in rrs:
-            rrpr.add_rank_range(r)
-        return power_val + rrpr.return_max_int()
+    def affects_only_objects(self, rank, starting_rank=0):
+        self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(-1), rank, starting_rank=starting_rank)
+        self.affects_only.add_range(starting_rank, rank)
+
+    #
+    # @classmethod
+    # def get_current_power_value(cls, power):
+    #     rrs = []
+    #     power_val = cls.get_power_default(power)
+    #     rrpr = points.Rank_Range_With_Points(power.get_rank())
+    #     for mod in power.get_extras_flaws():
+    #         if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
+    #             rrs.append(mod.get_rank_range())
+    #     for r in rrs:
+    #         rrpr.add_rank_range(r)
+    #     return power_val + rrpr.return_max_int()
 
     def represent_modifier_on_sheet_without_rank(self, power):
         retstr = ""
@@ -753,27 +774,24 @@ at the last moment."""
                 if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
                     modstr += " %s" % (str(rr))
                 modstr += ", "
-        if only_val == False:
+        if self.affects_only.is_empty() == True:
             retstr = "Affects Objects"
-        else:
+        elif self.affects_only == self.get_rank_range():
             retstr = "Affects Only Objects"
+        else:
+            retstr = "This may get confusing."
+            #OK, let's write this code. What's the worst thing that could happen?
         if modstr != "":
             retstr = "%s (%s)" % (retstr, modstr[:-2])
         return retstr
 
     def represent_modifier_on_sheet_with_rank(self, power):
-        retstr = ""
-        modstr = ""
-        for mod in self.modifier_modifiers:
-            modstr += " %s%s " % (mod.represent_modifier_on_sheet_with_rank(power), type(mod).get_class_plaintext_name())
-        if self.get_starting_rank() != 0:
-            retstr = "%s %d-%d" % (retstr, self.get_starting_rank(), self.get_rank())
-        else:
-            retstr = "%s %d" % (retstr, self.get_rank())
-        if modstr == "":
-            pass
-        else:
-            retstr = "%s (%s)" % (retstr, modstr)
+        retstr = self.represent_modifier_on_sheet_without_rank(power)
+        newarray = retstr.split("(")
+        retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
+        if len(newarray) != 1:
+            for str in newarray[1:]:
+                retstr += ("(" + str)
         return retstr
 
 
