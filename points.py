@@ -53,6 +53,9 @@ class Rank_Range:
         self.index += 1
         return self.rank_range[self.index-1]
 
+    def is_empty(self):
+        return (len(self.rank_range) == 0)
+
     def get_min(self):
         return self.rank_range[0][0]
 

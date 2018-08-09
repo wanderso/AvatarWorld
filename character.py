@@ -871,6 +871,9 @@ def menlo_cer_sim():
     ij = powers.Attack("Injunction", "Melee Combat: Gavels", 10, "Parry", Character.get_toughness, Character.get_toughness)
     rp = powers.Attack("Rocket Punch", "Ranged Combat: Martial Arts", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Ranged':'default'})
 
+    vm_o = powers.modifiers.Affects_Objects(vm, 10, starting_rank=0)
+    vm_o.affects_only_objects(10,starting_rank=6)
+
     es = powers.Protection("Electrostatic Shield", 10, modifier_values={'Sustained':'default'})
 
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 8)
