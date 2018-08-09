@@ -748,19 +748,6 @@ at the last moment."""
         self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(-1), rank, starting_rank=starting_rank)
         self.affects_only.add_range(starting_rank, rank)
 
-    #
-    # @classmethod
-    # def get_current_power_value(cls, power):
-    #     rrs = []
-    #     power_val = cls.get_power_default(power)
-    #     rrpr = points.Rank_Range_With_Points(power.get_rank())
-    #     for mod in power.get_extras_flaws():
-    #         if mod.get_class_plaintext_name() == cls.get_class_plaintext_name():
-    #             rrs.append(mod.get_rank_range())
-    #     for r in rrs:
-    #         rrpr.add_rank_range(r)
-    #     return power_val + rrpr.return_max_int()
-
     def represent_modifier_on_sheet_without_rank(self, power):
         retstr = ""
         modstr = ""
@@ -780,7 +767,6 @@ at the last moment."""
             retstr = "Affects Only Objects"
         else:
             retstr = "This may get confusing."
-            #OK, let's write this code. What's the worst thing that could happen?
         if modstr != "":
             retstr = "%s (%s)" % (retstr, modstr[:-2])
         return retstr
