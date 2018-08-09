@@ -261,25 +261,6 @@ class Modifier:
                 retstr += ("(" + str)
         return retstr
 
-    # def represent_modifier_on_sheet_with_rank(self, power):
-    #     #TODO - this is also broken
-    #     retstr = ""
-    #     modstr = ""
-    #     for mod in self.modifier_modifiers:
-    #         modstr += " %s%s " % (mod.represent_modifier_on_sheet_with_rank(power), type(mod).get_class_plaintext_name())
-    #     if type(self).modifier_list_type == True:
-    #         retstr += "%s" % type(self).modifier_options.get_plaintext_from_value(self.power_new_value)
-    #     if self.get_starting_rank() != 0:
-    #         retstr = "%s %d-%d" % (retstr, self.get_starting_rank(), self.get_rank())
-    #     else:
-    #         retstr = "%s %d" % (retstr, self.get_rank())
-    #     if modstr == "":
-    #         pass
-    #     else:
-    #         retstr = "%s (%s)" % (retstr, modstr)
-    #     return retstr
-
-
     @classmethod
     def get_class_plaintext_name(cls):
         return cls.modifier_name
@@ -826,6 +807,71 @@ at the last moment."""
                 retstr += ("(" + str)
         return retstr
 
+class Affects_Others(Modifier):
+    """This extra allows you to give someone else use of a personal
+effect. You must touch the subject as a standard
+action, and they have control over their use of the effect,
+although you can withdraw it when you wish as a free action.
+If you are unable to maintain the effect, it stops working,
+even if someone else is using it. Both you and your
+subject(s) can use the effect simultaneously.
+If the effect Affects Only Others, and not you, it has a net
+modifier of +0."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Affects Others"
+    modifier_list_type = False
+    flat_modifier = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+        self.affects_only = points.Rank_Range(0,0)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    def affects_only_objects(self, rank, starting_rank=0):
+        self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(-1), rank, starting_rank=starting_rank)
+        self.affects_only.add_range(starting_rank, rank)
+
+    def represent_modifier_on_sheet_without_rank(self, power):
+        retstr = ""
+        modstr = ""
+        only_val = False
+        for mod in self.modifier_modifiers:
+            if type(mod) == Limited:
+                only_val = True
+            else:
+                modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
+                rr = mod.get_rank_range()
+                if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                    modstr += " %s" % (str(rr))
+                modstr += ", "
+        if self.affects_only.is_empty() == True:
+            retstr = "Affects Objects"
+        elif self.affects_only == self.get_rank_range():
+            retstr = "Affects Only Objects"
+        else:
+            retstr = "Affects Objects %s (Affects Only Objects %s)" % (self.get_rank_range()-self.affects_only,self.affects_only)
+        if modstr != "":
+            retstr = "%s (%s)" % (retstr, modstr[:-2])
+        return retstr
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        retstr = self.represent_modifier_on_sheet_without_rank(power)
+        newarray = retstr.split("(")
+        if (self.affects_only.is_empty() == True) or (self.affects_only == self.get_rank_range()):
+            retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
+        else:
+            retstr = "%s" % (newarray[0])
+        if len(newarray) != 1:
+            for str in newarray[1:]:
+                retstr += ("(" + str)
+        return retstr
 
 
 class Accurate(Modifier):
