@@ -820,7 +820,7 @@ at the last moment."""
         if (self.affects_only.is_empty() == True) or (self.affects_only == self.get_rank_range()):
             retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
         else:
-            retstr = "%s" (newarray[0])
+            retstr = "%s" % (newarray[0])
         if len(newarray) != 1:
             for str in newarray[1:]:
                 retstr += ("(" + str)

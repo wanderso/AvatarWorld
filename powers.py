@@ -249,7 +249,7 @@ class Power:
                     repr_string = (" %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self)))
                     pass
                 else:
-                    repr_string = (" %s %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self), rr_pow))
+                    repr_string = (" %s" % (mod_list[0].represent_modifier_on_sheet_with_rank(self)))
 
 
             text_display[mod_type] = repr_string
