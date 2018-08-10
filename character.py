@@ -874,6 +874,9 @@ def menlo_cer_sim():
     vm_o = powers.modifiers.Affects_Objects(vm, 8, starting_rank=0)
     vm_o.affects_only_objects(8,starting_rank=6)
 
+    vm_ot = powers.modifiers.Affects_Others(vm, 10, starting_rank=0)
+
+
     es = powers.Protection("Electrostatic Shield", 10, modifier_values={'Sustained':'default'})
 
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 8)

@@ -827,6 +827,7 @@ modifier of +0."""
         super().__init__()
         self.link_modifier_per_rank(starting_rank, rank, power)
         self.affects_only = points.Rank_Range(0,0)
+        self.affects_total = points.Rank_Range_With_Points(rank,starting_rank=starting_rank)
 
     def when_applied(self, power):
         self.when_applied_stored_in_extras(power)
@@ -834,7 +835,11 @@ modifier of +0."""
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
 
-    def affects_only_objects(self, rank, starting_rank=0):
+    def add_additional_level(self, rank, starting_rank=0):
+        self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(1), rank, starting_rank=starting_rank)
+        self.affects_total.add_rank_range(points.Rank_Range(rank, starting_rank=0))
+
+    def affects_only_others(self, rank, starting_rank=0):
         self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(-1), rank, starting_rank=starting_rank)
         self.affects_only.add_range(starting_rank, rank)
 
@@ -851,12 +856,33 @@ modifier of +0."""
                 if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
                     modstr += " %s" % (str(rr))
                 modstr += ", "
+
+        max_power = self.affects_total.return_max_int()
+
         if self.affects_only.is_empty() == True:
-            retstr = "Affects Objects"
+            retstr = "Affects Others"
         elif self.affects_only == self.get_rank_range():
-            retstr = "Affects Only Objects"
+            retstr = "Affects Only Others"
+
+        for (a, b) in self.affects_total.get_points():
+            #a is int, b is points_per_rank_x_modifier
+            pass
+
+
+        if max_power == 1:
+            if self.affects_only.is_empty() == True:
+                retstr = "Affects Others"
+            elif self.affects_only == self.get_rank_range():
+                retstr = "Affects Only Others"
+            else:
+                retstr = "Affects Others %s (Affects Only Others %s)" % (self.get_rank_range()-self.affects_only,self.affects_only)
         else:
-            retstr = "Affects Objects %s (Affects Only Objects %s)" % (self.get_rank_range()-self.affects_only,self.affects_only)
+            if self.affects_only.is_empty() == True:
+                retstr = "Affects Others x%d" % max_power
+            elif self.affects_only == self.get_rank_range():
+                retstr = "Affects Only Others x%d" % max_power
+            else:
+                pass
         if modstr != "":
             retstr = "%s (%s)" % (retstr, modstr[:-2])
         return retstr

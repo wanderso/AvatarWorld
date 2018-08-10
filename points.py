@@ -185,6 +185,9 @@ class Rank_Range_With_Points():
                 ret_val = entry.get_modifier()
         return int(ret_val) - 1
 
+    def get_points(self):
+        return self.points
+
     def __repr__(self):
         return str(self.points)
 
@@ -339,6 +342,16 @@ class Points_Modifier_Adjuster:
 
     def __repr__(self):
         return str(self.rank_list) + " * " + str(self.point_adjust_list)
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+    def __next__(self):
+        if self.index >= len(self.rank_list):
+            raise StopIteration
+        self.index += 1
+        return (self.rank_list[self.index-1],self.point_adjust_list[self.index-1])
 
     def adjust_x_for_ranks(self, x_modifier, rank, starting_rank=0, pos=True):
         self.add_ppr_break_point(rank)
