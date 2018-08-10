@@ -127,9 +127,9 @@ class Rank_Range:
                         edited_this_run = True
                         restart_loop = True
                         break
-                elif starting_rank < start_entry:
+                elif starting_rank <= start_entry:
                     if ending_rank > start_entry:
-                        if ending_rank > end_entry:
+                        if ending_rank >= end_entry:
                             self.rank_range.pop(rank_index)
                             restart_loop = True
                             edited_this_run = True
@@ -581,21 +581,13 @@ class Points_In_Power:
         return retstr
 
 if __name__ == "__main__":
-    pip1 = Points_In_Power(10, Points_Per_Rank())
-    pip2 = Points_In_Power(10, Points_Per_Rank.from_int(0))
 
-    print (pip1)
+    rr1 = Rank_Range(0,6)
+    rr1.add_range(8,10)
+    print(rr1)
 
-    print (pip2)
-
-    print (pip1 + pip2)
-
-    ppr1 = Points_Per_Rank()
-    ppr2 = Points_Per_Rank.from_int(-1)
-
-    print (ppr1)
-    print (ppr2)
-    print (ppr1 + ppr2)
+    rr1.remove_range(0,6)
+    print(rr1)
 
     # ppr_1 = Points_Per_Rank()
     # ppr_flat = Points_Per_Rank.from_int(-2)

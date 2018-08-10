@@ -95,7 +95,7 @@ class Modifier:
     def alter_x_modifiers(self, adjustval, rank, starting_rank=0):
         for power in self.linked_to:
             self.remove(power)
-            self.points_in_modifier.adjust_x_for_ranks(points.Points_Per_Rank_X_Modifier(-1), rank, starting_rank=starting_rank, pos=True)
+            self.points_in_modifier.adjust_x_for_ranks(adjustval, rank, starting_rank=starting_rank, pos=True)
             self.apply(power)
 
     @classmethod
@@ -249,7 +249,7 @@ class Modifier:
         if modstr == "":
             pass
         else:
-            retstr = "%s (%s)" % (retstr, modstr[:-2])
+            retstr = "[%s (%s)]" % (retstr, modstr[:-2])
         return retstr
 
     def represent_modifier_on_sheet_with_rank(self, power):
@@ -314,11 +314,11 @@ modifier makes it perception range."""
         self.link_modifier_per_rank(starting_rank, rank, power)
 
     def when_applied(self, power):
-        if power.range < type(self).modifier_values[-1]:
+        if power.range < type(self).modifier_values[-1] and power.range > type(self).modifier_values[1]:
             power.range += 1
 
     def when_removed(self, power):
-        if power.range > type(self).modifier_values[1]:
+        if power.range > type(self).modifier_values[1] and power.range > type(self).modifier_values[1]:
             power.range -= 1
 
     @classmethod
@@ -777,14 +777,11 @@ at the last moment."""
         modstr = ""
         only_val = False
         for mod in self.modifier_modifiers:
-            if type(mod) == Limited:
-                only_val = True
-            else:
-                modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
-                rr = mod.get_rank_range()
-                if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
-                    modstr += " %s" % (str(rr))
-                modstr += ", "
+            modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
+            rr = mod.get_rank_range()
+            if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                modstr += " %s" % (str(rr))
+            modstr += ", "
         if self.affects_only.is_empty() == True:
             retstr = "Affects Objects"
         elif self.affects_only == self.get_rank_range():
@@ -828,12 +825,17 @@ modifier of +0."""
         self.link_modifier_per_rank(starting_rank, rank, power)
         self.affects_only = points.Rank_Range(0,0)
         self.affects_total = points.Rank_Range_With_Points(rank,starting_rank=starting_rank)
+        self.affects_b = False
 
     def when_applied(self, power):
         self.when_applied_stored_in_extras(power)
+        if power.range == value_enums.Power_Range.PERSONAL:
+            power.range = value_enums.Power_Range.CLOSE
 
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
+        power.range = value_enums.Power_Range.PERSONAL
+
 
     def add_additional_level(self, rank, starting_rank=0):
         self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(1), rank, starting_rank=starting_rank)
@@ -844,59 +846,57 @@ modifier of +0."""
         self.affects_only.add_range(starting_rank, rank)
 
     def represent_modifier_on_sheet_without_rank(self, power):
+        self.affects_b = False
         retstr = ""
         modstr = ""
-        only_val = False
         for mod in self.modifier_modifiers:
-            if type(mod) == Limited:
-                only_val = True
-            else:
-                modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
-                rr = mod.get_rank_range()
-                if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
-                    modstr += " %s" % (str(rr))
-                modstr += ", "
+            modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
+            rr = mod.get_rank_range()
+            if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                modstr += " %s" % (str(rr))
+            modstr += ", "
 
-        max_power = self.affects_total.return_max_int()
-
-        if self.affects_only.is_empty() == True:
-            retstr = "Affects Others"
-        elif self.affects_only == self.get_rank_range():
-            retstr = "Affects Only Others"
-
+        empty = points.Rank_Range(0,0)
+        value_rank = 0
         for (a, b) in self.affects_total.get_points():
             #a is int, b is points_per_rank_x_modifier
-            pass
-
-
-        if max_power == 1:
-            if self.affects_only.is_empty() == True:
-                retstr = "Affects Others"
-            elif self.affects_only == self.get_rank_range():
-                retstr = "Affects Only Others"
+            mod = b.get_modifier()
+            altstr = ""
+            if mod != 1:
+                altstr = " x%d" % mod
+            rng = points.Rank_Range(a,starting_rank=value_rank)
+            adj = (rng - self.affects_only)
+            affects_both = False
+            if (adj == rng):
+                retstr += "Affects Others%s" % (altstr)
+            elif(adj == empty):
+                retstr += "Affects Only Others%s" % (altstr)
             else:
-                retstr = "Affects Others %s (Affects Only Others %s)" % (self.get_rank_range()-self.affects_only,self.affects_only)
-        else:
-            if self.affects_only.is_empty() == True:
-                retstr = "Affects Others x%d" % max_power
-            elif self.affects_only == self.get_rank_range():
-                retstr = "Affects Only Others x%d" % max_power
-            else:
-                pass
+                retstr += "Affects Others%s %s (Affects Only Others%s %s)" % (altstr, adj, altstr, (rng-adj))
+                affects_both = True
+                self.affects_b = True
+            if(rng != self.get_rank_range()) and affects_both == False:
+                retstr += " %s" % rng
+            retstr += " "
+
+        retstr = retstr[:-1]
+
         if modstr != "":
-            retstr = "%s (%s)" % (retstr, modstr[:-2])
+            retstr = "[%s (%s)]" % (retstr, modstr[:-2])
         return retstr
 
     def represent_modifier_on_sheet_with_rank(self, power):
         retstr = self.represent_modifier_on_sheet_without_rank(power)
+        if self.affects_b == True:
+            return retstr
         newarray = retstr.split("(")
         if (self.affects_only.is_empty() == True) or (self.affects_only == self.get_rank_range()):
             retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
         else:
             retstr = "%s" % (newarray[0])
         if len(newarray) != 1:
-            for str in newarray[1:]:
-                retstr += ("(" + str)
+            for string in newarray[1:]:
+                retstr += ("(" + string)
         return retstr
 
 
@@ -1103,37 +1103,708 @@ with a particular effect and this modifier."""
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
 
+class Impervious:
+    """A defense with this modifier is highly resistant. Any effect
+with a resistance difficulty modifier equal to or less than
+half the Impervious rank (rounded up) has no effect. So,
+for example, Impervious Toughness 9 ignores any Damage
+with a rank of 5 or less. Penetrating effects can overcome
+Impervious Resistance (see the Penetrating extra
+description).
+Impervious is primarily intended for Toughness resistance
+checks, to handle characters immune to a certain threshold
+of damage, but it can be applied to other defenses
+with the GM’s permission, to reflect characters with certain
+reliable capabilities in terms of resisting particular effects
+or hazards."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Impervious"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Ricochet:
+    """You can ricochet or bounce an attack effect with this
+modifier off of a solid surface to change its direction. This
+allows you to attack around corners, overcome cover and
+possibly make a surprise attack against an opponent. It
+does not allow you to affect multiple targets. The “bounce”
+has no effect apart from changing the attack’s direction.
+You must be able to define a clear path for your attack,
+which must follow a straight line between each ricochet.
+Each rank in Ricochet allows you to bounce the attack
+once before it hits. Ricochet may grant a bonus to hit due
+to surprise, at the GM’s discretion."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Ricochet"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Reversible:
+    """You can remove conditions caused by a Reversible effect at
+will as a free action, so long as the subject is within the effect’s
+range. Examples include removing the damage conditions
+caused by a Damage effect, repairing damage done by
+Weaken Toughness, or removing an Affliction instantly. Normally,
+you have no control over the results of such effects."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = False
+    modifier_name = "Reversible"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank=1, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(0, 1, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        return self.represent_modifier_on_sheet_without_rank(power)
+
+class Reach:
+    """Each time you apply this modifier to a close range effect,
+you extend its reach by 5 feet. This may represent a shortranged
+effect or one with a somewhat greater reach, like a
+whip, spear, or similar weapon."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Reach"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Precise(Modifier):
+    """You can use a Precise effect to perform tasks requiring
+delicacy and fine control, such as using Precise Damage
+to spot-weld or carve your initials, Precise Move Object to
+type or pick a lock, Precise Environment to match a particular
+temperature exactly, and so forth. The GM has final
+say as to what tasks can be performed with a Precise effect
+and may require an ability, skill, or power check to determine
+the degree of precision with any given task."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Precise"
+    modifier_list_type = False
+    flat_modifier = True
+    modifier_pyramid_type = True
+
+    def __init__(self, power, rank=1, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Penetrating(Modifier):
+    """Your effect overcomes Impervious Resistance to a degree;
+the target must make a resistance check against an effect
+rank equal to your Penetrating rank. So, if a rank 4 (Penetrating
+2) effect hits a target with Impervious 9, the target
+must resist a rank 2 effect (equal to the Penetrating rank).
+If the effect were rank 6, the target would have to resist
+the full effect anyway, since its rank is greater than half
+the Impervious rank. You cannot have a Penetrating rank
+greater than your effect rank."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Penetrating"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Linked(Modifier):
+    """This modifier applies to two or more effects, linking them
+together so they only work in conjunction as one.
+The Linked effects must operate at the same range.
+The action required to use the combined effects is the
+longest of its components and they use a single attack
+check (if one is required) and resistance check (if both
+effects use the same type of check). If the effects have
+different resistances, targets check against each effect
+separately. Different Alternate Effects cannot be Linked
+since they can’t be used at the same time by definition.
+Generally, the same effect cannot be Linked to itself to
+“multiply” the results of a failed resistance check (such as
+two Linked Damage effects causing “double damage” on
+a failed check).
+This modifier does not change the cost of the component
+effects; simply add their costs together to get the combined
+effect’s cost."""
+    pass
+
+class Innate(Modifier):
+    """An effect with this modifier is an innate part of your na
+ture and unaffected by Nullify (see the Nullify effect in
+this chapter). Gamemasters should exercise caution in
+allowing the application of Innate; the effect must be a
+truly inborn or essential trait, such as an elephant’s size or
+a ghost’s incorporeal nature. If the effect is not something
+normal to the character’s species or type, it probably isn’t
+innate."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = False
+    modifier_name = "Innate"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank=1, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(0, 1, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        return self.represent_modifier_on_sheet_without_rank(power)
+
+class Incurable(Modifier):
+    """Effects such as Healing and Regeneration cannot heal the
+damage caused by an effect with this modifier; the target
+must recover at the normal rate. Effects with the Persistent
+extra can heal Incurable damage."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = False
+    modifier_name = "Incurable"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank=1, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(0, 1, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        return self.represent_modifier_on_sheet_without_rank(power)
+
+class Indirect(Modifier):
+    """A ranged effect with this modifier can originate from a
+point other than the user, ignoring cover between the
+user and the target, such as walls and other intervening
+barriers, so long as they do not provide cover between
+the effect’s origin point and the target. An Indirect effect
+normally originates from a fixed point directed away from
+you. In some cases, an Indirect effect may count as a surprise
+attack (see Surprise Attack, page 251).
+• Indirect 1: the effect originates from a fixed point
+away from you.
+• Indirect 2: the effect can come from any point away
+from you or a fixed point in a fixed direction (notaway
+from you).
+• Indirect 3: The effect can come from any point in a
+fixed direction (not away from you) or a fixed
+point in any direction.
+•Indirect 4: The effect can originate from any point
+and aim in any direction, including towards you
+(hitting a target in front of you from behind, for example)."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Indirect"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Increased_Mass(Modifier):
+    """This modifier may apply to an effect that allows you to
+carry or affect a set amount of mass, typically a movement
+effect like Dimensional Travel or Teleport. Each rank of this
+extra increases the mass rank you can carry or move with
+the effect by 1. So Increased Mass 3 on Teleport allows you
+to carry up to 400 lbs. of extra mass with you when you
+teleport, for example."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Increased Mass"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Homing(Modifier):
+    """This modifier grants a ranged effect an additional opportunity
+to hit. If an attack check with a Homing effect fails, it
+attempts to hit again on the start of your next turn, requiring
+only a free action to maintain and allowing you to take
+other actions, including making another attack. Each rank
+in Homing grants the effect one additional attack check,
+but it still only gets one check per round.
+The Homing effect uses the same accurate sense as the
+original attack to “track” its target, so concealment effective
+against that sense may confuse the effect and cause
+it to miss. If a Homing attack misses due to concealment,
+it has lost its “lock” on the target and does not get any
+further chances to hit. You can take Senses Linked to
+the Homing effect, if desired (to create things like radarguided
+or heat-seeking missiles, for example). If a Homing
+attack is countered before it hits, it loses any remaining
+chances to hit. The same is true if it hits a different target."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Homing"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Extended_Range(Modifier):
+    """This modifier extends the distance over which a ranged effect
+works. Each rank of Extended Range doubles all of the
+effect’s range categories. So 1 rank makes short range (rank
+x 50 ft.), medium range (rank x 100 ft.) and long range (rank
+x 200 ft.). Each additional rank further doubles range.
+The GM may set limits on the maximum Extended Range
+an effect can have; as a general guideline, effects used on
+a planetary surface are limited to the distance to the horizon
+(beyond which the curvature of the planet makes it
+impossible to see anything to target it). On Earth at sea
+level, this is roughly three miles (distance rank 10)."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Extended Range"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Dimensional(Modifier):
+    """This modifier allows an effect to work on targets in other
+dimensions (if any exist in the series). You affect your
+proximate location in the other dimension as if you were
+actually there, figuring range modifiers from that point.
+One rank in Dimensional can affect a single other dimension.
+Two ranks can affect any of a related group of dimensions
+(mythic dimensions, mystic dimensions, fiendish
+planes, and so forth). Three ranks can reach into any other
+dimension in the setting.
+For many effects, you may need a Dimensional Remote
+Sensing effect to target them. Targets in other dimensions
+you cannot sense have total concealment from you."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Dimensional"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+
+class Feature(Modifier):
+    """The Feature effect (see page 160) can also serve as an effect
+modifier, essentially adding on some minor additional
+capability or benefit to a basic effect. Although listed here
+as an extra, this is essentially the same as having the Feature
+Linked to the base effect (see the Linked modifier
+later in this section); the Feature is an intrinsic part of the
+overall power, rather than separate.
+As with the Feature effect, a Feature extra should be significant
+enough to be worth at least 1 power point and
+not solely based on the power’s descriptors. So, for example,
+a fiery Ranged Damage effect does not need a Feature
+to ignite fires; doing so is part of its “fire” descriptor and
+can be equally advantageous and problematic. A Ranged
+Damage effect that consistently “brands” its target with a
+visible and traceable mark, on the other hand, is an effect
+with an added Feature."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Feature"
+    modifier_list_type = False
+    flat_modifier = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Area(Modifier):
+    """This extra allows an effect that normally works on a single
+target to affect an area. No attack check is needed; the
+effect simply fills the designated area, based on the type
+of modifier. Potential targets in the area are permitted
+a Dodge resistance check (DC 10 + effect rank) to avoid
+some of the effect (reflecting ducking for cover, dodging
+out of the way, and so forth). A successful resistance check
+reduces the Area effect to half its normal rank against that
+target (round down, minimum of 1 rank).
+Shape
+Choose one of the following options:
+• Burst: The effect fills a sphere with a 30-foot radius
+(distance rank 0). Bursts on level surfaces (like the
+ground) create hemispheres 30 feet in radius and
+height.
+• Cloud: The effect fills a sphere with a 15-foot radius
+(distance rank –1) that lingers in that area for one
+round after its duration expires (affecting any targets
+in the area normally during the additional round).
+Clouds on level surfaces (like the ground) create
+hemispheres 15 feet in radius and height.
+• Cone: The effect fills a cone with a length, width,
+and height of 60 feet (distance rank 1), spreading out
+from the effect’s starting point. Cones on a level surface
+halve their final height.
+• Cylinder: The effect fills a cylinder 30 feet in radius
+and height (distance rank 0).
+• Line: The effect fills a path 6 feet wide and 30 feet
+long (distance ranks -2 and 0, respectively) in a
+straight line. Additional ranks of area increases the
+length. To increase the width, purchase additional
+ranks for that.
+• Perception: The effect works on anyone able to perceive
+the target point with a particular sense, chosen
+when you apply this extra, like a Sense-Dependent effect
+(see the Sense-Dependent modifier). Targets get
+a Dodge resistance check, as usual, but if the check is
+successful suffer no effect (rather than half). Concealment
+that prevents a target from perceiving the effect
+also blocks it. This modifier includes the Sense-Dependent
+flaw (see Flaws) so it cannot be applied again. If
+it is applied to an already Sense-Dependent effect, it
+costs 2 points per rank rather than 1.
+• Shapeable: The effect fills a volume of 30 cubic feet
+(volume rank 5), and you may shape the volume as
+you wish, so long as it all remains contiguous. Affecting
+an average-sized human requires 4 cubic feet
+(volume rank 2).
+Each +1 point increase in cost per rank moves the area’s
+distance rank up by 1. So a Burst Area with +2 cost per
+rank has a 60-foot radius (distance rank 1), a 120-foot radius
+at +3 cost per rank (distance rank 2), and so forth.
+Range
+The Area modifier interacts with different ranges as follows:
+• Close: An effect must be at least close range in order
+to apply Area (personal range effects work only on the
+user by definition). A Close Area effect originates from
+the user and expands to fill the affected area; the user
+is not affected by it. So, for example, Close Burst Area
+Damage does not damage the user, who is at the center
+ of the burst. This immunity does not apply to other
+effects, nor does it extend to anyone else: for that, apply
+the Selective extra. If the user wants to be affected
+at the same time, increase cost per rank by +1. An example
+would be a Close Burst Area Healing effect that
+included the user along with everyone else in the area.
+This is the equivalent of the +1 Affects Others modifier.
+• Ranged: A ranged area effect can be placed anywhere
+within the effect’s range, extending to fill the
+area’s volume from the origin point.
+• Perception: A perception area effect can be placed
+anywhere the user can accurately perceive. Perception
+area effects neither require an attack check nor
+allow a Dodge resistance check, although targets still
+get a normal resistance check against the effect. Perception
+area effects are blocked by either concealment
+or cover; choose one when acquiring the effect.
+For concealment, if the attacker can’t accurately perceive
+a target in the area, it is unaffected. Thus even
+heavy smoke or darkness can block the effect. Effects
+blocked by cover are much like conventional area effects:
+solid barriers interfere with the effect, even if
+they are transparent, but the effect ignores concealment
+like darkness, shadows, or smoke. Only targets
+behind total cover are unaffected.
+Example: Mastermind has a Burst Area Affliction, allowing
+him to seize control of the minds of everyone
+in the affected area. He must be able to accurately
+perceive a target to control it; an invisible foe or one
+out of his line of sight, for example, would be unaffected,
+even if they were within the area of the burst. On
+the other hand, targets behind a glass wall or invisible
+force field are affected, since Mastermind can perceive
+them. Conversely, Fear-Master has a Burst Area Affliction
+as well—his fear-inducing gas. Targets behind a
+solid barrier (such as on the other side of that glass
+wall or invisible shield) are unaffected, but the unseen
+or concealed target is, even though Fear-Master can’t
+perceive him, since the gas still reaches them."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Area"
+    modifier_list_type = False
+    flat_modifier = False
+
+    modifier_plain_text = value_enums.Power_Area_Names.name_list
+    modifier_values = value_enums.Power_Area_Names.val_list
+
+    modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
+
+    def __init__(self, power, rank, starting_rank=0, area_val=value_enums.Power_Area.BURST):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+        self.area_total = points.Rank_Range_With_Points(rank,starting_rank=starting_rank)
+        self.area_type = area_val
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    def set_area_type(self, area_type):
+        self.area_type = area_type
+
+    def add_additional_level(self, rank, starting_rank=0):
+        self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(1), rank, starting_rank=starting_rank)
+        self.area_total.add_rank_range(points.Rank_Range(rank, starting_rank=0))
+
+    def represent_modifier_on_sheet_without_rank(self, power):
+        self.rank_included = False
+        retstr = ""
+        modstr = ""
+        for mod in self.modifier_modifiers:
+            modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
+            rr = mod.get_rank_range()
+            if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                modstr += " %s" % (str(rr))
+            modstr += ", "
+
+        empty = points.Rank_Range(0,0)
+        value_rank = 0
+        for (a, b) in self.area_total.get_points():
+            #a is int, b is points_per_rank_x_modifier
+            mod = b.get_modifier()
+            altstr = ""
+            if mod != 1:
+                altstr = " x%d" % mod
+            rng = points.Rank_Range(a,starting_rank=value_rank)
+            retstr += "Area %s%s" % (type(self).modifier_options.get_plaintext_from_value(self.area_type),altstr)
+            if(rng != self.get_rank_range()):
+                retstr += " %s" % rng
+                self.rank_included = True
+            retstr += " "
+
+        retstr = retstr[:-1]
+
+        if modstr != "":
+            retstr = "[%s (%s)]" % (retstr, modstr[:-2])
+        return retstr
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        retstr = self.represent_modifier_on_sheet_without_rank(power)
+        if self.rank_included == True:
+            return retstr
+        newarray = retstr.split("(")
+        if (self.affects_only.is_empty() == True) or (self.affects_only == self.get_rank_range()):
+            retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
+        else:
+            retstr = "%s" % (newarray[0])
+        if len(newarray) != 1:
+            for string in newarray[1:]:
+                retstr += ("(" + string)
+        return retstr
+
+class Attack(Modifier):
+    """This extra applies to personal range effects, making
+them into attack effects. Examples include Shrinking and
+Teleport, causing a target to shrink or teleport away, respectively.
+Unlike most extras, the effect’s cost does not
+change, although it does work differently.
+The effect no longer works on you (so a Teleport Attack
+can’t be used to teleport yourself, for example). It affects
+one creature of any size or 50 lbs. of inanimate mass. The
+effect has close range and requires a standard action and
+an attack check to touch the subject. Its range can be improved
+with the Range extra while its required action can
+be changed with the Action modifier. The target gets a resistance
+check, determined when the effect is made into
+an attack. Generally Dodge or Will is the most appropriate.
+A successful check negates the effect.
+You must also define reasonably common circumstances
+that negate an Attack effect entirely, such as force fields or the
+ability to teleport blocking a Teleport Attack. You control the
+effect, and maintain it, if it has a duration longer than instant.
+If you want both versions of an Attack effect, such as being
+able to Teleport yourself and Teleport others as an attack,
+take both as Alternate Effects. For the ability to use
+both options simultaneously—to teleport a target and
+yourself at the same time, for example—take the effects
+as separate powers."""
+    pass
+
+class Alternate_Resistance(Modifier):
+    """An effect with this modifier has a different resistance
+than usual. The resistance check difficulty class remains
+the same, only the resistance differs. If the change is to
+a generally lower (and therefore more advantageous) resistance,
+this extra increases cost per rank by +1. If, in the
+GM’s opinion, there is no real increase in effectiveness, just
+a chance to the resistance, it has a net modifier of +0."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Alternate Resistance"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0, res_ptr=None, res_name="Fortitude"):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+        self.resistance_pointer = res_ptr
+        self.resistance_name = res_name
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    def adjust_value_of_resistance(self, adjval):
+        self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(adjval),self.get_rank(),self.get_starting_rank())
+
+    def set_new_resistance(self, resistance_pointer):
+        self.resistance_pointer = resistance_pointer
+
+    def represent_modifier_on_sheet_without_rank(self, power):
+        retstr = ""
+        modstr = ""
+        for mod in self.modifier_modifiers:
+            modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
+            rr = mod.get_rank_range()
+            if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                modstr += " %s" % (str(rr))
+            modstr += ", "
+        retstr += "%s (%s)" % (type(self).modifier_name,self.resistance_name)
+        if modstr == "":
+            pass
+        else:
+            retstr = "[%s (%s)]" % (retstr, modstr[:-2])
+        return retstr
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        retstr = self.represent_modifier_on_sheet_without_rank(power)
+        retstr = "%s %s" % (retstr,self.get_rank_range())
+        return retstr
+
 
 extras = """XXX Accurate 1 flat per rank +2 attack check bonus per rank XXX
 XXX Affects Corporeal 1 flat per rank Effect works on corporeal beings with rank equal to extra rank. XXX
 XXX Affects Insubstantial 1-2 flat points Effect works on insubstantial beings at half (1 rank) or full (2 ranks) effect. XXX
-Affects Objects +0-1 per rank Fortitude resisted effect works on objects.
-Affects Others +0-1 per rank Personal effect works on others.
+XXX Affects Objects +0-1 per rank Fortitude resisted effect works on objects. XXX
+XXX Affects Others +0-1 per rank Personal effect works on others. XXX
 Alternate Effect 1-2 flat points Substitute one effect for another in a power.
-Alternate Resistance +0-1 per rank Effect uses a different resistance.
-Area +1 per rank Effect works on an area.
+XXX Alternate Resistance +0-1 per rank Effect uses a different resistance. XXX
+XXX Area +1 per rank Effect works on an area. XXX
 Attack +0 per rank Personal effect works on others as an attack.
 XXX Contagious +1 per rank Effect works on anyone coming into contact with its target. XXX
-Dimensional 1-3 flat points Effect works on targets in other dimensions.
-Extended Range 1 flat per rank Doubles ranged effect’s distances per rank.
-Feature 1 flat per rank Adds a minor capability or benefit to an effect.
-Homing 1 flat per rank Attack effect gains additional chances to hit.
-Impervious +1 per rank Resistance ignores effects with difficulty modifier of half extra rank or less.
+XXX Dimensional 1-3 flat points Effect works on targets in other dimensions. XXX
+XXX Extended Range 1 flat per rank Doubles ranged effect’s distances per rank. XXX
+XXX Feature 1 flat per rank Adds a minor capability or benefit to an effect. XXX
+XXX Homing 1 flat per rank Attack effect gains additional chances to hit. XXX
+XXX Impervious +1 per rank Resistance ignores effects with difficulty modifier of half extra rank or less. XXX
 XXX Increased Duration +1 per rank Improves effect’s duration. XXX
-Increased Mass 1 flat per rank Effect can carry a greater amount of mass.
+XXX Increased Mass 1 flat per rank Effect can carry a greater amount of mass. XXX
 XXX Increased Range +1 per rank Improves effect’s range. XXX
-Incurable 1 flat point Effect cannot be countered or removed using Healing or Regeneration.
-Indirect 1 flat per rank Effect can originate from a point other than the user.
-Innate 1 flat point Effect cannot be Nullified.
-Insidious 1 flat point Result of the effect is more difficult to detect.
+XXX Incurable 1 flat point Effect cannot be countered or removed using Healing or Regeneration. XXX
+XXX Indirect 1 flat per rank Effect can originate from a point other than the user. XXX
+XXX Innate 1 flat point Effect cannot be Nullified. XXX
+XXX Insidious 1 flat point Result of the effect is more difficult to detect. XXX
 Linked 0 flat points Two or more effects work together as one.
 XXX Multiattack +1 per rank Effect can hit multiple targets or a single target multiple times. XXX
-Penetrating 1 flat per rank Effect overcomes Impervious Resistance.
-Precise 1 flat point Effect can perform delicate and precise tasks.
-Reach 1 flat per rank Extend effect’s reach by 5 feet per rank.
+XXX Penetrating 1 flat per rank Effect overcomes Impervious Resistance. XXX
+XXX Precise 1 flat point Effect can perform delicate and precise tasks. XXX
+XXX Reach 1 flat per rank Extend effect’s reach by 5 feet per rank. XXX
 XXX Reaction +1 or 3 per rank Changes effect’s required action to reaction. XXX
-Reversible 1 flat point Effect can be removed at will as a free action.
-Ricochet 1 flat per rank Attacker can bounce effect to change direction.
+XXX Reversible 1 flat point Effect can be removed at will as a free action. XXX
+XXX Ricochet 1 flat per rank Attacker can bounce effect to change direction. XXX
 XXX Secondary Effect +1 per rank Instant effect works on the target twice. XXX
 XXX Selective +1 per rank Resistible effect works only on the targets you choose. XXX
 XXX Sleep +0 per rank Effect leaves targets asleep rather than incapacitated. XXX
