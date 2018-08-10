@@ -871,7 +871,24 @@ def menlo_cer_sim():
     ij = powers.Attack("Injunction", "Melee Combat: Gavels", 10, "Parry", Character.get_toughness, Character.get_toughness)
     rp = powers.Attack("Rocket Punch", "Ranged Combat: Martial Arts", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Ranged':'default'})
 
+    vm_o = powers.modifiers.Affects_Objects(vm, 8, starting_rank=0)
+    vm_o.affects_only_objects(8,starting_rank=6)
+#    vm_ot.affects_only_others(8,4)
+
     es = powers.Protection("Electrostatic Shield", 10, modifier_values={'Sustained':'default'})
+    vm_ot = powers.modifiers.Affects_Others(es, 10, starting_rank=0)
+#    vm_ot.add_additional_level(8,starting_rank=0)
+#    vm_ot.add_additional_level(6,starting_rank=0)
+
+    vm_b = powers.modifiers.Area(vm,10,0,5)
+    vm_b.add_additional_level(8)
+    vm_b.add_additional_level(8)
+
+    vm_f = powers.modifiers.Alternate_Resistance(vm,8,0,defenses.Fortitude)
+
+    es_zadie = powers.modifiers.Increased_Range(es,10,0)
+    es_b = powers.modifiers.Increased_Range(es,10,0)
+
 
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 8)
     srk.set_skill_ranks("Melee Combat: Martial Arts", 10)
@@ -922,15 +939,10 @@ def menlo_cer_sim():
     print(men.print_character_sheet())
 
     modifier_z = powers.modifiers.Secondary_Effect(vm,10,starting_rank=0)
-
-    modifier_e = powers.modifiers.Sleep(modifier_z, 10, starting_rank=0)
-
     modifier_j = powers.modifiers.Fades(modifier_z, 10, starting_rank=0)
 
-    modifier_k = powers.modifiers.Multiattack(modifier_j, 10, starting_rank=0)
 
     print(vm.get_character_sheet_repr())
-
 
 
 def dictifier(c):
@@ -965,6 +977,5 @@ def avatar_caus_sim():
 
 
 if __name__ == '__main__':
-#    print(advantages.Accurate_Attack(4).calculate_cost())
     menlo_cer_sim()
 #    avatar_caus_sim()

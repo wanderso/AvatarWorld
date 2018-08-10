@@ -34,6 +34,15 @@ class Power_Secondary_Effect(enum.IntEnum):
     TERTIARY_EFFECT = 3
     PERMANENT_EFFECT = 4
 
+class Power_Area(enum.IntEnum):
+    BURST = 1
+    CLOUD = 2
+    CONE = 3
+    CYLINDER = 4
+    LINE = 5
+    PERCEPTION = 6
+    SHAPEABLE = 7
+
 class Power_Range_Names:
     name_list = ["","Personal", "Close", "Ranged", "Perception-Ranged"]
     val_list = [0,Power_Range.PERSONAL,Power_Range.CLOSE,Power_Range.RANGED,Power_Range.PERCEPTION]
@@ -49,3 +58,7 @@ class Power_Action_Names:
 class Power_Secondary_Effect_Names:
     name_list = ["","","Secondary Effect","Tertiary Effect","Permanent Effect"]
     val_list = [0,Power_Secondary_Effect.BASE,Power_Secondary_Effect.SECONDARY_EFFECT,Power_Secondary_Effect.TERTIARY_EFFECT,Power_Secondary_Effect.PERMANENT_EFFECT]
+
+class Power_Area_Names:
+    name_list = ["","Burst","Cloud","Cone","Cylinder","Line","Perception","Shapeable"]
+    val_list = [0,Power_Area.BURST,Power_Area.CLOUD,Power_Area.CONE,Power_Area.CYLINDER,Power_Area.LINE,Power_Area.PERCEPTION,Power_Area.SHAPEABLE]

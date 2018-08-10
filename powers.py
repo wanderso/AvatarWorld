@@ -249,7 +249,7 @@ class Power:
                     repr_string = (" %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self)))
                     pass
                 else:
-                    repr_string = (" %s %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self), rr_pow))
+                    repr_string = (" %s" % (mod_list[0].represent_modifier_on_sheet_with_rank(self)))
 
 
             text_display[mod_type] = repr_string
@@ -271,8 +271,8 @@ class Power:
         affects_duration = ['Increased Duration']
         affects_action = ['Increased Action','Sustained']
 
-        before_modifiers = ['Multiattack','Selective','Sleep','Contagious','Accurate','Fades','Subtle','Noticeable']
-        after_modifiers = ['Secondary Effect']
+        before_modifiers = ['Multiattack','Selective','Sleep','Contagious','Accurate','Fades','Subtle','Noticeable','Area']
+        after_modifiers = ['Secondary Effect', 'Affects Others', 'Affects Objects', 'Alternate Resistance']
         display_power = ['Display Power']
 
         process_order = [after_modifiers,display_power,affects_range,affects_duration,affects_action,before_modifiers]
