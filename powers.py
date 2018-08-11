@@ -272,7 +272,7 @@ class Power:
         affects_action = ['Increased Action','Sustained']
 
         before_modifiers = ['Multiattack','Selective','Sleep','Contagious','Accurate','Fades','Subtle','Noticeable','Area']
-        after_modifiers = ['Secondary Effect', 'Affects Others', 'Affects Objects', 'Alternate Resistance']
+        after_modifiers = ['Secondary Effect', 'Affects Others', 'Affects Objects', 'Alternate Resistance', 'Check Required']
         display_power = ['Display Power']
 
         process_order = [after_modifiers,display_power,affects_range,affects_duration,affects_action,before_modifiers]

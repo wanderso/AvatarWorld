@@ -367,7 +367,7 @@ effect, this modifier makes it continuous"""
             power.duration += 1
 
     def when_removed(self, power):
-        if power.duration < type(self).modifier_values[1]:
+        if power.duration > type(self).modifier_values[1]:
             power.duration -= 1
 
     @classmethod
@@ -466,7 +466,7 @@ active."""
             power.action += 1
 
     def when_removed(self, power):
-        if power.action < type(self).modifier_values[1]:
+        if power.action > type(self).modifier_values[1]:
             power.action -= 1
 
     @classmethod
@@ -1103,7 +1103,7 @@ with a particular effect and this modifier."""
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
 
-class Impervious:
+class Impervious(Modifier):
     """A defense with this modifier is highly resistant. Any effect
 with a resistance difficulty modifier equal to or less than
 half the Impervious rank (rounded up) has no effect. So,
@@ -1133,7 +1133,7 @@ or hazards."""
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
 
-class Ricochet:
+class Ricochet(Modifier):
     """You can ricochet or bounce an attack effect with this
 modifier off of a solid surface to change its direction. This
 allows you to attack around corners, overcome cover and
@@ -1161,7 +1161,7 @@ to surprise, at the GM’s discretion."""
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
 
-class Reversible:
+class Reversible(Modifier):
     """You can remove conditions caused by a Reversible effect at
 will as a free action, so long as the subject is within the effect’s
 range. Examples include removing the damage conditions
@@ -1187,7 +1187,7 @@ you have no control over the results of such effects."""
     def represent_modifier_on_sheet_with_rank(self, power):
         return self.represent_modifier_on_sheet_without_rank(power)
 
-class Reach:
+class Reach(Modifier):
     """Each time you apply this modifier to a close range effect,
 you extend its reach by 5 feet. This may represent a shortranged
 effect or one with a somewhat greater reach, like a
@@ -1683,14 +1683,7 @@ perceive him, since the gas still reaches them."""
         retstr = self.represent_modifier_on_sheet_without_rank(power)
         if self.rank_included == True:
             return retstr
-        newarray = retstr.split("(")
-        if (self.affects_only.is_empty() == True) or (self.affects_only == self.get_rank_range()):
-            retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
-        else:
-            retstr = "%s" % (newarray[0])
-        if len(newarray) != 1:
-            for string in newarray[1:]:
-                retstr += ("(" + string)
+        retstr = "%s %s" % (retstr, str(self.get_rank_range()))
         return retstr
 
 class Attack(Modifier):
@@ -1774,6 +1767,753 @@ a chance to the resistance, it has a net modifier of +0."""
         retstr = "%s %s" % (retstr,self.get_rank_range())
         return retstr
 
+class Activation(Modifier):
+    """A power with this flaw requires an action to prepare or
+activate before any of its effects are usable. If the power
+requires a move action to activate, the flaw is –1 point. If
+it requires a standard action, it is –2 points. Activation taking
+less than a move action is not a flaw, although may
+qualify as a complication (see the Power Loss complication
+for details).
+Activation has no effect other than making all of the power’s
+effects available for use. The effects themselves still
+require their normal actions to use. You can use a power’s
+effects in the same turn as you activate it, provided you
+have sufficient actions to do so. If the power is deactivated—either
+voluntarily or involuntarily via effects like
+Nullify—you must activate it again in order to use any of
+its effects.
+Activation applies to an entire power and all of its effects.
+Activating the power brings all of its effects “on-line” and
+makes them available. If you have to activate different effects
+separately, apply this flaw to each of them, requiring
+separate actions for each.
+If Activation is not automatic, apply the Check Required
+flaw to the entire power as well and have the player make
+the necessary check in order to activate the power. If the
+check fails, the power does not activate, and the character
+has to take the activation action to try again.
+Activation and Permanent Effects
+The Activation flaw does allow permanent effects that are
+part of a power to be turned off, but only if the power as a
+whole is deactivated. It does not affect the other aspects
+of permanent duration, including the inability to improve
+the effect with extra effort. The GM should decide if allowing
+a permanent effect to have an Activation is appropriate
+based on the specific effect and any others it is combined
+with in the power.
+Example: Stonewall has the power to turn into
+a super-strong rock-form. This is a combination
+of the Enhanced Strength, Impervious Protection,
+and Power-Lifting effects. Stonewall’s player
+applies the Activation flaw to the power, saying
+Stonewall has to concentrate and take a standard
+action to assume his rock-form. That reduces the
+total cost of all three effects by 2 power points and
+means unless Stonewall takes a standard action
+to activate his rock-form, he cannot use any of the
+power’s effects, even including permanent ones
+like Protection."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Activation"
+    modifier_list_type = False
+    flat_modifier = True
+    modifier_is_flaw = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+
+
+class Check_Required(Modifier):
+    """An effect with this flaw requires a check of some sort—usually
+a skill check—with a base difficulty of 10, +1 for each additional
+rank in Check Required. If the check fails, the effect doesn’t
+work, although the action required to use it is expended (so
+attempting to activate a standard action effect takes a standard
+action whether the check is successful or not).
+If the check succeeds, the character gains the use of 1 effect
+rank per point the check exceeds the DC. Thus a check
+result of 14 allows the character to use up to 4 ranks of the
+effect. If a lesser rank of the effect doesn’t do anything,
+then it’s the same as failing the check.
+The required check occurs as part of the action to use the
+effect and provides no benefit other than helping to activate
+it. Normal modifiers apply to the check, and if you
+are unable to make the required check for any reason, the
+effect doesn’t work.
+A natural 1 rolled on the check means it fails automatically,
+regardless of the check result. So there is always a small
+chance the effect won’t work, regardless of the character’s
+check bonus.
+This check must be in addition to any check(s) normally
+required for the effect. So, for example, the normal Perception
+check made in conjunction with a sensory effect
+does not count as an application of this flaw, and applying
+it means an additional check is required before the effect’s
+normally required check(s).
+Example: A spellcaster has Senses 4 (Detect Magic,
+Ranged, Acute, Analyze) with Expertise: Magic
+Check Required 4. The player needs to make a DC
+13 skill check (10 + 3 additional ranks) to successfully
+cast the spell, followed by the normal Perception
+check to pick up on anything present, and perhaps
+another Expertise check to interpret what the
+character senses.
+Check Examples
+Skill checks an effect may require include:
+• Acrobatics: Suitable for effects requiring a measure
+of coordination or complex maneuvering.
+• Deception: Good for effects intended to deceive,
+particularly sensory effects like Concealment or Illusion,
+and disguise or form-altering effects like Morph.
+• Expertise: An Expertise skill check might represent
+having to know something about the subject of the
+effect or having to know something about the effect
+itself.
+• Intimidation: Useful for effects intended to inspire
+fear as well as similar offensive effects like Affliction.
+• Stealth: Best suited to sensory effects, particularly
+Concealment.
+• Technology: Operating a complex device may require
+a Technology check."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Check Required"
+    modifier_list_type = False
+    flat_modifier = True
+    modifier_is_flaw = True
+
+    def __init__(self, power, rank, starting_rank=0, skill_ptr=None):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+        self.set_skill_name(skill_ptr)
+
+    def set_skill_name(self,skill):
+        self.skill = skill
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    def represent_modifier_on_sheet_without_rank(self, power):
+        retstr = ""
+        modstr = ""
+        for mod in self.modifier_modifiers:
+            modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
+            rr = mod.get_rank_range()
+            if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                modstr += " %s" % (str(rr))
+            modstr += ", "
+        retstr += "%s (%s DC %d)" % (type(self).modifier_name,self.skill,9+self.get_rank())
+        if modstr == "":
+            pass
+        else:
+            retstr = "[%s (%s)]" % (retstr, modstr[:-2])
+        return retstr
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        retstr = self.represent_modifier_on_sheet_without_rank(power)
+        return retstr
+
+class Concentration(Modifier):
+    """Applied to a sustained duration effect, this modifier
+makes it concentration duration, requiring a standard action,
+rather than a free action, each turn to maintain. See
+Duration at the start of this chapter for details."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Concentration"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+        if power.duration == value_enums.Power_Duration.SUSTAINED:
+            power.duration = value_enums.Power_Duration.CONCENTRATION
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+        if power.duration == value_enums.Power_Duration.CONCENTRATION:
+            power.duration = value_enums.Power_Duration.SUSTAINED
+
+class Diminished_Range(Modifier):
+    """Each rank of Diminished Range reduces the effect’s short,
+medium, and long ranges. One rank in this flaw gives
+the effect a short range of 10 feet x power rank, medium
+range of 25 feet x power rank, and long range of 50 feet
+x power rank. A second rank reduces the multipliers to 5
+feet, 10 feet, and 25 feet, and a third rank reduces them to
+2 feet, 5 feet, and 10 feet. Three ranks is the maximum a
+character can have in this flaw."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Diminished Range"
+    modifier_list_type = False
+    flat_modifier = True
+    modifier_is_flaw = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Distracting(Modifier):
+    """Using a Distracting effect requires more concentration
+than usual, causing you become vulnerable when you use
+the effect, until the start of your next turn."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Distracting"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+
+class Feedback(Modifier):
+    """You suffer damage when a manifestation of your effect is
+damaged. This flaw only applies to effects with physical
+(or apparently physical) manifestations, such as Create,
+Illusion, or Summon, for example. If your power’s manifestation
+is damaged, make a resistance check against
+the attack’s damage rank, using your effect’s rank as the
+resistance check bonus. For example, if a manifestation of
+a rank 10 effect is attacked for damage 12, you must make
+a resistance check against damage 12 with a +10 bonus
+(the effect’s rank) in place of your normal Toughness."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Feedback"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Grab_Based(Modifier):
+    """An attack effect with this flaw requires you to successfully
+grab a target before using the effect (see Grab, page 248).
+This generally applies to an effect that is close range, since
+you have to be in close combat to grab anyway. If the effect’s
+default range is not close, apply the Close modifier
+as well. If you do not succeed on the grab, you cannot use
+the effect. If your grab attempt succeeds, the effect occurs
+automatically as a reaction.
+Example: Lamprey has a draining touch that is a
+Grab-Based Weaken Strength effect. So the monstrous
+villain has to take a standard action and
+make a grab first in order to use it. If his close attack
+check hits, the target makes a Dodge or Fortitude
+resistance check against Lamprey’s Strength. If it
+fails, the target then makes the Fortitude resistance
+check against the villain’s Weaken effect to see how
+much Strength Lamprey drains away.
+This flaw is essentially a form of Resistible, with a grab
+check rather than a regular resistance check (see the Resistible
+flaw for more)."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Grab-Based"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Permanent(Modifier):
+    """A continuous effect with this flaw becomes permanent in
+duration. It cannot be turned off, it is always on by default.
+If some outside force—usually a Nullify effect—does turn
+it off, it turns back on automatically at the earliest opportunity.
+Additionally, you cannot improve a permanent effect
+using extra effort.
+Permanent effects may be inconvenient at times (including
+things like being permanently incorporeal or 30 feet
+tall); this is included in the value of the flaw."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Concentration"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+        if power.duration == value_enums.Power_Duration.CONTINUOUS:
+            power.duration = value_enums.Power_Duration.PERMANENT
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+        if power.duration == value_enums.Power_Duration.CONTINUOUS:
+            power.duration = value_enums.Power_Duration.PERMANENT
+
+class Quirk(Modifier):
+    """A Quirk is some minor nuisance attached to an effect,
+essentially the reverse of a Feature (see Feature under
+Extras). A Quirk is generally worth, at most, 2–3 power
+points, and many are simply 1-point flaws.
+As with Features, the GM should ensure a Quirk is truly a
+flaw (albeit a minor one) and not simply part of the power’s
+descriptors. For example, the fact that an attack with
+a “sonic” descriptor likely will not travel through a vacuum
+is not a Quirk, simply part of the “sonic” descriptor (especially
+since the attack may be enhanced by a medium
+such as water). On the other hand, a shapeshifter unable
+to change color (losing some of the power’s utility), or a
+telepath unable to lie while using Mental Communication,
+do have Quirks to their powers.
+The GM sets the rank (and therefore value) of any given
+Quirk for an effect, based on how troublesome it may be,
+similar to setting ranks for the Benefit advantage and Feature
+effect (see those trait descriptions for details)."""
+    points_per_rank_modifier = points.Points_Flat_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Quirk"
+    modifier_list_type = False
+    flat_modifier = True
+    modifier_is_flaw = True
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_flat_with_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Resistible(Modifier):
+    """When applied to an effect that doesn’t normally allow a
+resistance check, this flaw gives it one. Choose the defense
+when the flaw is applied. Since effects that work on
+others allow a resistance check by definition, this nearly
+always applies to personal effects that allow someone interacting
+with them to circumvent the effect with a successful
+check.
+For example, an Enhanced Parry defense effect might reflect
+a low-level reading of a target’s mind to anticipate and
+avoid attacks. It allows a Will resistance check to overcome
+the effect, denying you the defense bonus against that opponent
+(and applying this flaw to the effect). Likewise, your
+Concealment effect might be illusory rather than a true
+physical transformation, permitting a Will resistance check
+for someone to overcome it. A sustained Protection effect
+might be some sort of “kinetic field” that permits an attacker
+a Fortitude resistance check to overcome it.
+When applied to an effect that does normally allow a resistance
+check, this flaw gives it an additional one, which
+may be the same as its normal resistance, or different. The
+target makes both resistance checks and applies the better
+of the two to determine the effect’s result.
+For example, a Damage effect might involve whirling
+blades an attacker can avoid with a successful Dodge
+resistance check, circumventing the need for a Toughness
+check against the damage. Similarly a Weaken effect
+based on a poison dart might add a Toughness check to
+see if the dart penetrates the target’s skin in addition to
+making the usual Fortitude check against the effect."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Resistible"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Reduced_Range(Modifier):
+    """An effect has a range of close, ranged, or perception. Decreasing
+an effect’s range by one step (from ranged to
+close, for example) is worth 1 point per rank. Some effects
+have their range determined by rank. To change the effect’s
+range, increase or decrease its rank; this flaw does
+not apply. Effects that are close range by default cannot
+further decrease their range."""
+
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Reduced Range"
+    modifier_list_type = True
+
+    modifier_plain_text = value_enums.Power_Range_Names.name_list
+    modifier_values = value_enums.Power_Range_Names.val_list
+
+    modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        if power.range > type(self).modifier_values[1] and power.range > type(self).modifier_values[1]:
+            power.range -= 1
+
+    def when_removed(self, power):
+        if power.range < type(self).modifier_values[-1] and power.range > type(self).modifier_values[1]:
+            power.range += 1
+
+    @classmethod
+    def get_power_default(cls, power):
+        return type(power).default_range
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        return power.get_range()
+
+class Sense_Dependent(Modifier):
+    """The target of a Sense-Dependent effect must be able to
+perceive the effect for it to work. The target gets a Dodge
+resistance check. Success means the target has managed
+to avert his eyes, cover his ears, etc. and the effect doesn’t
+work. Otherwise the effect works normally and the target
+makes the usual resistance check against it, if any.
+Opponents aware of a Sense-Dependent effect can also
+deliberately block the targeted sense: looking away, covering
+or blocking their ears, etc. This provides a +10 bonus to
+resistance checks against the effect, but gives others partial
+concealment from that sense. An opponent unable to use a
+sense (blind, deaf, etc.) is immune to effects dependent on
+it. Opponents can do this by closing their eyes, wearing earor
+nose-plugs, or using another effect like Concealment.
+This gives you total concealment from that sense.
+Sensory effects are Sense-Dependent by definition, and
+cannot apply this flaw. To give a target additional resistance
+to a sensory effect, use the Resistible flaw."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Sense-Dependent"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Tiring(Modifier):
+    """An effect with this flaw causes you to suffer a level of fatigue
+when you use it. You recover from this fatigue normally,
+and can use hero points to overcome it by spending
+the hero point at the start of the round following the
+use of a tiring effect. In essence, the power requires extra
+effort in order to use it (see Extra Effort, page 19). This
+makes Tiring a useful flaw for creating an effect you can
+only use with extra effort.
+Tiring is often applied to just some ranks of an effect to represent
+a higher level of the effect, usable only through extra
+effort. For example, a hero might have a rank 12 Damage
+effect, but routinely use only 8 ranks of it. The remaining
+4 ranks are Tiring, so using them quickly fatigues the hero.
+A Tiring effect can be combined with extra effort, but the
+fatigue stacks, causing a minimum of two levels of fatigue
+per use."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Tiring"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Uncontrolled(Modifier):
+    """You have no control over an effect with this flaw. Instead,
+the Gamemaster decides when and how it works (essentially
+making it a plot device). This flaw is best suited for
+mysterious powers out of the characters’ direct control or
+effects the GM feels more comfortable having under direct,
+rather than player, control."""
+    oints_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Uncontrolled"
+
+    modifier_list_type = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+class Decreased_Action(Modifier):
+    """Using or activating an effect requires a particular amount
+of time. See Actions, page 246, for details about the different
+types of actions. Modifiers may change the action
+needed to use an effect.
+• Standard: Using the effect requires a standard action.
+• Move: Using the effect requires a move action.
+• Free: It requires a free action to use or activate the
+effect. Once an effect is activated or deactivated, it
+remains so until your next turn. As with all free actions,
+the GM may limit the total number of effects a
+hero can turn on or off in a turn.
+• Reaction: It requires no action to use the effect. It
+operates automatically in response to something
+else, such as an attack.
+• None: It requires no action to use the effect. It is always
+active."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
+    modifier_needs_rank = True
+    modifier_name = "Decreased Action"
+    modifier_list_type = True
+
+    modifier_plain_text = value_enums.Power_Action_Names.name_list
+    modifier_values = value_enums.Power_Action_Names.val_list
+
+    modifier_options = Modifier_Options(modifier_plain_text,modifier_values)
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+    def when_applied(self, power):
+        if power.action > type(self).modifier_values[0]:
+            power.action -= 1
+
+    def when_removed(self, power):
+        if power.action < type(self).modifier_values[-1]:
+            power.action += 1
+
+    @classmethod
+    def get_power_default(cls, power):
+        return type(power).default_action
+
+    @classmethod
+    def get_current_power_value(cls, power):
+        return power.get_action()
+
+
+class Side_Effect(Modifier):
+    """Failing to successfully use an effect with this flaw causes
+some problematic effect. Failure includes missing an attack
+check, or the target successfully resisting the effect.
+If the side effect always occurs when you use the effect,
+whether you succeed or fail, it is worth –2 cost per rank.
+The exact nature of the side effect is for you and the Gamemaster
+to determine. As a general guideline, it should be
+an effect about the same in value as the effect with this
+flaw. So an effect with a cost of 20 points should have a
+20-point side effect. Typical side effects include Affliction,
+Damage, or Weaken, or the base effect itself (it essentially
+rebounds and affects you instead). The Side Effect does
+not require an attack check and only affects you, although
+the GM may permit some Side Effects with the Area modifier
+on a case-by-case basis. You get a normal resistance
+check against the Side Effect. If you are immune to your
+own powers, you aren’t immune to its side-effect.
+The GM may also allow a Complication Side Effect, which
+essentially imposes a complication on you without awarding
+a hero point. See Complications on page 27 for more
+information."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Side Effect"
+    modifier_list_type = False
+    flat_modifier = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+        self.always_affects = points.Rank_Range(0,0)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    def always_activates(self, rank, starting_rank=0):
+        self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(-1), rank, starting_rank=starting_rank)
+        self.always_affects.add_range(starting_rank,rank)
+
+    def represent_modifier_on_sheet_without_rank(self, power):
+        retstr = ""
+        modstr = ""
+        only_val = False
+        for mod in self.modifier_modifiers:
+            modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
+            rr = mod.get_rank_range()
+            if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                modstr += " %s" % (str(rr))
+            modstr += ", "
+        if self.always_affects.is_empty() == True:
+            retstr = "Side Effect"
+        elif self.always_affects == self.get_rank_range():
+            retstr = "Side Effect (Always Activates)"
+        else:
+            retstr = "Side Effect %s (Always Activates %s)" % (self.get_rank_range()-self.always_affects,self.always_affects)
+        if modstr != "":
+            retstr = "%s (%s)" % (retstr, modstr[:-2])
+        return retstr
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        retstr = self.represent_modifier_on_sheet_without_rank(power)
+        newarray = retstr.split("(")
+        if (self.always_affects.is_empty() == True) or (self.always_affects == self.get_rank_range()):
+            retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
+        else:
+            retstr = "%s" % (newarray[0])
+        if len(newarray) != 1:
+            for str in newarray[1:]:
+                retstr += ("(" + str)
+        return retstr
+
+class Unreliable(Modifier):
+    """An Unreliable effect doesn’t work all the time. Roll a die
+each round before you use or maintain the effect. On a
+10 or less, it doesn’t work this round, but you’ve still used
+the action the effect requires. You can roll again on the
+following round to see if it works, although you must
+take the normal action needed to activate the effect
+again. Spending a hero point on your reliability roll allows
+you to succeed automatically (since the roll is then
+at least an 11).
+Alternately, instead of having a reliability roll, you can
+choose to have five uses where your effect works normally,
+then it stops working altogether until you can “recover”
+it in some way (see the Fades flaw for more on this). The
+GM may allow you to spend a hero point to automatically
+recover a spent Unreliable power.
+Powers that are only occasionally unreliable (less than
+about 50% of the time) are better handled as complications
+(see Complications, page 30)."""
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
+    modifier_needs_rank = True
+    modifier_name = "Unreliable"
+    modifier_list_type = False
+    flat_modifier = False
+
+    def __init__(self, power, rank, starting_rank=0):
+        super().__init__()
+        self.link_modifier_per_rank(starting_rank, rank, power)
+
+        self.limited_shots = False
+        self.increased_power = points.Rank_Range(0,0)
+
+    def when_applied(self, power):
+        self.when_applied_stored_in_extras(power)
+
+    def when_removed(self, power):
+        self.when_removed_stored_in_extras(power)
+
+    def set_shot_limit(self, setval):
+        self.limited_shots = setval
+
+    def increase_power(self, rank, starting_rank=0):
+        self.alter_x_modifiers(points.Points_Per_Rank_X_Modifier(-1), rank, starting_rank=starting_rank)
+        self.increased_power.add_range(starting_rank, rank)
+
+    def represent_modifier_on_sheet_without_rank(self, power):
+        retstr = ""
+        modstr = ""
+        only_val = False
+        for mod in self.modifier_modifiers:
+            modstr += "%s" % (mod.represent_modifier_on_sheet_without_rank(power))
+            rr = mod.get_rank_range()
+            if (rr.get_min() != 0) or (rr.get_max() != power.get_rank()) or (len(rr.rank_range) != 1):
+                modstr += " %s" % (str(rr))
+            modstr += ", "
+        empty_r = points.Rank_Range(0,0)
+
+        if self.limited_shots == False:
+            if self.increased_power == empty_r:
+                retstr = "Unreliable (11-20)"
+            elif self.increased_power == self.get_rank_range():
+                retstr = "Unreliable (16-20)"
+            else:
+                retstr = "Unreliable (11-20 %s, 16-20 %s)" % (self.get_rank_range()-self.increased_power, self.increased_power)
+        else:
+            if self.increased_power == empty_r:
+                retstr = "Unreliable (Five Shots)"
+            elif self.increased_power == self.get_rank_range():
+                retstr = "Unreliable (One Shot)"
+            else:
+                retstr = "Unreliable (Five Shots %s, One Shot %s)" % (self.get_rank_range()-self.increased_power, self.increased_power)
+        if modstr != "":
+            retstr = "%s (%s)" % (retstr, modstr[:-2])
+        return retstr
+
+    def represent_modifier_on_sheet_with_rank(self, power):
+        retstr = self.represent_modifier_on_sheet_without_rank(power)
+        newarray = retstr.split("(")
+        if (self.always_affects.is_empty() == True) or (self.always_affects == self.get_rank_range()):
+            retstr = "%s %s" % (newarray[0], str(self.get_rank_range()))
+        else:
+            retstr = "%s" % (newarray[0])
+        if len(newarray) != 1:
+            for str in newarray[1:]:
+                retstr += ("(" + str)
+        return retstr
+
 
 extras = """XXX Accurate 1 flat per rank +2 attack check bonus per rank XXX
 XXX Affects Corporeal 1 flat per rank Effect works on corporeal beings with rank equal to extra rank. XXX
@@ -1814,27 +2554,27 @@ XXX Sustained +0 per rank Makes a permanent effect sustained. XXX
 XXX Triggered 1 flat per rank Effect can be set for later activation. XXX
 XXX Variable Descriptor 1-2 flat points Effect can change descriptors XXX"""
 
-flaws = """Activation –1-2 flat points Effect requires a move (1 point) or standard (2 points) action to activate.
-Check Required –1 flat per rank Must succeed on a check to use effect.
-Concentration –1 per rank Sustained effect becomes concentration duration.
-Diminished Range –1 flat per rank Reduces short, medium, and long ranges for the effect.
-Distracting –1 per rank Vulnerable while using effect.
+flaws = """XXX Activation –1-2 flat points Effect requires a move (1 point) or standard (2 points) action to activate. XXX
+XXX Check Required –1 flat per rank Must succeed on a check to use effect. XXX
+XXX Concentration –1 per rank Sustained effect becomes concentration duration. XXX
+XXX Diminished Range –1 flat per rank Reduces short, medium, and long ranges for the effect. XXX
+XXX Distracting –1 per rank Vulnerable while using effect. XXX
 XXX Fades –1 per rank Effect loses 1 rank each time it is used. XXX
-Feedback –1 per rank Suffer damage when your effect’s manifestation is damaged.
-Grab-Based –1 per rank Effect requires a successful grab attack to use.
-Increased Action –1-3 per rank Increases action required to use effect.
+XXX Feedback –1 per rank Suffer damage when your effect’s manifestation is damaged. XXX
+XXX Grab-Based –1 per rank Effect requires a successful grab attack to use. XXX
+XXX Increased Action –1-3 per rank Increases action required to use effect. XXX
 Limited –1 per rank Effect loses about half its effectiveness.
 XXX Noticeable –1 flat point Continuous or permanent effect is noticeable. XXX
-Permanent –1 per rank Effect cannot be turned off or improved with extra effort.
-Quirk –1 flat per rank A minor flaw attached to an effect. The opposite of a Feature.
-Reduced Range –1-2 per rank Effect’s range decreases.
+XXX Permanent –1 per rank Effect cannot be turned off or improved with extra effort. XXX
+XXX Quirk –1 flat per rank A minor flaw attached to an effect. The opposite of a Feature. XXX
+XXX Reduced Range –1-2 per rank Effect’s range decreases. XXX
 Removable –1-2/5 flat points Effect can be taken away from the user.
-Resistible –1 per rank Effect gains a resistance check.
-Sense-Dependent –1 per rank Target must be able to perceive the effect for it to work.
-Side Effect –1-2 per rank Failing to use the effect causes a problematic side effect.
-Tiring –1 per rank Effect causes a level of fatigue when used.
-Uncontrolled –1 per rank You have no control over the effect.
-Unreliable –1 per rank Effect only works about half the time (roll of 11 or more)."""
+XXX Resistible –1 per rank Effect gains a resistance check. XXX
+XXX Sense-Dependent –1 per rank Target must be able to perceive the effect for it to work. XXX
+XXX Side Effect –1-2 per rank Failing to use the effect causes a problematic side effect. XXX
+XXX Tiring –1 per rank Effect causes a level of fatigue when used. XXX
+XXX Uncontrolled –1 per rank You have no control over the effect. XXX
+XXX Unreliable –1 per rank Effect only works about half the time (roll of 11 or more). XXX"""
 
 
 

@@ -876,6 +876,8 @@ def menlo_cer_sim():
 #    vm_ot.affects_only_others(8,4)
 
     es = powers.Protection("Electrostatic Shield", 10, modifier_values={'Sustained':'default'})
+
+    es_cw = powers.modifiers.Check_Required(es, 10, starting_rank=0, skill_ptr="Expertise: Science")
     vm_ot = powers.modifiers.Affects_Others(es, 10, starting_rank=0)
 #    vm_ot.add_additional_level(8,starting_rank=0)
 #    vm_ot.add_additional_level(6,starting_rank=0)
