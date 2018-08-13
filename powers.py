@@ -27,6 +27,15 @@ class Power:
         self.natural_power = False
         self.points_in_power = points.Points_In_Power(self.rank, points.Points_Per_Rank.from_int(type(self).points_per_rank_default))
 
+
+        self.can_execute_checks = []
+
+        self.before_execution = []
+
+        self.after_execution = []
+
+
+
     def calculate_points(self):
         return self.get_points_in_power().get_points_total()
 
@@ -133,13 +142,11 @@ class Power:
                                 if mod_val < ex_rank:
                                     self.modifiers[text_list[val]] = ex_rank
                                     mod_val = ex_rank
-                        new_modifier = possible_modifier_class(self, mod_val)
+                        possible_modifier_class.process_value_to_modifier_for_power(self, mod_val)
             else:
                 entry = possible_modifier_class.get_class_plaintext_name()
                 if entry in self.modifiers:
-                    if self.modifiers[entry] == "default":
-                        self.modifiers[entry] = possible_modifier_class.get_default_value(self)
-                    new_modifier = possible_modifier_class(self, self.modifiers[entry])
+                    possible_modifier_class.process_value_to_modifier_for_power(self,self.modifiers[entry])
 
 
     def repr_process_range(self, altered_value, default_value, value_list, name_list):
@@ -231,7 +238,6 @@ class Power:
                         else:
                             representation_list.append (" %s" % (text_values_with_rank[index]))
                     elif modifier_modifier_values[index] != last_power_index:
-
                         if power_values[index] == self.get_rank():
                             representation_list.append(" %s" % (text_values_without_rank[index]))
                         else:
@@ -247,12 +253,13 @@ class Power:
                 rr_pow = mod_class.get_current_power_value(self)
                 if (rr_pow == points.Rank_Range(self.get_rank())) and mod_class.flat_modifier == False:
                     repr_string = (" %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self)))
-                    pass
                 else:
-                    repr_string = (" %s" % (mod_list[0].represent_modifier_on_sheet_with_rank(self)))
+                    repr_string = (" %s %s" % (mod_list[0].represent_modifier_on_sheet_without_rank(self), str(rr_pow)))
 
-
-            text_display[mod_type] = repr_string
+            if mod_type not in text_display:
+                text_display[mod_type] = [repr_string]
+            else:
+                text_display[mod_type].append(" " + repr_string)
 
         return (text_display)
 
@@ -267,37 +274,60 @@ class Power:
 
         modifier_strings = self.repr_process_modifiers()
 
-        affects_range = ['Increased Range']
-        affects_duration = ['Increased Duration']
-        affects_action = ['Increased Action','Sustained']
+        total_mods = list(modifiers.Modifier_Description.mods_dict.keys())
 
-        before_modifiers = ['Multiattack','Selective','Sleep','Contagious','Accurate','Fades','Subtle','Noticeable','Area']
-        after_modifiers = ['Secondary Effect', 'Affects Others', 'Affects Objects', 'Alternate Resistance', 'Check Required']
+        affects_range = ['Increased Range','Reduced Range','Extended Range','Diminished Range']
+        affects_duration = ['Increased Duration']
+        affects_action = ['Increased Action','Sustained','Decreased Action']
+
+        before_modifiers = ['Multiattack','Selective','Sleep','Contagious','Accurate','Fades','Insidious','Subtle',
+                            'Noticeable','Area','Affects Corporeal','Affects Incorporeal','Penetrating','Precise',
+                            'Tiring','Impervious','Penetrating','Innate','Activation','Concentration']
+        after_modifiers = ['Secondary Effect', 'Affects Others', 'Affects Objects', 'Alternate Resistance',
+                           'Check Required','Unreliable','Limited','Split','Triggered','Variable Descriptor',
+                           'Reach','Ricochet','Reversible','Side Effect','Uncontrolled','Quirk','Feedback','Grab-Based',
+                           'Increased Mass','Homing','Incurable','Indirect','Dimensional','Feature','Distracting',
+                           'Resistible','Sense-Dependent']
         display_power = ['Display Power']
 
         process_order = [after_modifiers,display_power,affects_range,affects_duration,affects_action,before_modifiers]
+
+        for entry in total_mods:
+            entry_not_displayed = True
+            for lis in process_order:
+                if entry in lis:
+                    entry_not_displayed = False
+            if entry_not_displayed == True:
+                print(entry)
 
         for mod_list in process_order:
             for mod in mod_list:
                 if mod == 'Display Power':
                     addl_string = " %s %d" % (type(self).default_plain_text, self.get_rank()) + addl_string
                 elif mod in modifier_strings:
-                    addl_string = modifier_strings[mod] + addl_string
-
-
-#        addl_string = self.repr_process_range(self.range, type(self).default_range, value_enums.Power_Range_Names.val_list, value_enums.Power_Range_Names.name_list) + addl_string
-
-#        addl_string = self.repr_process_range(self.duration, type(self).default_duration, value_enums.Power_Duration_Names.val_list, value_enums.Power_Duration_Names.name_list) + addl_string
-
-#        addl_string = self.repr_process_range(self.action, type(self).default_action,
-#                                             value_enums.Power_Action_Names.val_list,
-#                                             value_enums.Power_Action_Names.name_list) + addl_string
+                    for value in modifier_strings[mod]:
+                        addl_string = value + addl_string
 
         return_string = return_string + addl_string + " (%d point" % self.get_points()
         if self.points != 1:
             return_string += "s"
         return_string += ")\n"
         return return_string
+
+    def power_available(self, character_using_power, target_of_power, environment_of_power):
+        power_available = True
+
+        for fun_ptr in self.can_execute_checks:
+            if fun_ptr(character_using_power,target_of_power, environment_of_power) == False:
+                power_available = False
+
+        return power_available
+
+    def execute_power(self, character_using_power, target_of_power, environment_of_power):
+        pass
+
+    def execute_power_internals(self, character_using_power, target_of_power, environment_of_power):
+        pass
 
 
 class Attack(Power):
@@ -353,6 +383,9 @@ class Attack(Power):
     def get_recovery(self):
         return self.recovery
 
+    def execute_power_internals(self, character_using_power, target_of_power, environment_of_power):
+        pass
+
 class Protection(Power):
     points_per_rank_default = 1
     default_range = value_enums.Power_Range.PERSONAL
@@ -361,7 +394,7 @@ class Protection(Power):
 
     default_plain_text = "Protection"
 
-    allowed_modifiers = [modifiers.Sustained]
+    allowed_modifiers = [modifiers.Sustained,modifiers.Impervious]
 
     def __init__(self, name, rank, modifier_values={}):
         super().__init__(name, "Protection")

@@ -167,6 +167,29 @@ class Rank_Range:
             if edited_this_run == False:
                 cleanup_progress = False
 
+    @classmethod
+    def from_str(cls,str_input):
+        retval = Rank_Range(0,0)
+        str_split = str_input.split(',')
+        if '-' not in str_split[0]:
+            str_split[0] = "0-" + str_split[0]
+        for entry in str_split:
+            a = 0
+            b = 0
+            e_value = entry.split('-')
+            if len(e_value) == 1:
+                a = int(e_value[0])
+                retval.add_range(a,a)
+            else:
+                a = int(e_value[0])
+                b = int(e_value[1])
+                retval.add_range(a,b)
+        return retval
+
+
+
+
+
 class Rank_Range_With_Points():
     def __init__(self, rank, starting_rank=0, starting_ppr=1):
         self.points = Points_Modifier_Adjuster(rank)
