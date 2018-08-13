@@ -864,7 +864,7 @@ def menlo_cer_sim():
     ana = CharacterGenerators.default_char("Miss Trial", 10, "Balanced")
     mer = CharacterGenerators.default_char("Metal Knuckle", 10, "Balanced")
 
-    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Accurate': 10, 'Sleep': 'default', 'Tertiary Effect':'default', 'Secondary Effect':'default', 'Perception-Ranged':'default', 'Ranged':'default', 'Continuous':'default', 'Reaction':'default', 'Multiattack':'default', 'Selective':'default', 'Subtle':3, 'Fades':'default', 'Noticeable':1})
+    vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge", Character.get_toughness, Character.get_toughness, modifier_values={'Accurate': '10', 'Sleep': '0-10', 'Tertiary Effect':'default', 'Secondary Effect':'default', 'Perception-Ranged':'default', 'Ranged':'default', 'Continuous':'default', 'Reaction':'default', 'Multiattack':'default', 'Selective':'default', 'Subtle':3, 'Fades':'default', 'Noticeable':1})
     ef = powers.Attack("Electron Flurry", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", Character.get_toughness, Character.get_toughness)
     sk = powers.Attack("Sack", "Melee Combat: Football", 10, "Parry", Character.get_toughness, Character.get_toughness)
@@ -933,11 +933,12 @@ def menlo_cer_sim():
 
     men.exp = 150
 
-    print("Points in the %s attack: %d" % (vm.get_name(), vm.calculate_points()))
+#    print("Points in the %s attack: %d" % (vm.get_name(), vm.calculate_points()))
 
     men.print_character_sheet()
+    print(vm.get_modifiers())
 
-    print(vm.get_points_in_power())
+#    print(vm.get_points_in_power())
     print(men.print_character_sheet())
 
     modifier_z = powers.modifiers.Secondary_Effect(vm,10,starting_rank=0)

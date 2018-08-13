@@ -99,6 +99,17 @@ class Modifier:
             self.apply(power)
 
     @classmethod
+    def process_value_to_modifier_for_power(cls, power, value):
+        if value == "default":
+            value = cls.get_default_value(power)
+        elif type(value) == str:
+            rr_p = points.Rank_Range.from_str(value)
+            for entry in rr_p:
+                cls(power, entry[1], starting_rank=entry[0])
+            return
+        return cls(power, value)
+
+    @classmethod
     def get_current_power_value(cls, power):
         pass
 
@@ -201,7 +212,6 @@ class Modifier:
         power.add_pip_to_power(self.points_in_modifier, pos=pos)
 
     def adjust_points_with_modifier(self, mod, pos=True):
-        # Errors probably in here.
         for target in mod.linked_to:
             if (issubclass(type(target), powers.Power)):
                 pip_t = target.get_points_in_power()
@@ -1089,7 +1099,7 @@ The GM decides if a given descriptor is appropriate in conjunction
 with a particular effect and this modifier."""
     points_per_rank_modifier = points.Points_Flat_Modifier(1)
     modifier_needs_rank = True
-    modifier_name = "Variable_Descriptor"
+    modifier_name = "Variable Descriptor"
     modifier_list_type = False
     flat_modifier = True
 
@@ -2587,15 +2597,52 @@ class Modifier_Description:
                  "Selective": Selective,
                  "Contagious": Contagious,
                  "Fades": Fades,
+                 "Limited": Limited,
                  "Sustained": Sustained,
                  "Sleep": Sleep,
+                 "Affects Corporeal": Affects_Corporeal,
+                 "Affects Incorporeal": Affects_Incorporeal,
+                 "Affects Objects": Affects_Objects,
+                 "Affects Others": Affects_Others,
                  "Accurate": Accurate,
                  "Insidious": Insidious,
                  "Subtle": Subtle,
                  "Noticeable": Noticeable,
                  "Split": Split,
                  "Triggered": Triggered,
-                 "Variable_Descriptor": Variable_Descriptor}
+                 "Variable Descriptor": Variable_Descriptor,
+                 "Impervious": Impervious,
+                 "Ricochet": Ricochet,
+                 "Reversible": Reversible,
+                 "Reach": Reach,
+                 "Precise": Precise,
+                 "Penetrating": Penetrating,
+                 "Innate": Innate,
+                 "Incurable": Incurable,
+                 "Indirect": Indirect,
+                 "Increased Mass": Increased_Mass,
+                 "Homing": Homing,
+                 "Extended Range": Extended_Range,
+                 "Dimensional": Dimensional,
+                 "Feature": Feature,
+                 "Area": Area,
+                 "Alternate Resistance": Alternate_Resistance,
+                 "Activation": Activation,
+                 "Check Required": Check_Required,
+                 "Concentration": Permanent,
+                 "Diminished Range": Diminished_Range,
+                 "Distracting": Distracting,
+                 "Feedback": Feedback,
+                 "Grab-Based": Grab_Based,
+                 "Quirk": Quirk,
+                 "Resistible": Resistible,
+                 "Reduced Range": Reduced_Range,
+                 "Sense-Dependent": Sense_Dependent,
+                 "Tiring": Tiring,
+                 "Uncontrolled": Uncontrolled,
+                 "Decreased Action": Decreased_Action,
+                 "Side Effect": Side_Effect,
+                 "Unreliable": Unreliable}
 
     def __init__(self, dict_input):
         self.modifier_name = dict_input['modifier']
@@ -2608,5 +2655,4 @@ class Modifier_Description:
                 self.modifier_starting_rank = 0
 
 if __name__ == "__main__":
-    for i in range(4,2,-1):
-        print(i)
+    print(Modifier_Description.mods_dict.keys())
