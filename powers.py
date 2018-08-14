@@ -266,11 +266,6 @@ class Power:
     def get_character_sheet_repr(self):
         return_string = "%s:" % self.get_name()
         addl_string = ""
-        """Shadow Hankyū: Subtle 2 Precise Ranged Damage 8, Accurate 8, Affects Corporeal 8, Indirect 4 Limited to (from and to shadows) (37 points)"""
-
-        # The magic happens
-
-        # Set power range
 
         modifier_strings = self.repr_process_modifiers()
 
