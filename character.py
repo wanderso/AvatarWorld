@@ -770,18 +770,21 @@ class CharacterGenerators:
     def default_char(name, pl, def_focus):
         chara = Character(name)
         chara.set_pl(pl)
+        t = None
         if def_focus == "Defense":
-            chara.dodge = int(6*pl/4)
-            chara.parry = int(6*pl/4)
-            chara.toughness = 2*pl - (chara.dodge)
+            chara.set_dodge_ranks(int(6*pl/4))
+            chara.set_parry_ranks(int(6*pl/4))
+            t = powers.Protection("Default Protection", 2*pl - (chara.dodge))
         elif def_focus == "Toughness":
-            chara.toughness = int(6*pl/4)
-            chara.dodge = 2*pl - (chara.toughness)
-            chara.parry = 2*pl - (chara.toughness)
+            t = powers.Protection("Default Protection", int(6*pl/4))
+            chara.set_dodge_ranks(2*pl - t.get_rank())
+            chara.set_parry_ranks(2*pl - t.get_rank())
         elif def_focus == "Balanced":
-            chara.toughness = pl
-            chara.dodge = pl
-            chara.parry = pl
+            t = powers.Protection("Default Protection", pl)
+            chara.set_dodge_ranks(pl)
+            chara.set_parry_ranks(pl)
+        chara.add_power(t)
+
 
         chara.generate_health_new()
         return chara
