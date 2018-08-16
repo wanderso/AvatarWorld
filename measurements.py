@@ -43,6 +43,13 @@ class Measurement:
     value_list = []
     multiplier_after = 2
     multiplier_before = 0.5
+    unit_list = []
+
+    def __add__(self,other):
+        return type(self).from_value(self.get_value() + other.get_value())
+
+    def __sub__(self, other):
+        return type(self).from_value(self.get_value() - other.get_value())
 
     def __init__(self):
         self.value = 0
@@ -73,35 +80,68 @@ class Measurement:
         return self.value
 
     def get_rank(self):
-        if self.value in type(self).value_list:
-            return type(self).value_list.index(self.value) - type(self).rank_offset
+        rank_start = -type(self).rank_offset
+        for val in type(self).value_list:
+            if val < self.value:
+                rank_start += 1
+            else:
+                break
+        return rank_start
+
+    def __str__(self):
+        val = self.get_value()
+        value_marker = type(self).unit_list[0][0]
+        name_singleton = type(self).unit_list[0][1]
+        name_plural = type(self).unit_list[0][2]
+        for entry in type(self).unit_list:
+            if val > entry[0]:
+                value_marker = entry[0]
+                name_singleton = entry[1]
+                name_plural = entry[2]
+        num_target = self.value/value_marker
+        name_target = name_plural
+        if num_target >= 1 and num_target < 2:
+            name_target = name_singleton
+        if num_target == int(num_target):
+            return "{:,d} {}".format(int(num_target), name_target)
+        else:
+            return "{:,g} {}".format(num_target, name_target)
 
 class Mass(Measurement):
     value_list = [1.5,3,6,12,25,50,100,200,400,800,1600,3200,6000,12000,24000,50000,100000,200000,400000,800000,
                   800*2000,1600*2000,3200*2000,6*2000000,12*2000000,25*2000000,50*2000000,100*2000000,200*2000000,
                   400*2000000,800*2000000,1600*2000000,3200*2000000,6400*2000000,12500*2000000,25000*2000000]
+    unit_list = [(1,'lb.','lbs.'),(2000,'ton','tons'),(2000000,'kiloton','kilotons')]
 
 class Time(Measurement):
     value_list = [1.0/8,1.0/4,0.5,1,3,6,12,30,1*60,2*60,4*60,8*60,15*60,30*60,1*60*60,2*60*60,4*60*60,8*60*60,16*60*60,
                   24*60*60,2*24*60*60,4*24*60*60,7*24*60*60,2*7*24*60*60,30*24*60*60,2*30*24*60*60,4*30*24*60*60,
                   8*30*24*60*60,3*365*12*60*60,3*365*24*60*60,6*365*24*60*60,12*365*24*60*60,25*365*24*60*60,
                   50*365*24*60*60,100*365*24*60*60,200*365*24*60*60]
+    unit_list = [(1,'second','seconds'),(60,'minute','minutes'),(60*60,'hour','hours'),(24*60*60,'day','days'),
+                 (7*24*60*60,'week','weeks'),(30*24*60*60,'month','months'),(365*24*60*60,'year','years')]
 
 class Distance(Measurement):
     value_list = [0.5,1,3,6,15,30,60,120,250,500,900,1800,2640,5280,2*5280,4*5280,8*5280,16*5280,30*5280,60*5280,
                   120*5280,250*5280,500*5280,1000*5280,2000*5280,4000*5280,8000*5280,16000*5280,32000*5280,64000*5280,
                   125000*5280,250000*5280,500000*5280,1000000*5290,2*1000000*5290,4*1000000*5290]
+    unit_list = [(1,'foot','feet'),(5280,'mile','miles'),(5280*1000000,'million miles','million miles')]
+
 
 class Volume(Measurement):
     value_list = [1.0/32,1.0/16,1.0/8,1.0/4,1.0/2,1,2,4,8,15,30,60,125,250,500,1000,2000,4000,80000,15000,32000,
                   65000,125000,250000,500000,1000000,2*1000000,4*1000000,8*1000000,15*1000000,32*1000000,65*1000000,
                   125*1000000,250*1000000,500*1000000,1000*1000000]
+    unit_list = [(1, 'cubic ft.', 'cft.'),(1000000,'million cft.','million cft.'),
+                 (1000000000,'billion cft.','billion cft.')]
 
 if __name__ == "__main__":
     m1 = Mass.from_rank(2)
     m2 = Mass.from_rank(5)
     m3 = Mass.from_rank(0)
 
+
+    print(m1)
 
     print(m1.get_value())
     print(m2.get_value())
@@ -112,7 +152,10 @@ if __name__ == "__main__":
     print(len(Distance.value_list))
     print(len(Volume.value_list))
 
-    print(Mass.from_rank(30).get_value())
-    print(Mass.from_rank(31).get_value())
+    print(Mass.from_rank(-5))
+    print(Mass.from_rank(30))
+    print(Mass.from_rank(31))
+
+    print(Mass.from_value(50).get_rank())
 
 
