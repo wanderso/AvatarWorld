@@ -319,7 +319,14 @@ class Power:
         return power_available
 
     def execute_power(self, character_using_power, target_of_power, environment_of_power):
-        pass
+
+        for fun_ptr in self.before_execution:
+            fun_ptr(character_using_power,target_of_power,environment_of_power)
+
+        self.execute_power_internals(character_using_power,target_of_power,environment_of_power)
+
+        for fun_ptr in self.after_execution:
+            fun_ptr(character_using_power,target_of_power,environment_of_power)
 
     def execute_power_internals(self, character_using_power, target_of_power, environment_of_power):
         pass
