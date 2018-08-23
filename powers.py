@@ -4,6 +4,70 @@ import value_enums
 import defenses
 from time import sleep
 
+"""Power Effects
+Name Type Act ion Range Duration Resistance Cost
+Affliction Attack Standard Close Instant Fort. or Will 1 per rank
+Alternate Form Varies Varies Varies Varies — See description
+Blast Attack Standard Ranged Instant Toughness 2 per rank
+Burrowing Movement Free Personal Sustained — 1 per rank
+Communication Sensory Free Rank Sustained — 4 per rank
+Comprehend Sensory None Personal Permanent — 2 per rank
+Concealment Sensory Free Personal Sustained — 2 per rank
+Create Control Standard Ranged Sustained — 2 per rank
+Damage Attack Standard Close Instant Toughness 1 per rank
+Dazzle Attack Standard Ranged Instant Fort. or Will 2 per rank
+Deflect Defense Standard Ranged Instant — 1 per rank
+Duplication Control Standard Close Sustained — 3 per rank
+Element Control Control Standard Perception Sustained Strength 2 per rank
+Elongation General Free Personal Sustained — 1 per rank
+Energy Absorption General Free Personal Sustained — See description
+Energy Aura Attack Reaction Close Instant Toughness 4 per rank
+Energy Control Attack Standard Ranged Instant Toughness 2 per rank
+Enhanced Trait General Free Personal Sustained — As base trait
+Environment Control Standard Rank Sustained — 1-2 per rank
+Extra Limbs General None Personal Permanent — 1 per rank
+Feature General None Personal Permanent — 1 per rank
+Flight Movement Free Personal Sustained — 2 per rank
+Force Field Defense Free Personal Sustained — 1 per rank
+Growth General Free Personal Sustained — 2 per rank
+Healing General Standard Close Instant — 2 per rank
+Illusion Control Standard Perception Sustained Awareness 1-5 per rank
+Immortality Defense None Personal Permanent — 2 per rank
+Immunity Defense None Personal Permanent — 1 per rank
+Insubstantial General Free Personal Sustained — 5 per rank
+Invisibility Sensory Free Personal Sustained — 4 or 8 points
+Leaping Movement Free Personal Instant — 1 per rank
+Luck Control Control Reaction Perception Instant — 3 per rank
+Magic Attack Standard Ranged Instant Toughness 2 per rank
+Mental Blast Attack Standard Perception Instant Will 4 per rank
+Mimic General Move Personal Sustained — 8 per rank
+Mind Control Attack Standard Perception Instant Will 4 per rank
+Mind Reading Sensory Standard Perception Sustained Will 2 per rank
+Morph General Free Personal Sustained — 5 per rank
+Move Object Control Standard Ranged Sustained Strength 2 per rank
+Movement Movement Free Personal Sustained — 2 per rank
+Nullify Attack Standard Ranged Instant Rank/Will 1 per rank
+Power-Lifting General Free Personal Sustained — 1 per rank
+Protection Defense None Personal Permanent — 1 per rank
+Quickness General Free Personal Sustained — 1 per rank
+Regeneration Defense None Personal Permanent — 1 per rank
+Remote Sensing Sensory Free Rank Sustained — 1-5 per rank
+Senses Sensory None Personal Permanent — 1 per rank
+Shapeshift General Move Personal Sustained — 8 per rank
+Shrinking General Free Personal Sustained — 2 per rank
+Sleep Attack Standard Ranged Instant Fortitude 2 per rank
+Snare Attack Standard Ranged Instant Dodge 3 per rank
+Speed Movement Free Personal Sustained — 1 per rank
+Strike Attack Standard Close Instant Toughness 1 per rank
+Suffocation Attack Standard Ranged Instant Fortitude 4 per rank
+Summon Control Standard Close Sustained — 2 per rank
+Super-Speed See description Free Personal See description — 3 per rank
+Swimming Movement Free Personal Sustained — 1 per rank
+Teleport Movement Move Rank Instant — 2 per rank
+Transform Control Standard Close Sustained — 2-5 per rank
+Variable General Standard Personal Sustained — 7 per rank
+Weaken Attack Standard Close Instant Fort. or Will 1 per rank"""
+
 class Power:
     points_per_rank_default = None
     default_range = None
@@ -309,26 +373,28 @@ class Power:
         return_string += ")\n"
         return return_string
 
-    def power_available(self, character_using_power, target_of_power, environment_of_power):
+    def power_available(self, Power_Environment_Data):
         power_available = True
 
         for fun_ptr in self.can_execute_checks:
-            if fun_ptr(character_using_power,target_of_power, environment_of_power) == False:
+            if fun_ptr(Power_Environment_Data) == False:
                 power_available = False
 
         return power_available
 
-    def execute_power(self, character_using_power, target_of_power, environment_of_power):
+    def execute_power(self, Power_Environment_Data):
+        if self.power_available(Power_Environment_Data) == False:
+            return
 
         for fun_ptr in self.before_execution:
-            fun_ptr(character_using_power,target_of_power,environment_of_power)
+            fun_ptr(Power_Environment_Data)
 
-        self.execute_power_internals(character_using_power,target_of_power,environment_of_power)
+        self.execute_power_internals(Power_Environment_Data)
 
         for fun_ptr in self.after_execution:
             fun_ptr(character_using_power,target_of_power,environment_of_power)
 
-    def execute_power_internals(self, character_using_power, target_of_power, environment_of_power):
+    def execute_power_internals(self, Power_Environment_Data):
         pass
 
 
@@ -385,8 +451,9 @@ class Attack(Power):
     def get_recovery(self):
         return self.recovery
 
-    def execute_power_internals(self, character_using_power, target_of_power, environment_of_power):
-        pass
+    def execute_power_internals(self, Power_Environment_Data):
+        print("Executing power %s." % self.name)
+
 
 class Protection(Power):
     points_per_rank_default = 1

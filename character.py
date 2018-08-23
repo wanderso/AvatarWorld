@@ -81,6 +81,9 @@ class Character:
     def set_pl(self, pl):
         self.pl = pl
 
+    def set_exp(self, exp):
+        self.exp = exp
+
     def set_dodge_ranks(self, value):
         self.dodge_ranks = value
         self.generate_defenses(update=[defenses.Dodge])
@@ -259,7 +262,7 @@ class Character:
     def set_base_ability(self, ability_name, value):
         self.abilities[ability_name] = value
         for power in self.powers:
-            if power.power_type == "Enhanced Ability":
+            if self.powers[power].power_type == "Enhanced Ability":
                 if ability_name in power.abilities:
                     self.abilities[ability_name] += power.abilities[ability_name]
                 # TODO: Check if power is active!
@@ -334,7 +337,7 @@ class Character:
             if skill_ability in self.abilities:
                 skill_val += self.abilities[skill_ability]
         for power in self.powers:
-            if power.power_type == "Enhanced Skill":
+            if self.powers[power].power_type == "Enhanced Skill":
                 skill_val += power.rank
                 ## TODO: Needs to check if power is active!
         self.skills[name] = skill_val
@@ -770,6 +773,7 @@ class CharacterGenerators:
     def default_char(name, pl, def_focus):
         chara = Character(name)
         chara.set_pl(pl)
+        chara.set_exp(15*pl)
         t = None
         if def_focus == "Defense":
             chara.set_dodge_ranks(int(6*pl/4))
