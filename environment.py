@@ -13,11 +13,21 @@ class Environment:
     def add_character(self, chara):
         self.character_list.append(chara)
 
-
-
     def advance_clock(self):
+        e = self.clock.pop_event()
+        self.execute_event(e)
+
+    def add_event(self, time, event):
+        self.clock.add_event(time, event)
+
+    def execute_event(self, event):
         pass
 
+class Event:
+    def __init__(self, event_dict):
+        self.event_information = event_dict
+
+    
 
 if __name__ == "__main__":
 
@@ -46,6 +56,5 @@ if __name__ == "__main__":
 
     print("%s initiative count: %d" % (men.get_name(), men.roll_initiative()))
     print("%s initiative count: %d" % (cer.get_name(), cer.roll_initiative()))
-
 
     vm.execute_power(None)
