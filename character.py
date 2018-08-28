@@ -136,6 +136,8 @@ class Character:
             elif entry == defenses.Initiative:
                 self.initiative = update_value
 
+    def get_name(self):
+        return self.name
 
     def get_initiative(self):
         return self.initiative
@@ -252,7 +254,6 @@ class Character:
         elif class_target == defenses.Will:
             return self.get_will_ranks()
 
-
     def get_ability(self, ability_name):
         if ability_name in self.abilities:
             return self.abilities[ability_name]
@@ -344,6 +345,9 @@ class Character:
 
     def roll_toughness(self):
         return Dice.d20() + self.toughness - self.bruise
+
+    def roll_initiative(self):
+        return Dice.d20() + self.get_initiative()
 
     def exec_attack_evasion(self, atk_name, atk_target):
         if atk_name not in self.attacks:
