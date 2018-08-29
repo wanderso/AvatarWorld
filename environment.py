@@ -27,7 +27,11 @@ class Event:
     def __init__(self, event_dict):
         self.event_information = event_dict
 
-    
+class Turn(Event):
+    pass
+    def __init__(self, init_count, init_tiebreak):
+        pass
+
 
 if __name__ == "__main__":
 

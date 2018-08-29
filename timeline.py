@@ -9,6 +9,7 @@ class Round_Schedule(enum.IntEnum):
 class Timeline:
     def __init__(self):
         self.current_time = Game_Round(0)
+        self.last_event = Timeline_Entry(0, Round_Schedule.BEFORE, Round_Schedule.BEFORE)
         self.heap_timeline = []
 
     def add_event(self, time, event):
@@ -26,7 +27,27 @@ class Timeline:
         else:
             return None
 
+    def get_time(self):
+        te = self.top_event()
+
 class Timeline_Event:
+    def __eq__(self, other):
+        return (self.time == other.time)
+
+    def __gt__(self, other):
+        return (self.time > other.time)
+
+    def __lt__(self, other):
+        return (self.time < other.time)
+
+    def __init__(self, initiative, rnd, eve, tiebreaker=Round_Schedule.AFTER):
+        self.time = Timeline_Entry(initiative, rnd, tiebreaker=tiebreaker)
+        self.event = eve
+
+    def get_event(self):
+        return self.event
+
+class Timeline_Entry:
     def __eq__(self, other):
         return (self.initiative == other.initiative) and (self.round == other.round) and (self.tiebreaker == other.tiebreaker)
 
@@ -46,8 +67,7 @@ class Timeline_Event:
         else:
             return (self.tiebreaker > other.tiebreaker)
 
-    def __init__(self, initiative, rnd, eve, tiebreaker=Round_Schedule.AFTER):
-        self.event = eve
+    def __init__(self, initiative, rnd, tiebreaker=Round_Schedule.AFTER):
         self.tiebreaker = tiebreaker
         if type(initiative) == Initiative:
             self.initiative = Initiative.cpy(initiative)
@@ -57,9 +77,6 @@ class Timeline_Event:
             self.round = Game_Round.cpy(rnd)
         else:
             self.round = Game_Round(rnd)
-
-    def get_event(self):
-        return self.event
 
 
 class Game_Round:
