@@ -66,7 +66,6 @@ class Turn(Event):
 
 
 if __name__ == "__main__":
-
     r1 = rooms.Room()
 
     men = character.CharacterGenerators.default_char("Doctor Menlo", 10, "Defense")
