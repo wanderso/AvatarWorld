@@ -17,20 +17,52 @@ class Environment:
         e = self.clock.pop_event()
         self.execute_event(e)
 
-    def add_event(self, time, event):
-        self.clock.add_event(time, event)
+    def add_event(self, timeline_event):
+        self.clock.add_event(timeline_event)
 
     def execute_event(self, event):
-        pass
+        event.get_event().execute_event()
+
+    def get_time(self):
+        return self.clock.get_time()
 
 class Event:
     def __init__(self, event_dict):
         self.event_information = event_dict
 
-class Turn(Event):
-    pass
-    def __init__(self, init_count, init_tiebreak):
+    def add_to_environment(self, env):
+        cnt = timeline.Initiative(timeline.Round_Schedule.AFTER)
+        rnd = None
+        tie = timeline.Round_Schedule.AFTER
+        if 'Initiative Count' in self.event_information:
+            cnt = self.event_information['Initiative Count']
+        if 'Initiative Tiebreaker' in self.event_information:
+            tie = self.event_information['Initiative Tiebreaker']
+        if 'Initiative Round' in self.event_information:
+            rnd = self.event_information['Initiative Round']
+        else:
+            rnd = env.get_time().get_round()
+            self.event_information['Initiative Round'] = rnd
+        tent = timeline.Timeline_Entry(cnt, rnd, tiebreaker=tie)
+        teve = timeline.Timeline_Event.from_time_event(tent, self)
+        env.add_event(teve)
+        self.event_information['Environment'] = env
+        
+    def execute_event(self):
         pass
+
+
+class Turn(Event):
+    def __init__(self, init_count, init_tiebreak, character):
+        super().__init__({})
+        self.event_information['Initiative Count'] = init_count
+        self.event_information['Initiative Tiebreaker'] = init_tiebreak
+        self.event_information['Power User'] = character
+        
+    def execute_event(self):
+        print("%s's turn" % self.event_information['Power User'].get_name())
+        self.event_information['Initiative Round'] += 1
+        self.add_to_environment(self.event_information['Environment'])
 
 
 if __name__ == "__main__":
@@ -58,7 +90,26 @@ if __name__ == "__main__":
     cer.print_character_sheet()
     print(cer.print_character_sheet())
 
-    print("%s initiative count: %d" % (men.get_name(), men.roll_initiative()))
-    print("%s initiative count: %d" % (cer.get_name(), cer.roll_initiative()))
+    men_init = men.roll_initiative()
+    cer_init = cer.roll_initiative()
 
-    vm.execute_power(None)
+    print("%s initiative count: %d" % (men.get_name(), men_init))
+    print("%s initiative count: %d" % (cer.get_name(), cer_init))
+
+    men_turn = Turn(men_init, men.get_initiative(), men)
+    cer_turn = Turn(cer_init, cer.get_initiative(), cer)
+
+    en = Environment()
+
+    men_turn.add_to_environment(en)
+    cer_turn.add_to_environment(en)
+
+    en.advance_clock()
+    en.advance_clock()
+    en.advance_clock()
+    en.advance_clock()
+    en.advance_clock()
+    en.advance_clock()
+
+
+#    vm.execute_power(None)

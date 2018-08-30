@@ -266,9 +266,6 @@ class Character:
             if self.powers[power].power_type == "Enhanced Ability":
                 if ability_name in power.abilities:
                     self.abilities[ability_name] += power.abilities[ability_name]
-                # TODO: Check if power is active!
-
-        # set skills!
         if ability_name in ability.Ability.ability_list:
             for entry in ability.Ability.ability_list[ability_name].associated_skills:
                 if ":" in entry:
@@ -277,7 +274,6 @@ class Character:
                             self.calculate_skill(skill_name)
                 else:
                     self.calculate_skill(entry)
-        # set powers!
 
     def add_advantage_natural(self, advantage_name, modifiers={}):
         advantage_class = None
