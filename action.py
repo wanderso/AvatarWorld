@@ -49,7 +49,10 @@ class Turn:
             entry.execute_action()
 
 class Action:
-    def __init__(self, act_val):
+    def __init__(self, act_val=None):
+        self.action = act_val
+
+    def set_action(self, act_val):
         self.action = act_val
 
     def execute_action(self):

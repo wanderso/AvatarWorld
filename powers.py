@@ -2,7 +2,7 @@ import modifiers
 import points
 import value_enums
 import defenses
-from time import sleep
+import action
 
 """Power Effects
 Name Type Act ion Range Duration Resistance Cost
@@ -67,6 +67,20 @@ Teleport Movement Move Rank Instant — 2 per rank
 Transform Control Standard Close Sustained — 2-5 per rank
 Variable General Standard Personal Sustained — 7 per rank
 Weaken Attack Standard Close Instant Fort. or Will 1 per rank"""
+
+class Power_Execution_Data:
+    def __init__(self, modifiers):
+        self.modifiers = modifiers
+        self.process_modifiers()
+
+    def process_modifiers(self):
+        for key in self.modifiers:
+            mod_data = self.modifiers[key]
+            if key == "Target":
+                self.target = mod_data
+            elif key == "Self":
+                self.power_user = mod_data
+                
 
 class Power:
     points_per_rank_default = None
@@ -162,6 +176,17 @@ class Power:
 
     def remove_modifier(self, old_modifier):
         self.power_modifiers.remove(old_modifier)
+
+    def create_action(self):
+        act_time = self.get_action()
+        ret_action = None
+        if act_time == value_enums.Power_Action.STANDARD:
+            ret_action = action.Standard_Action()
+        elif act_time == value_enums.Power_Action.MOVE:
+            ret_action = action.Move_Action()
+        elif act_time == value_enums.Power_Action.FREE:
+            ret_action = action.Free_Action()
+
 
     def process_modifiers(self):
         for possible_modifier_class in type(self).allowed_modifiers:

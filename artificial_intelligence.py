@@ -1,6 +1,7 @@
 import character
 import environment
 import enum
+import action
 
 class Objective_Type(enum.IntEnum):
     NULL_OBJECTIVE = 0
@@ -26,9 +27,50 @@ class Artificial_Intelligence:
             return ([], [], [])
 
     def large_process_turn_decision(self):
+        weight_current_objective = 0
+        current_objective = None
         for obj in self.objectives:
             if obj.get_type() == Objective_Type.DEFEAT_TARGET:
-                obj.get_weight()
+                weight = obj.get_weight()
+                if weight > weight_current_objective:
+                    current_objective = obj
+                    weight_current_objective = obj.get_weight()
+
+        processed_turn = action.Turn()
+
+        if current_objective == None:
+            pass
+        elif current_objective.type == Objective_Type.DEFEAT_TARGET:
+            use_attack = self.get_best_attack(obj.objective_target)
+            use_attack.create_action()
+            processed_turn.insert_action()
+            
+        
+            
+        return processed_turn
+
+
+    def get_best_attack(self, target):
+        power_list = self.chara.get_powers()
+        attack_list = []
+        for fact in self.factums:
+            pass
+
+        for power in power_list:
+            if power.get_power_type() == "Attack":
+                attack_list.append(power)
+
+        for attack in attack_list:
+            print(attack)
+
+        if len(attack_list) == 0:
+            return None
+        else:
+            return attack_list[0]
+
+
+
+
 
 class Faction:
     def __init__(self, faction_modifiers):

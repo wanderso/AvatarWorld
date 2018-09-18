@@ -51,7 +51,6 @@ class Event:
     def execute_event(self):
         pass
 
-
 class Turn(Event):
     def __init__(self, init_count, init_tiebreak, character):
         super().__init__({})
@@ -102,6 +101,8 @@ if __name__ == "__main__":
 
     men_turn.add_to_environment(en)
     cer_turn.add_to_environment(en)
+
+    print(vm.get_name())
 
     en.advance_clock()
     en.advance_clock()

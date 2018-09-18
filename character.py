@@ -175,13 +175,12 @@ class Character:
     def get_toughness(self):
         return self.toughness
 
-
+    def get_powers(self):
+        return self.powers
 
     def generate_health_classic(self):
         self.bruise = 0
         self.conditions = []
-
-
 
     def generate_health_light(self):
         self.max_stamina = max(self.get_dodge(),self.get_parry()) + self.pl
@@ -825,7 +824,6 @@ def combat_sim(men, cer, iterations, atk_fun, health_fun):
         while ("Incapacitated" not in men.conditions and "Incapacitated" not in cer.conditions):
             atk_fun(men, men_atk_name, cer)
             atk_fun(cer, cer_atk_name, men)
-
             combat_rounds += 1
 
         if ("Incapacitated") in cer.conditions and ("Incapacitated") in men.conditions:
