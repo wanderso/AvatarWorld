@@ -2,6 +2,7 @@ import character
 import timeline
 import rooms
 import powers
+import artificial_intelligence
 
 class Environment:
     def __init__(self):
@@ -79,6 +80,10 @@ if __name__ == "__main__":
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", character.Character.get_toughness,
                        character.Character.get_toughness)
 
+    men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 10)
+    cer.set_skill_ranks("Melee Combat: Martial Arts", 10)
+
+
     men.add_power(vm)
     cer.add_power(mf)
 
@@ -102,6 +107,9 @@ if __name__ == "__main__":
     men_turn.add_to_environment(en)
     cer_turn.add_to_environment(en)
 
+    men_ai = artificial_intelligence.Artificial_Intelligence(men, en)
+    cer_ai = artificial_intelligence.Artificial_Intelligence(cer, en)
+
     print(vm.get_name())
 
     en.advance_clock()
@@ -112,4 +120,4 @@ if __name__ == "__main__":
     en.advance_clock()
 
 
-#    vm.execute_power(None)
+    

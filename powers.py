@@ -3,6 +3,7 @@ import points
 import value_enums
 import defenses
 import action
+import character
 
 """Power Effects
 Name Type Act ion Range Duration Resistance Cost
@@ -80,7 +81,6 @@ class Power_Execution_Data:
                 self.target = mod_data
             elif key == "Self":
                 self.power_user = mod_data
-                
 
 class Power:
     points_per_rank_default = None
@@ -478,6 +478,55 @@ class Attack(Power):
 
     def execute_power_internals(self, Power_Environment_Data):
         print("Executing power %s." % self.name)
+        if type(Power_Environment_Data.target) == character.Character:
+            power_target = Power_Environment_Data.target
+            power_user = Power_Environment_Data.power_user
+
+            self.exec_attack_classic(power_user, power_target)
+            
+    def exec_attack_classic(self, user, target):
+        skill = self.get_skill()
+        skill_value = 0
+
+        hit = False
+
+        roll = user.roll_skill(skill)
+
+        if (self.defense == "Dodge") or (self.defense == defenses.Dodge):
+            if roll >= target.get_dodge_defense():
+                hit = True
+        elif (self.defense == "Parry") or (self.defense == defenses.Parry):
+            if roll >= target.get_parry_defense():
+                hit = True
+
+        if hit:
+            tough_roll = target.roll_toughness()
+            rank = self.get_rank()
+            if (tough_roll >= 15 + rank):
+                print("No effect")
+                pass
+            elif (tough_roll >= 10 + rank):
+                target.bruise += 1
+                print("Bruised")
+            elif (tough_roll >= 5 + rank):
+                target.bruise += 1
+                print("Dazed")
+                # dazed
+            elif (tough_roll >= rank):
+                target.bruise += 1
+                if "Staggered" not in target.conditions:
+                    print("Staggered")
+                    target.conditions.append("Staggered")
+                else:
+                    target.conditions.append("Incapacitated")
+                    print("Incapacitated (from Staggered)")
+            else:
+                target.conditions.append("Incapacitated")
+                print("Incapacitated")
+
+        else:
+            print("Missed")
+            print(roll)
 
 
 class Protection(Power):

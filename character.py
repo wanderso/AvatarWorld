@@ -136,6 +136,12 @@ class Character:
             elif entry == defenses.Initiative:
                 self.initiative = update_value
 
+    def get_skill(self, skill_name):
+        if skill_name in self.skills:
+            return self.skills[skill_name]
+        else:
+            return self.calculate_skill(skill_name)
+
     def get_name(self):
         return self.name
 
@@ -343,6 +349,9 @@ class Character:
 
     def roll_initiative(self):
         return Dice.d20() + self.get_initiative()
+
+    def roll_skill(self, skill_name):
+        return Dice.d20() + self.get_skill(skill_name)
 
     def exec_attack_evasion(self, atk_name, atk_target):
         if atk_name not in self.attacks:

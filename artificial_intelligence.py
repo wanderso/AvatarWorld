@@ -41,10 +41,16 @@ class Artificial_Intelligence:
         if current_objective == None:
             pass
         elif current_objective.type == Objective_Type.DEFEAT_TARGET:
-            use_attack = self.get_best_attack(obj.objective_target)
-            use_attack.create_action()
-            processed_turn.insert_action()
+            target_attack = obj.objective_target
+            use_attack = self.get_best_attack(target_attack)
+            act = use_attack.create_action()
+
+            execute_data = powers.Power_Execution_Data({"Self": self.chara, "Target": target_attack})
+
+            act.set_action(use_attack)
+            act.set_data(execute_data)
             
+            processed_turn.insert_action(act,0)
         
             
         return processed_turn
