@@ -2468,7 +2468,9 @@ about 50% of the time) are better handled as complications
 
         self.limited_shots = False
         self.increased_power = points.Rank_Range(0,0)
-        
+
+    def when_triggered(self, power):
+        pass
 
     def when_applied(self, power):
         self.when_applied_stored_in_extras(power)
