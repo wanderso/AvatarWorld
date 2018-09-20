@@ -126,7 +126,7 @@ if __name__ == "__main__":
     men_wins = 0
     cer_wins = 0
 
-    for _ in range(0,1000):
+    for _ in range(0,10000):
         men.generate_health_classic()
         cer.generate_health_classic()
         while not men.has_condition("Incapacitated") and not cer.has_condition("Incapacitated"):

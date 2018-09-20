@@ -497,9 +497,9 @@ class Attack(Power):
             power_target = Power_Environment_Data.target
             power_user = Power_Environment_Data.power_user
 
-            self.exec_attack_classic(power_user, power_target)
+            self.exec_attack_classic(power_user, power_target, verbose=False)
             
-    def exec_attack_classic(self, user, target):
+    def exec_attack_classic(self, user, target, verbose=True):
         skill = self.get_skill()
         skill_value = 0
 
@@ -518,30 +518,37 @@ class Attack(Power):
             tough_roll = target.roll_toughness()
             rank = self.get_rank()
             if (tough_roll >= 15 + rank):
-                print("No effect")
+                if verbose:
+                    print("No effect")
                 pass
             elif (tough_roll >= 10 + rank):
                 target.bruise += 1
-                print("Bruised")
+                if verbose:
+                    print("Bruised")
             elif (tough_roll >= 5 + rank):
                 target.bruise += 1
-                print("Dazed")
+                if verbose:
+                    print("Dazed")
                 # dazed
             elif (tough_roll >= rank):
                 target.bruise += 1
                 if "Staggered" not in target.conditions:
-                    print("Staggered")
+                    if verbose:
+                        print("Staggered")
                     target.conditions.append("Staggered")
                 else:
                     target.conditions.append("Incapacitated")
-                    print("Incapacitated (from Staggered)")
+                    if verbose:
+                        print("Incapacitated (from Staggered)")
             else:
                 target.conditions.append("Incapacitated")
-                print("Incapacitated")
+                if verbose:
+                    print("Incapacitated")
 
         else:
-            print("Missed")
-            print(roll)
+            if verbose:
+                print("Missed")
+                print(roll)
 
 
 class Protection(Power):
