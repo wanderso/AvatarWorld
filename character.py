@@ -78,8 +78,19 @@ class Character:
 
         self.conditions = []
 
+        self.intelligence = None
+
+    def __str__(self):
+        return self.get_name()
+
+    def set_intelligence(self, int):
+        self.intelligence = int
+
     def set_pl(self, pl):
         self.pl = pl
+
+    def set_exp(self, exp):
+        self.exp = exp
 
     def set_dodge_ranks(self, value):
         self.dodge_ranks = value
@@ -133,6 +144,17 @@ class Character:
             elif entry == defenses.Initiative:
                 self.initiative = update_value
 
+    def has_condition(self, condition_name):
+        return condition_name in self.conditions
+
+    def get_skill(self, skill_name):
+        if skill_name in self.skills:
+            return self.skills[skill_name]
+        else:
+            return self.calculate_skill(skill_name)
+
+    def get_name(self):
+        return self.name
 
     def get_initiative(self):
         return self.initiative
@@ -170,13 +192,18 @@ class Character:
     def get_toughness(self):
         return self.toughness
 
+    def get_powers(self):
+        return self.powers
 
+    def get_intelligence(self):
+        return self.intelligence
+
+    def generate_turn(self):
+        return self.get_intelligence().large_process_turn_decision()
 
     def generate_health_classic(self):
         self.bruise = 0
         self.conditions = []
-
-
 
     def generate_health_light(self):
         self.max_stamina = max(self.get_dodge(),self.get_parry()) + self.pl
@@ -249,7 +276,6 @@ class Character:
         elif class_target == defenses.Will:
             return self.get_will_ranks()
 
-
     def get_ability(self, ability_name):
         if ability_name in self.abilities:
             return self.abilities[ability_name]
@@ -259,12 +285,9 @@ class Character:
     def set_base_ability(self, ability_name, value):
         self.abilities[ability_name] = value
         for power in self.powers:
-            if power.power_type == "Enhanced Ability":
+            if self.powers[power].power_type == "Enhanced Ability":
                 if ability_name in power.abilities:
                     self.abilities[ability_name] += power.abilities[ability_name]
-                # TODO: Check if power is active!
-
-        # set skills!
         if ability_name in ability.Ability.ability_list:
             for entry in ability.Ability.ability_list[ability_name].associated_skills:
                 if ":" in entry:
@@ -273,7 +296,6 @@ class Character:
                             self.calculate_skill(skill_name)
                 else:
                     self.calculate_skill(entry)
-        # set powers!
 
     def add_advantage_natural(self, advantage_name, modifiers={}):
         advantage_class = None
@@ -334,13 +356,19 @@ class Character:
             if skill_ability in self.abilities:
                 skill_val += self.abilities[skill_ability]
         for power in self.powers:
-            if power.power_type == "Enhanced Skill":
+            if self.powers[power].power_type == "Enhanced Skill":
                 skill_val += power.rank
                 ## TODO: Needs to check if power is active!
         self.skills[name] = skill_val
 
     def roll_toughness(self):
         return Dice.d20() + self.toughness - self.bruise
+
+    def roll_initiative(self):
+        return Dice.d20() + self.get_initiative()
+
+    def roll_skill(self, skill_name):
+        return Dice.d20() + self.get_skill(skill_name)
 
     def exec_attack_evasion(self, atk_name, atk_target):
         if atk_name not in self.attacks:
@@ -770,6 +798,7 @@ class CharacterGenerators:
     def default_char(name, pl, def_focus):
         chara = Character(name)
         chara.set_pl(pl)
+        chara.set_exp(15*pl)
         t = None
         if def_focus == "Defense":
             chara.set_dodge_ranks(int(6*pl/4))
@@ -821,7 +850,6 @@ def combat_sim(men, cer, iterations, atk_fun, health_fun):
         while ("Incapacitated" not in men.conditions and "Incapacitated" not in cer.conditions):
             atk_fun(men, men_atk_name, cer)
             atk_fun(cer, cer_atk_name, men)
-
             combat_rounds += 1
 
         if ("Incapacitated") in cer.conditions and ("Incapacitated") in men.conditions:
