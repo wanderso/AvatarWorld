@@ -78,6 +78,14 @@ class Character:
 
         self.conditions = []
 
+        self.intelligence = None
+
+    def __str__(self):
+        return self.get_name()
+
+    def set_intelligence(self, int):
+        self.intelligence = int
+
     def set_pl(self, pl):
         self.pl = pl
 
@@ -136,6 +144,9 @@ class Character:
             elif entry == defenses.Initiative:
                 self.initiative = update_value
 
+    def has_condition(self, condition_name):
+        return condition_name in self.conditions
+
     def get_skill(self, skill_name):
         if skill_name in self.skills:
             return self.skills[skill_name]
@@ -183,6 +194,12 @@ class Character:
 
     def get_powers(self):
         return self.powers
+
+    def get_intelligence(self):
+        return self.intelligence
+
+    def generate_turn(self):
+        return self.get_intelligence().large_process_turn_decision()
 
     def generate_health_classic(self):
         self.bruise = 0

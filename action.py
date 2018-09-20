@@ -48,34 +48,90 @@ class Turn:
         for entry in self.action_order:
             entry.execute_action()
 
+    def __str__(self):
+        retstr = ""
+        for entry in self.action_order:
+            retstr += str(entry)
+            retstr += " -> "
+        if len(retstr) != 0:
+            retstr = retstr[:-4]
+
+        addl_actions_str = ""
+
+        for entry in self.turn_default:
+            actions_left = self.turn_default[entry]
+            action_type = ""
+            if entry == Action_Duration.MOVE:
+                action_type = "Move Actions"
+            elif entry == Action_Duration.STANDARD:
+                action_type = "Standard Actions"
+            else:
+                action_type = entry
+            if actions_left != 0:
+                addl_actions_str = "%s, %s: %d" % (addl_actions_str, action_type, actions_left)
+
+        if len(addl_actions_str) != 0:
+            addl_actions_str = addl_actions_str[2:]
+            retstr = retstr + " : (Remaining: " + addl_actions_str + ")"
+
+        return "[" + retstr + "]"
+
+
 class Action:
     def __init__(self, act_val=None):
         self.action = act_val
+        self.data = None
 
     def set_action(self, act_val):
         self.action = act_val
 
+    def set_data(self, data):
+        self.data = data
+
     def execute_action(self):
-        self.action()
+        self.action(self.data)
 
     def get_action_type(self):
         return None
+
+    def get_action_name(self):
+        return None
+
+    def __str__(self):
+        retstr = "(%s: %s(%s))" % (self.get_action_name(), str(self.action), str(self.data))
+        return retstr
+
 
 class Free_Action(Action):
     def get_action_type(self):
         return Action_Duration.FREE
 
+    def get_action_name(self):
+        return "Free Action"
+
 class Move_Action(Action):
     def get_action_type(self):
         return Action_Duration.MOVE
+
+    def get_action_name(self):
+        return "Move Action"
+
 
 class Standard_Action(Action):
     def get_action_type(self):
         return Action_Duration.STANDARD
 
+    def get_action_name(self):
+        return "Standard Action"
+
+
 class Full_Round_Action(Action):
     def get_action_type(self):
         return Action_Duration.FULL_ROUND
+
+    def get_action_name(self):
+        return "Full-Round Action"
+
 
 
 

@@ -2,6 +2,7 @@ import character
 import environment
 import enum
 import action
+import powers
 
 class Objective_Type(enum.IntEnum):
     NULL_OBJECTIVE = 0
@@ -14,6 +15,7 @@ class Target_Type(enum.IntEnum):
 class Artificial_Intelligence:
     def __init__(self, character, environment):
         self.chara = character
+        self.chara.set_intelligence(self)
         self.env = environment
         self.factions = []
         self.objectives = []
@@ -21,6 +23,9 @@ class Artificial_Intelligence:
         self.navigation_graph = []
         self.tasks = []
         self.senses = {}
+
+    def add_objective(self, obj):
+        self.objectives.append(obj)
 
     def process_turn_decision(self):
         if self.tasks == []:
@@ -32,7 +37,7 @@ class Artificial_Intelligence:
         for obj in self.objectives:
             if obj.get_type() == Objective_Type.DEFEAT_TARGET:
                 weight = obj.get_weight()
-                if weight > weight_current_objective:
+                if weight > weight_current_objective and not obj.get_target().has_condition("Incapacitated"):
                     current_objective = obj
                     weight_current_objective = obj.get_weight()
 
@@ -40,7 +45,7 @@ class Artificial_Intelligence:
 
         if current_objective == None:
             pass
-        elif current_objective.type == Objective_Type.DEFEAT_TARGET:
+        elif current_objective.get_type() == Objective_Type.DEFEAT_TARGET:
             target_attack = obj.objective_target
             use_attack = self.get_best_attack(target_attack)
             act = use_attack.create_action()
@@ -59,15 +64,13 @@ class Artificial_Intelligence:
     def get_best_attack(self, target):
         power_list = self.chara.get_powers()
         attack_list = []
+
         for fact in self.factums:
             pass
 
         for power in power_list:
-            if power.get_power_type() == "Attack":
-                attack_list.append(power)
-
-        for attack in attack_list:
-            print(attack)
+            if power_list[power].get_power_type() == "Attack":
+                attack_list.append(power_list[power])
 
         if len(attack_list) == 0:
             return None
@@ -89,7 +92,7 @@ class Faction:
 class Objective:
     def __init__(self, objective_modifiers):
         self.objective_type = Objective_Type.NULL_OBJECTIVE
-        self.modifiers = objective_modifiers
+        self.objective_modifiers = objective_modifiers
         self.process_objective()
 
     def process_objective(self):
@@ -105,6 +108,9 @@ class Objective:
 
     def get_weight(self):
         return self.objective_weight
+    
+    def get_target(self):
+        return self.objective_target
 
 
 if __name__ == "__main__":

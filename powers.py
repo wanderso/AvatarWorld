@@ -82,6 +82,14 @@ class Power_Execution_Data:
             elif key == "Self":
                 self.power_user = mod_data
 
+    def __str__(self):
+        retstr = ""
+        for key in self.modifiers:
+            retstr += "'%s': %s, " % (key, str(self.modifiers[key]))
+        if len(retstr) != 0:
+            retstr = retstr[:-2]
+        return "{" + retstr + "}"
+
 class Power:
     points_per_rank_default = None
     default_range = None
@@ -111,6 +119,9 @@ class Power:
         self.before_execution = []
 
         self.after_execution = []
+
+    def __str__(self):
+        return self.get_character_sheet_repr().strip()
 
 
 
@@ -186,6 +197,7 @@ class Power:
             ret_action = action.Move_Action()
         elif act_time == value_enums.Power_Action.FREE:
             ret_action = action.Free_Action()
+        return ret_action
 
 
     def process_modifiers(self):
@@ -421,6 +433,9 @@ class Power:
 
     def execute_power_internals(self, Power_Environment_Data):
         pass
+
+    def __call__(self, *args, **kwargs):
+        return self.execute_power(*args, **kwargs)
 
 
 class Attack(Power):

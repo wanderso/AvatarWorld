@@ -52,7 +52,7 @@ class Event:
     def execute_event(self):
         pass
 
-class Turn(Event):
+class Character_Turn(Event):
     def __init__(self, init_count, init_tiebreak, character):
         super().__init__({})
         self.event_information['Initiative Count'] = init_count
@@ -61,6 +61,8 @@ class Turn(Event):
         
     def execute_event(self):
         print("%s's turn" % self.event_information['Power User'].get_name())
+        turn = self.event_information['Power User'].generate_turn()
+        turn.execute_actions()
         self.event_information['Initiative Round'] += 1
         self.add_to_environment(self.event_information['Environment'])
 
@@ -99,8 +101,8 @@ if __name__ == "__main__":
     print("%s initiative count: %d" % (men.get_name(), men_init))
     print("%s initiative count: %d" % (cer.get_name(), cer_init))
 
-    men_turn = Turn(men_init, men.get_initiative(), men)
-    cer_turn = Turn(cer_init, cer.get_initiative(), cer)
+    men_turn = Character_Turn(men_init, men.get_initiative(), men)
+    cer_turn = Character_Turn(cer_init, cer.get_initiative(), cer)
 
     en = Environment()
 
@@ -110,14 +112,33 @@ if __name__ == "__main__":
     men_ai = artificial_intelligence.Artificial_Intelligence(men, en)
     cer_ai = artificial_intelligence.Artificial_Intelligence(cer, en)
 
+    men_ob = artificial_intelligence.Objective({'Type':artificial_intelligence.Objective_Type.DEFEAT_TARGET,
+                                                'Target':cer, 'Weight':1})
+    cer_ob = artificial_intelligence.Objective({'Type':artificial_intelligence.Objective_Type.DEFEAT_TARGET,
+                                                'Target':men, 'Weight':1})
+
+    men_ai.add_objective(men_ob)
+    cer_ai.add_objective(cer_ob)
+
     print(vm.get_name())
 
-    en.advance_clock()
-    en.advance_clock()
-    en.advance_clock()
-    en.advance_clock()
-    en.advance_clock()
-    en.advance_clock()
+
+    men_wins = 0
+    cer_wins = 0
+
+    for _ in range(0,1000):
+        men.generate_health_classic()
+        cer.generate_health_classic()
+        while not men.has_condition("Incapacitated") and not cer.has_condition("Incapacitated"):
+            en.advance_clock()
+        if men.has_condition("Incapacitated"):
+            cer_wins += 1
+        if cer.has_condition("Incapacitated"):
+            men_wins += 1
+
+    print("Menlo wins: %d, Cerulean wins: %d" % (men_wins, cer_wins))
+
+
 
 
     
