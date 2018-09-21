@@ -597,3 +597,23 @@ class Protection(Power):
             return False
         else:
             return self.rank
+
+class Senses(Power):
+    points_per_rank_default = 1
+    default_range = value_enums.Power_Range.PERSONAL
+    default_action = value_enums.Power_Action.NONE
+    default_duration = value_enums.Power_Duration.PERMANENT
+
+    default_plain_text = "Senses"
+
+    allowed_modifiers = [modifiers.Sustained, modifiers.Impervious]
+
+    def __init__(self, name, rank, modifier_values={}):
+        super().__init__(name, "Senses")
+        self.rank = rank
+        self.points = rank
+        self.points_per_rank = 1.0
+        self.modifiers = modifier_values
+        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(
+            type(self).points_per_rank_default))
+        self.process_modifiers()
