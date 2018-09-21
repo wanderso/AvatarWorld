@@ -1,6 +1,7 @@
 import powers
 import points
 import value_enums
+import dice
 
 class Modifier_Options:
     def __init__(self, pt_list, val_list):
@@ -2456,7 +2457,7 @@ recover a spent Unreliable power.
 Powers that are only occasionally unreliable (less than
 about 50% of the time) are better handled as complications
 (see Complications, page 30)."""
-    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(1)
+    points_per_rank_modifier = points.Points_Per_Rank_X_Modifier(-1)
     modifier_needs_rank = True
     modifier_name = "Unreliable"
     modifier_list_type = False
@@ -2469,14 +2470,21 @@ about 50% of the time) are better handled as complications
         self.limited_shots = False
         self.increased_power = points.Rank_Range(0,0)
 
-    def when_triggered(self, power):
-        pass
+    def when_triggered(self, data):
+        roll = dice.Dice.d20()
+        if roll > 10:
+            return powers.Power_Function_Codes.NO_ACTION
+        else:
+            return powers.Power_Function_Codes.POWER_FAILED
+
 
     def when_applied(self, power):
         self.when_applied_stored_in_extras(power)
+        power.add_before_execution(self.when_triggered)
 
     def when_removed(self, power):
         self.when_removed_stored_in_extras(power)
+        power.remove_before_execution(self.when_triggered)
 
     def set_shot_limit(self, setval):
         self.limited_shots = setval

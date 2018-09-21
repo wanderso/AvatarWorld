@@ -5,29 +5,11 @@ import ability
 import defenses
 import advantages
 import json
+import dice
 
 from characterencoder import serialize_whole_character
 #https://pastebin.com/azrdkPdB blorp
 
-class Dice:
-    @staticmethod
-    def d20():
-        return random.randint(1, 20)
-
-    @staticmethod
-    def d10():
-        return random.randint(1, 10)
-
-    @staticmethod
-    def d4():
-        return random.randint(1, 4)
-
-    @staticmethod
-    def ndn(n, m):
-        ret_val = 0
-        for _ in range(n):
-            ret_val += random.randint(1,m)
-        return ret_val
 
 
 class Condition:
@@ -362,13 +344,13 @@ class Character:
         self.skills[name] = skill_val
 
     def roll_toughness(self):
-        return Dice.d20() + self.toughness - self.bruise
+        return dice.Dice.d20() + self.toughness - self.bruise
 
     def roll_initiative(self):
-        return Dice.d20() + self.get_initiative()
+        return dice.Dice.d20() + self.get_initiative()
 
     def roll_skill(self, skill_name):
-        return Dice.d20() + self.get_skill(skill_name)
+        return dice.Dice.d20() + self.get_skill(skill_name)
 
     def exec_attack_evasion(self, atk_name, atk_target):
         if atk_name not in self.attacks:
@@ -380,7 +362,7 @@ class Character:
         if skill in self.skills:
             skill_value = self.skills[skill]
 
-        roll = Dice.d20() + skill_value
+        roll = dice.Dice.d20() + skill_value
 
         hit = False
         dodged = False
@@ -411,7 +393,7 @@ class Character:
         if skill in self.skills:
             skill_value = self.skills[skill]
 
-        roll = Dice.d20() + skill_value
+        roll = dice.Dice.d20() + skill_value
 
         hit = False
 
@@ -452,7 +434,7 @@ class Character:
         if skill in self.skills:
             skill_value = self.skills[skill]
 
-        roll = Dice.d20() + skill_value
+        roll = dice.Dice.d20() + skill_value
         hit = False
 
         if (atk.defense == "Dodge"):
@@ -495,7 +477,7 @@ class Character:
             skill_value = self.skills[skill]
 
 
-        roll = Dice.d20() + skill_value
+        roll = dice.Dice.d20() + skill_value
 
         base_hit = 10
         def_num = base_hit
@@ -529,7 +511,7 @@ class Character:
 
             else:
                 atk_target.wounds -= max(0, int(rank))
-                dam = Dice.d20() + rank
+                dam = dice.Dice.d20() + rank
                 dam -= atk_target.get_toughness()
                 atk_target.wounds -= max(0, dam)
 
@@ -550,7 +532,7 @@ class Character:
             skill_value = self.skills[skill]
 
 
-        roll = Dice.d20() + skill_value
+        roll = dice.Dice.d20() + skill_value
 
         base_hit = 10
         def_num = base_hit
@@ -595,7 +577,7 @@ class Character:
                     resistance = atk_target.get_will()
 
 
-                toughness_roll = Dice.ndn(12,resistance) - Dice.ndn(1,atk_target.wounds)
+                toughness_roll = dice.Dice.ndn(12,resistance) - dice.Dice.ndn(1,atk_target.wounds)
 
                 if toughness_roll > rank:
                     pass

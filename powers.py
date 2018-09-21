@@ -4,6 +4,7 @@ import value_enums
 import defenses
 import action
 import character
+import enum
 
 """Power Effects
 Name Type Act ion Range Duration Resistance Cost
@@ -69,6 +70,11 @@ Transform Control Standard Close Sustained — 2-5 per rank
 Variable General Standard Personal Sustained — 7 per rank
 Weaken Attack Standard Close Instant Fort. or Will 1 per rank"""
 
+class Power_Function_Codes(enum.Enum):
+    NO_ACTION = 0
+    POWER_FAILED = 1
+
+
 class Power_Execution_Data:
     def __init__(self, modifiers):
         self.modifiers = modifiers
@@ -123,7 +129,12 @@ class Power:
     def __str__(self):
         return self.get_character_sheet_repr().strip()
 
+    def add_before_execution(self, fun_ptr):
+        self.before_execution.append(fun_ptr)
 
+    def remove_before_execution(self, fun_ptr):
+        if fun_ptr in self.before_execution:
+            self.before_execution.remove(fun_ptr)
 
     def calculate_points(self):
         return self.get_points_in_power().get_points_total()
@@ -424,12 +435,14 @@ class Power:
             return
 
         for fun_ptr in self.before_execution:
-            fun_ptr(Power_Environment_Data)
+            ret_code = fun_ptr(Power_Environment_Data)
+            if ret_code == Power_Function_Codes.POWER_FAILED:
+                return
 
         self.execute_power_internals(Power_Environment_Data)
 
         for fun_ptr in self.after_execution:
-            fun_ptr(character_using_power,target_of_power,environment_of_power)
+            fun_ptr(Power_Environment_Data)
 
     def execute_power_internals(self, Power_Environment_Data):
         pass

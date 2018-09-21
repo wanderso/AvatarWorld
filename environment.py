@@ -60,7 +60,7 @@ class Character_Turn(Event):
         self.event_information['Power User'] = character
         
     def execute_event(self):
-        print("%s's turn" % self.event_information['Power User'].get_name())
+        #print("%s's turn" % self.event_information['Power User'].get_name())
         turn = self.event_information['Power User'].generate_turn()
         turn.execute_actions()
         self.event_information['Initiative Round'] += 1
@@ -81,6 +81,8 @@ if __name__ == "__main__":
                        modifier_values={'Ranged':'default'})
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", character.Character.get_toughness,
                        character.Character.get_toughness)
+
+    mf_mod = powers.modifiers.Unreliable(mf,10)
 
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 10)
     cer.set_skill_ranks("Melee Combat: Martial Arts", 10)
@@ -119,9 +121,6 @@ if __name__ == "__main__":
 
     men_ai.add_objective(men_ob)
     cer_ai.add_objective(cer_ob)
-
-    print(vm.get_name())
-
 
     men_wins = 0
     cer_wins = 0
