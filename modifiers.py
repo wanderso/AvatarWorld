@@ -2471,12 +2471,22 @@ about 50% of the time) are better handled as complications
         self.increased_power = points.Rank_Range(0,0)
 
     def when_triggered(self, data):
-        roll = dice.Dice.d20()
-        if roll > 10:
-            return powers.Power_Function_Codes.NO_ACTION
+        if self.limited_shots == False:
+            roll = dice.Dice.d20()
+            if roll > 10:
+                return powers.Power_Function_Codes.NO_ACTION
+            else:
+                return powers.Power_Function_Codes.POWER_FAILED
         else:
-            return powers.Power_Function_Codes.POWER_FAILED
+            if self.limited_shots > 0:
+                self.limited_shots -= 1
+                return powers.Power_Function_Codes.NO_ACTION
+            else:
+                return powers.Power_Function_Codes.POWER_FAILED
 
+    def make_limited(self):
+        self.limited_shots = True
+        self.set_shot_limit(5)
 
     def when_applied(self, power):
         self.when_applied_stored_in_extras(power)

@@ -16,7 +16,7 @@ Communication Sensory Free Rank Sustained — 4 per rank
 Comprehend Sensory None Personal Permanent — 2 per rank
 Concealment Sensory Free Personal Sustained — 2 per rank
 Create Control Standard Ranged Sustained — 2 per rank
-Damage Attack Standard Close Instant Toughness 1 per rank
+XXX Damage Attack Standard Close Instant Toughness 1 per rank XXX
 Dazzle Attack Standard Ranged Instant Fort. or Will 2 per rank
 Deflect Defense Standard Ranged Instant — 1 per rank
 Duplication Control Standard Close Sustained — 3 per rank
