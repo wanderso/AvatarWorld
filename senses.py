@@ -7,11 +7,25 @@ class Sense_Type_Designation(enum.Enum):
     TACTILE = 4
     MENTAL = 5
 
-class Sense_Type:
+class Sense_Cluster:
+    def __init__(self):
+        self.senses_total = []
+
+    def add_sense(self, sense):
+        self.senses_total.append(sense)
+
+    def remove_sense(self, sense):
+        self.senses_total.remove(sense)
+
+class Sense:
     def __init__(self, designation, sense_name):
         self.sense_modifiers = []
         self.sense_type = designation
         self.name = sense_name
+        self.sense_flags = []
+
+class Sense_Event:
+    pass
 
 """Visual
 Normal vision is ranged (with a –1/10 feet modifier),
