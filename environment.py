@@ -82,7 +82,7 @@ if __name__ == "__main__":
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", character.Character.get_toughness,
                        character.Character.get_toughness)
 
-    mf_mod = powers.modifiers.Unreliable(mf,10)
+    #mf_mod = powers.modifiers.Unreliable(mf,10)
 
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 10)
     cer.set_skill_ranks("Melee Combat: Martial Arts", 10)

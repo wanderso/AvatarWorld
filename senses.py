@@ -10,6 +10,7 @@ class Sense_Type_Designation(enum.Enum):
 class Sense_Cluster:
     def __init__(self):
         self.senses_total = []
+        self.senses_powers = []
 
     def add_sense(self, sense):
         self.senses_total.append(sense)
@@ -21,11 +22,154 @@ class Sense:
     def __init__(self, designation, sense_name):
         self.sense_modifiers = []
         self.sense_type = designation
-        self.name = sense_name
+        self.name = sense_name  
         self.sense_flags = []
 
 class Sense_Event:
-    pass
+    def __init__(self, type, location):
+        self.sense_type = type
+        self.location = location
+
+class Sense_Flag:
+    flag_name = None
+    entire_type_option = False
+    has_descriptor = False
+    def __init__(self):
+        pass
+
+class Accurate(Sense_Flag):
+    """Accurate 2 or 4 ranks
+An accurate sense can pinpoint something’s exact location.
+You can use an accurate sense to target something
+in combat. Visual and tactile senses are normally accurate
+for humans. Cost is 2 ranks for one sense, 4 for an entire
+sense type."""
+    flag_name = "Accurate"
+    entire_type_option = True
+    ranks_for_value = [2,4]
+    def __init__(self):
+        super().__init__()
+
+class Acute(Sense_Flag):
+    """Acute 1-2 ranks
+You can sense fine details about anything you can detect
+with a particular sense, allowing you to distinguish between
+and identify different subjects. Visual and auditory
+senses are normally acute for humans. Cost is 1 rank for
+one sense, 2 for an entire sense type."""
+    flag_name = "Acute"
+    entire_type_option = True
+    ranks_for_value = [1,2]
+    def __init__(self):
+        super().__init__()
+
+class Analytical(Sense_Flag):
+    """Analytical 1-2 ranks
+Beyond even acute, you can perceive specific details
+about anything you can detect with an analytical sense,
+such as chemical composition, exact dimensions or mass,
+frequency of sounds and energy wavelengths, and so
+forth. You can only apply this effect to an acute sense. Normal
+senses are not analytical. Cost is 1 rank for one sense,
+2 for an entire sense type."""
+    flag_name = "Analytical"
+    entire_type_option = True
+    ranks_for_value = [1, 2]
+    def __init__(self):
+        super().__init__()
+
+class Awareness(Sense_Flag):
+    """Awareness 1 rank
+You can sense the use of effects of a particular descriptor
+with a successful Perception check (DC 10, with –1 to
+your check per 10 feet range). Examples include Cosmic
+Awareness, Divine Awareness, Magical Awareness, Mental
+Awareness, and so forth. You can apply other Sense effects
+to your Awareness to modify it. Choose the sense type for
+your Awareness; it is often a mental sense, but doesn’t
+have to be. Awareness counts as an “exotic sense” for noticing
+effects with the first rank of the Subtle modifier (see
+Subtle under Extras for details)."""
+    flag_name = "Awareness"
+    has_descriptor = True
+    ranks_for_value = 1
+    def __init__(self):
+        super().__init__()
+
+
+class Communication_Link(Sense_Flag):
+    """Communication Link 1 rank
+You have a link with a particular individual, chosen when
+you acquire this option, who must also have this ability.
+The two of you can communicate over any distance like
+a use of the Communication effect. Choose a sense type
+as a communication medium when you select this option;
+mental is common for psychic or empathic links. If you
+apply the Dimensional modifier to your Communication
+Link, it extends to other dimensions as well (see Dimensional
+under Power Modifiers for details)."""
+    flag_name = "Communication Link"
+    has_descriptor = True
+    ranks_for_value = 1
+    def __init__(self):
+        super().__init__()
+
+class Counters_Concealment(Sense_Flag):
+    """Counters Concealment 2 ranks
+A sense type with this trait ignores the Concealment effect
+of a particular descriptor; you sense the subject of the effect
+normally, as if the Concealment wasn’t even there. So
+if you have vision that Counters Invisibility, for example,
+then invisible beings are visible to you. For 5 ranks, the
+sense type ignores all Concealment effects, regardless of
+descriptor. Concealed subjects seem slightly “off” to you,
+enough to know they are concealed to others. This trait
+does not affect concealment provided by opaque objects,
+for that, see Penetrates Concealment."""
+    has_upgraded_power = True
+    has_descriptor = True
+    ranks_for_value = [2,5]
+    def __init__(self):
+        super().__init__()
+
+class Counters_Illusion(Sense_Flag):
+    """Counters Illusion 2 ranks
+A sense type with this trait ignores the Illusion effect; you
+automatically succeed on your resistance check against the
+illusion if it affects your sense type, realizing that it isn’t real."""
+    ranks_for_value = 2
+    def __init__(self):
+        super().__init__()
+
+class Danger_Sense(Sense_Flag):
+    """Danger Sense 1 rank
+When you would normally be surprised in combat, make
+a Perception check (DC 10): One degree of success means
+you’re not surprised, but can’t act during the surprise
+round (so you don’t suffer any conditions of being surprised),
+while two or more degrees of success means you
+are not surprised and may act during the surprise round
+(if any). Failure means you are surprised (although, if you
+have Uncanny Dodge, you are not vulnerable). The GM
+may raise the DC of the Danger Sense check in some circumstances.
+Choose a sense type for your Danger Sense.
+Sensory effects targeting that sense also affect your Danger
+Sense ability and may “blind” it."""
+    ranks_for_value = 1
+    def __init__(self):
+        super().__init__()
+
+class Darkvision(Sense_Flag):
+    """Darkvision 2 ranks
+You can see in complete darkness as if it were normal daylight;
+darkness provides no concealment to your vision.
+This is essentially the same as Counters Concealment
+(Darkness)."""
+
+class
+
+
+
 
 """Visual
 Normal vision is ranged (with a –1/10 feet modifier),
