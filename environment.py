@@ -60,7 +60,6 @@ class Character_Turn(Event):
         self.event_information['Power User'] = character
         
     def execute_event(self):
-        #print("%s's turn" % self.event_information['Power User'].get_name())
         turn = self.event_information['Power User'].generate_turn()
         turn.execute_actions()
         self.event_information['Initiative Round'] += 1
@@ -86,7 +85,6 @@ if __name__ == "__main__":
 
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 10)
     cer.set_skill_ranks("Melee Combat: Martial Arts", 10)
-
 
     men.add_power(vm)
     cer.add_power(mf)

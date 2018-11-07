@@ -165,8 +165,23 @@ You can see in complete darkness as if it were normal daylight;
 darkness provides no concealment to your vision.
 This is essentially the same as Counters Concealment
 (Darkness)."""
+    ranks_for_value = 2
+    def __init__(self):
+        super().__init__()
 
-class
+class Detect(Sense_Flag):
+    """Detect 1-2 ranks
+You can sense a particular item or effect by touch with a
+Perception check. Detect has no range and only indicates
+the presence or absence of something (being neither
+acute nor accurate). Choose what sense type your Detect
+falls under (often mental). For 2 ranks you can detect
+things at range (with the normal –1 per 10 feet modifier to
+your Perception check)."""
+    ranks_for_value = 1
+    def __init__(self):
+        super().__init__()
+
 
 
 
