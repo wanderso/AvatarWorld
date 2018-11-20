@@ -6,6 +6,7 @@ class Sense_Type_Designation(enum.Enum):
     OLFACTORY = 3
     TACTILE = 4
     MENTAL = 5
+    RADIO = 6
 
 class Sense_Cluster:
     def __init__(self):
@@ -36,7 +37,38 @@ class Sense_Flag:
     has_descriptor = False
     is_ranked = False
     def __init__(self):
-        pass
+        self.sense_type = None
+        self.rank = 0
+
+    def set_sense_type(self, typ):
+        self.sense_type = typ
+
+    def edit_rank(self, rank_mod=1):
+        self.rank += rank_mod
+
+    def get_point_value(self):
+        type_of_flag = type(self)
+        ret_val = 0
+        if type_of_flag.is_ranked == False:
+            if type_of_flag.entire_type_option == False:
+                ret_val = type_of_flag.ranks_for_value
+            else:
+                ret_val = type_of_flag.ranks_for_value[self.rank]
+        else:
+            ret_val = type_of_flag.ranks_for_value * self.rank
+        return ret_val
+
+    def get_flag_representation_no_sense(self):
+        type_of_flag = type(self)
+        ret_val = ""
+        if type_of_flag.is_ranked == False:
+            if type_of_flag.entire_type_option == False:
+                ret_val = type_of_flag.flag_name
+            else:
+                ret_val = type_of_flag.flag_name + " " + str([type_of_flag.ranks_for_value[self.rank]])
+        else:
+            ret_val = type_of_flag.flag_name + " " + str(self.rank)
+        return ret_val
 
 class Accurate(Sense_Flag):
     """Accurate 2 or 4 ranks
@@ -417,3 +449,31 @@ at night by the light of the stars or other UV light sources."""
     def __init__(self):
         super().__init__()
 
+class Sense_Flag_Description:
+    mods_dict = {"Accurate": Accurate,
+                 "Acute": Acute,
+                 "Analytical": Analytical,
+                 "Awareness": Awareness,
+                 "Communication Link": Communication_Link,
+                 "Counters Concealment": Counters_Concealment,
+                 "Counters Illusion": Counters_Illusion,
+                 "Danger Sense": Danger_Sense,
+                 "Darkvision": Darkvision,
+                 "Detect": Detect,
+                 "Direction Sense": Direction_Sense,
+                 "Distance Sense": Distance_Sense,
+                 "Extended": Extended,
+                 "Infravision": Infravision,
+                 "Low-Light Vision": Low_Light_Vision,
+                 "Microscopic Vision": Microscopic_Vision,
+                 "Penetrates Concealment": Penetrates_Concealment,
+                 "Postcognition": Postcognition,
+                 "Precognition": Precognition,
+                 "Radio": Radio,
+                 "Radius": Radius,
+                 "Ranged": Ranged,
+                 "Rapid": Rapid,
+                 "Time Sense": Time_Sense,
+                 "Tracking": Tracking,
+                 "Ultra-Hearing": Ultra_Hearing,
+                 "Ultravision": Ultravision}

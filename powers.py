@@ -1,6 +1,7 @@
 import modifiers
 import points
 import value_enums
+import senses
 import defenses
 import action
 import character
@@ -606,14 +607,47 @@ class Senses(Power):
 
     default_plain_text = "Senses"
 
-    allowed_modifiers = [modifiers.Sustained, modifiers.Impervious]
+    allowed_modifiers = [modifiers.Sustained, modifiers.Impervious, modifiers.Uncontrolled, modifiers.Unreliable]
 
     def __init__(self, name, rank, modifier_values={}):
         super().__init__(name, "Senses")
         self.rank = rank
         self.points = rank
+        self.points_of_senses_max = self.points
+        self.points_of_senses_current = 0
         self.points_per_rank = 1.0
+        self.sense_flags = []
         self.modifiers = modifier_values
         self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(
             type(self).points_per_rank_default))
         self.process_modifiers()
+
+    def add_sense_flag(self, sense_flag):
+        self.sense_flags.append(sense_flag)
+        self.points_of_senses_current += sense_flag.get_point_value()
+
+    def get_sense_flags(self):
+        return self.sense_flags
+
+    def create_sense_flag(self, sense_flag_name, sense_type="Default", rank=1, modifiers = {}):
+        if sense_flag_name in senses.Sense_Flag_Description.mods_dict:
+            new_flag = senses.Sense_Flag_Description.mods_dict[sense_flag_name]()
+
+    def get_character_sheet_repr(self):
+        default_retval = super().get_character_sheet_repr()
+        sides = default_retval.split('(')
+        left_side = '('.join(sides[:-1])
+        right_side = '(' + '('.join(sides[-1:]).rstrip('\n')
+        print(left_side)
+        print(right_side)
+
+        flag_listing = ""
+
+        for flag in self.get_sense_flags():
+            flag_listing += flag.get_flag_representation_no_sense() + ", "
+
+        if flag_listing != "":
+            flag_listing = flag_listing[:-2]
+
+        return left_side + "(" + flag_listing + ") " + right_side
+

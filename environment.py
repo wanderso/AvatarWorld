@@ -81,12 +81,15 @@ if __name__ == "__main__":
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", character.Character.get_toughness,
                        character.Character.get_toughness)
 
+    og = powers.Senses("Omniglasses", 8, {})
+
     #mf_mod = powers.modifiers.Unreliable(mf,10)
 
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 10)
     cer.set_skill_ranks("Melee Combat: Martial Arts", 10)
 
     men.add_power(vm)
+    men.add_power(og)
     cer.add_power(mf)
 
     men.print_character_sheet()
@@ -123,17 +126,17 @@ if __name__ == "__main__":
     men_wins = 0
     cer_wins = 0
 
-    for _ in range(0,10000):
-        men.generate_health_classic()
-        cer.generate_health_classic()
-        while not men.has_condition("Incapacitated") and not cer.has_condition("Incapacitated"):
-            en.advance_clock()
-        if men.has_condition("Incapacitated"):
-            cer_wins += 1
-        if cer.has_condition("Incapacitated"):
-            men_wins += 1
-
-    print("Menlo wins: %d, Cerulean wins: %d" % (men_wins, cer_wins))
+    # for _ in range(0,10000):
+    #     men.generate_health_classic()
+    #     cer.generate_health_classic()
+    #     while not men.has_condition("Incapacitated") and not cer.has_condition("Incapacitated"):
+    #         en.advance_clock()
+    #     if men.has_condition("Incapacitated"):
+    #         cer_wins += 1
+    #     if cer.has_condition("Incapacitated"):
+    #         men_wins += 1
+    #
+    # print("Menlo wins: %d, Cerulean wins: %d" % (men_wins, cer_wins))
 
 
 
