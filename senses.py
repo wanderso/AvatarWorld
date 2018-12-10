@@ -36,12 +36,16 @@ class Sense_Flag:
     entire_type_option = False
     has_descriptor = False
     is_ranked = False
+
     def __init__(self):
         self.sense_type = None
         self.rank = 0
 
     def set_sense_type(self, typ):
         self.sense_type = typ
+
+    def get_sense_type(self):
+        return self.sense_type
 
     def edit_rank(self, rank_mod=1):
         self.rank += rank_mod

@@ -638,13 +638,21 @@ class Senses(Power):
         sides = default_retval.split('(')
         left_side = '('.join(sides[:-1])
         right_side = '(' + '('.join(sides[-1:]).rstrip('\n')
-        print(left_side)
-        print(right_side)
 
         flag_listing = ""
 
+        sense_types = {}
+
         for flag in self.get_sense_flags():
-            flag_listing += flag.get_flag_representation_no_sense() + ", "
+            st = flag.get_sense_type()
+            if st == None:
+                st = "None"
+            if st in sense_types:
+                sense_types[st].append(flag)
+            else:
+                sense_types[st] = [flag]
+
+        print ("Sense types: %s" % sense_types)
 
         if flag_listing != "":
             flag_listing = flag_listing[:-2]
