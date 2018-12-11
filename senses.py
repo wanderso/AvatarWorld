@@ -36,10 +36,11 @@ class Sense_Flag:
     entire_type_option = False
     has_descriptor = False
     is_ranked = False
+    has_upgraded_power = False
 
     def __init__(self):
         self.sense_type = None
-        self.rank = 0
+        self.rank = 1
 
     def set_sense_type(self, typ):
         self.sense_type = typ
@@ -58,6 +59,8 @@ class Sense_Flag:
                 ret_val = type_of_flag.ranks_for_value
             else:
                 ret_val = type_of_flag.ranks_for_value[self.rank]
+        elif type_of_flag.has_upgraded_power == True:
+            ret_val = type_of_flag.ranks_for_value[self.rank]
         else:
             ret_val = type_of_flag.ranks_for_value * self.rank
         return ret_val
@@ -71,7 +74,10 @@ class Sense_Flag:
             else:
                 ret_val = type_of_flag.flag_name + " " + str([type_of_flag.ranks_for_value[self.rank]])
         else:
-            ret_val = type_of_flag.flag_name + " " + str(self.rank)
+            if self.rank == 1:
+                ret_val = type_of_flag.flag_name
+            else:
+                ret_val = type_of_flag.flag_name + " " + str(self.rank)
         return ret_val
 
 class Accurate(Sense_Flag):
@@ -83,7 +89,7 @@ for humans. Cost is 2 ranks for one sense, 4 for an entire
 sense type."""
     flag_name = "Accurate"
     entire_type_option = True
-    ranks_for_value = [2,4]
+    ranks_for_value = [None,2,4]
     def __init__(self):
         super().__init__()
 
@@ -96,7 +102,7 @@ senses are normally acute for humans. Cost is 1 rank for
 one sense, 2 for an entire sense type."""
     flag_name = "Acute"
     entire_type_option = True
-    ranks_for_value = [1,2]
+    ranks_for_value = [None,1, 2]
     def __init__(self):
         super().__init__()
 
@@ -111,7 +117,7 @@ senses are not analytical. Cost is 1 rank for one sense,
 2 for an entire sense type."""
     flag_name = "Analytical"
     entire_type_option = True
-    ranks_for_value = [1, 2]
+    ranks_for_value = [None,1, 2]
     def __init__(self):
         super().__init__()
 
@@ -164,9 +170,10 @@ enough to know they are concealed to others. This trait
 does not affect concealment provided by opaque objects,
 for that, see Penetrates Concealment."""
     flag_name = "Counters Concealment"
+    is_ranked = True
     has_upgraded_power = True
     has_descriptor = True
-    ranks_for_value = [2,5]
+    ranks_for_value = [None, 2,5]
     def __init__(self):
         super().__init__()
 
@@ -381,7 +388,7 @@ radius for humans. Cost is 1 rank for use with one sense, 2
 ranks for one sense type."""
     flag_name = "Radius"
     entire_type_option = True
-    ranks_for_value = [1, 2]
+    ranks_for_value = [None, 1, 2]
     def __init__(self):
         super().__init__()
 
@@ -429,8 +436,9 @@ as the GM sees fit. You move at your speed rank –1 while
 tracking. For 2 ranks, you can move at full normal speed
 while tracking."""
     flag_name = "Tracking"
+    is_ranked = True
     has_upgraded_power = True
-    ranks_for_value = [1,2]
+    ranks_for_value = [None, 1, 2]
     def __init__(self):
         super().__init__()
 
@@ -481,3 +489,10 @@ class Sense_Flag_Description:
                  "Tracking": Tracking,
                  "Ultra-Hearing": Ultra_Hearing,
                  "Ultravision": Ultravision}
+
+    sense_type_dict = {Sense_Type_Designation.VISUAL: "Visual",
+                       Sense_Type_Designation.AUDITORY: "Auditory",
+                       Sense_Type_Designation.OLFACTORY: "Olfactory",
+                       Sense_Type_Designation.TACTILE: "Tactile",
+                       Sense_Type_Designation.MENTAL: "Mental",
+                       Sense_Type_Designation.RADIO: "Radio"}

@@ -83,6 +83,18 @@ if __name__ == "__main__":
 
     og = powers.Senses("Omniglasses", 8, {})
 
+    tv = powers.senses.Tracking()
+    tv.set_sense_type(powers.senses.Sense_Type_Designation.VISUAL)
+    og.add_sense_flag(tv)
+
+    ta = powers.senses.Tracking()
+    ta.set_sense_type(powers.senses.Sense_Type_Designation.AUDITORY)
+    og.add_sense_flag(ta)
+
+    aa = powers.senses.Accurate()
+    aa.set_sense_type(powers.senses.Sense_Type_Designation.AUDITORY)
+    og.add_sense_flag(aa)
+
     #mf_mod = powers.modifiers.Unreliable(mf,10)
 
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 10)
@@ -93,9 +105,9 @@ if __name__ == "__main__":
     cer.add_power(mf)
 
     men.print_character_sheet()
-    print(men.print_character_sheet())
-
     cer.print_character_sheet()
+
+    print(men.print_character_sheet())
     print(cer.print_character_sheet())
 
     men_init = men.roll_initiative()
@@ -137,7 +149,5 @@ if __name__ == "__main__":
     #         men_wins += 1
     #
     # print("Menlo wins: %d, Cerulean wins: %d" % (men_wins, cer_wins))
-
-
 
 

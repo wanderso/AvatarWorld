@@ -612,7 +612,7 @@ class Senses(Power):
     def __init__(self, name, rank, modifier_values={}):
         super().__init__(name, "Senses")
         self.rank = rank
-        self.points = rank
+        self.points = 0
         self.points_of_senses_max = self.points
         self.points_of_senses_current = 0
         self.points_per_rank = 1.0
@@ -621,6 +621,9 @@ class Senses(Power):
         self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(
             type(self).points_per_rank_default))
         self.process_modifiers()
+        
+    def get_points_of_senses_current(self):
+        return self.points_of_senses_current
 
     def add_sense_flag(self, sense_flag):
         self.sense_flags.append(sense_flag)
@@ -639,8 +642,6 @@ class Senses(Power):
         left_side = '('.join(sides[:-1])
         right_side = '(' + '('.join(sides[-1:]).rstrip('\n')
 
-        flag_listing = ""
-
         sense_types = {}
 
         for flag in self.get_sense_flags():
@@ -652,10 +653,26 @@ class Senses(Power):
             else:
                 sense_types[st] = [flag]
 
-        print ("Sense types: %s" % sense_types)
+        flag_text = []
+        
+        for key in sense_types:
+            type_text = key
+            if key in senses.Sense_Flag_Description.sense_type_dict:
+                type_text = senses.Sense_Flag_Description.sense_type_dict[key]
+            key_text = ("%s: " % type_text)
+            for entry in sense_types[key]:
+                key_text += ("%s, " % entry.get_flag_representation_no_sense())
 
-        if flag_listing != "":
-            flag_listing = flag_listing[:-2]
+            key_text = key_text[:-2]
+            flag_text.append(key_text)
 
-        return left_side + "(" + flag_listing + ") " + right_side
+        final_text = ""
+
+        for entry in flag_text:
+            final_text += ("%s, " % entry)
+
+        if final_text != "":
+            final_text = final_text[:-2]
+
+        return left_side + "(" + final_text + ") " + right_side
 
