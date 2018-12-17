@@ -170,6 +170,9 @@ class Power:
     def get_rank(self):
         return self.rank
 
+    def add_rank(self, extend_modifiers=True):
+        pass
+
     def get_range(self):
         return self.range
 
@@ -626,6 +629,8 @@ class Senses(Power):
         return self.points_of_senses_current
 
     def add_sense_flag(self, sense_flag):
+        old_rank = self.get_rank()
+        new_rank = old_rank + sense_flag.get_point_value()
         self.sense_flags.append(sense_flag)
         self.points_of_senses_current += sense_flag.get_point_value()
 
