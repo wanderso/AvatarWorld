@@ -19,12 +19,24 @@ class Sense_Cluster:
     def remove_sense(self, sense):
         self.senses_total.remove(sense)
 
+    def create_default_sense_cluster(self):
+        self.visual = Sense(Sense_Type_Designation.VISUAL, "Visual (Ordinary Frequencies)")
+        visual_acute = Acute(modifiers={"Flag Type":"Visual","Rank":1})
+        self.visual.add_flag(visual_acute)
+
 class Sense:
     def __init__(self, designation, sense_name):
         self.sense_modifiers = []
         self.sense_type = designation
         self.name = sense_name  
         self.sense_flags = []
+
+    def add_flag(self, sense_flag):
+        pass
+
+    def remove_flag(self, sense_flag):
+        pass
+
 
 class Sense_Event:
     def __init__(self, type, location):
@@ -38,9 +50,20 @@ class Sense_Flag:
     is_ranked = False
     has_upgraded_power = False
 
-    def __init__(self):
+    def __init__(self, modifiers = {}):
         self.sense_type = None
         self.rank = 1
+        self.process_modifiers(modifiers)
+
+    def process_modifiers(self, mods):
+        if "Flag Type" in mods:
+            flag_type = mods["Flag Type"]
+            if flag_type in Sense_Flag_Description.sense_type_dict.values():
+                key_val = next(key for key, value in Sense_Flag_Description.sense_type_dict.items() if value == flag_type)
+                self.set_sense_type(key_val)
+        if "Rank" in mods:
+            rank_val = mods["Rank"]
+            self.set_rank(rank_val)
 
     def set_sense_type(self, typ):
         self.sense_type = typ
@@ -50,6 +73,9 @@ class Sense_Flag:
 
     def edit_rank(self, rank_mod=1):
         self.rank += rank_mod
+
+    def set_rank(self, rnk):
+        self.rank = rnk
 
     def get_point_value(self):
         type_of_flag = type(self)
@@ -72,7 +98,11 @@ class Sense_Flag:
             if type_of_flag.entire_type_option == False:
                 ret_val = type_of_flag.flag_name
             else:
-                ret_val = type_of_flag.flag_name + " " + str([type_of_flag.ranks_for_value[self.rank]])
+                if self.rank == 1:
+                    ret_val = type_of_flag.flag_name
+                else:
+                    ret_val = type_of_flag.flag_name + " " + str(type_of_flag.ranks_for_value[self.rank])
+
         else:
             if self.rank == 1:
                 ret_val = type_of_flag.flag_name
@@ -90,8 +120,8 @@ sense type."""
     flag_name = "Accurate"
     entire_type_option = True
     ranks_for_value = [None,2,4]
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Acute(Sense_Flag):
     """Acute 1-2 ranks
@@ -103,8 +133,8 @@ one sense, 2 for an entire sense type."""
     flag_name = "Acute"
     entire_type_option = True
     ranks_for_value = [None,1, 2]
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Analytical(Sense_Flag):
     """Analytical 1-2 ranks
@@ -118,8 +148,8 @@ senses are not analytical. Cost is 1 rank for one sense,
     flag_name = "Analytical"
     entire_type_option = True
     ranks_for_value = [None,1, 2]
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Awareness(Sense_Flag):
     """Awareness 1 rank
@@ -136,8 +166,8 @@ Subtle under Extras for details)."""
     flag_name = "Awareness"
     has_descriptor = True
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 
 class Communication_Link(Sense_Flag):
@@ -154,8 +184,8 @@ under Power Modifiers for details)."""
     flag_name = "Communication Link"
     has_descriptor = True
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Counters_Concealment(Sense_Flag):
     """Counters Concealment 2 ranks
@@ -174,8 +204,8 @@ for that, see Penetrates Concealment."""
     has_upgraded_power = True
     has_descriptor = True
     ranks_for_value = [None, 2,5]
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Counters_Illusion(Sense_Flag):
     """Counters Illusion 2 ranks
@@ -184,8 +214,8 @@ automatically succeed on your resistance check against the
 illusion if it affects your sense type, realizing that it isn’t real."""
     flag_name = "Counters Illusion"
     ranks_for_value = 2
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Danger_Sense(Sense_Flag):
     """Danger Sense 1 rank
@@ -203,8 +233,8 @@ Sensory effects targeting that sense also affect your Danger
 Sense ability and may “blind” it."""
     flag_name = "Danger Sense"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Darkvision(Sense_Flag):
     """Darkvision 2 ranks
@@ -214,8 +244,9 @@ This is essentially the same as Counters Concealment
 (Darkness)."""
     flag_name = "Darkvision"
     ranks_for_value = 2
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
+        self.set_sense_type(Sense_Type_Designation.VISUAL)
 
 class Detect(Sense_Flag):
     """Detect 1-2 ranks
@@ -228,8 +259,8 @@ things at range (with the normal –1 per 10 feet modifier to
 your Perception check)."""
     flag_name = "Detect"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Direction_Sense(Sense_Flag):
     """Direction Sense 1 rank
@@ -237,16 +268,16 @@ You always know what direction north lies in and can retrace
 your steps through any place you’ve been."""
     flag_name = "Direction Sense"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Distance_Sense(Sense_Flag):
     """Distance Sense 1 rank
 You can accurately and automatically judge distances."""
     flag_name = "Distance Sense"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Extended(Sense_Flag):
     """Extended 1 rank
@@ -263,8 +294,8 @@ unless it also Penetrates Concealment."""
     flag_name = "Extended"
     ranks_for_value = 1
     is_ranked = True
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Infravision(Sense_Flag):
     """Infravision 1 rank
@@ -277,8 +308,8 @@ The Gamemaster is the final judge on how long the
 trail remains visible."""
     flag_name = "Infravision"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Low_Light_Vision(Sense_Flag):
     """Low-Light Vision 1 rank
@@ -287,8 +318,9 @@ checks for poor lighting, so long as it is not completely
 dark."""
     flag_name = "Low-Light Vision"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
+        self.set_sense_type(Sense_Type_Designation.VISUAL)
 
 class Microscopic_Vision(Sense_Flag):
     """Microscopic Vision 1-4 ranks
@@ -301,8 +333,9 @@ and interpret what you see."""
     flag_name = "Microscopic Vision"
     ranks_for_value = 1
     is_ranked = True
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
+        self.set_sense_type(Sense_Type_Designation.VISUAL)
 
 class Penetrates_Concealment(Sense_Flag):
     """Penetrates Concealment 4 ranks
@@ -314,8 +347,8 @@ is unaffected by sound-proofing or intervening materials,
 and so forth."""
     flag_name = "Penetrates Concealment"
     ranks_for_value = 4
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 
 class Postcognition(Sense_Flag):
@@ -338,8 +371,8 @@ connected to your own “past lives” or ancestors, reducing
 cost to 2 ranks."""
     flag_name = "Postcognition"
     ranks_for_value = 4
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 
 class Precognition(Sense_Flag):
@@ -363,8 +396,8 @@ sensory effects like Mind Reading or any other ability requiring
 interaction."""
     flag_name = "Precognition"
     ranks_for_value = 4
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Radio(Sense_Flag):
     """Radio 1 rank
@@ -375,8 +408,9 @@ This is the base sense of the radio sense type.
 It’s ranged, radius, and acute by default."""
     flag_name = "Radio"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
+        self.set_sense_type(Sense_Type_Designation.RADIO)
 
 class Radius(Sense_Flag):
     """Radius 1-2 ranks
@@ -389,8 +423,8 @@ ranks for one sense type."""
     flag_name = "Radius"
     entire_type_option = True
     ranks_for_value = [None, 1, 2]
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Ranged(Sense_Flag):
     """Ranged 1 rank
@@ -400,8 +434,8 @@ with the normal –1 per 10 feet modifier. This can be enhanced
 with the Extended Sense effect."""
     flag_name = "Ranged"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Rapid(Sense_Flag):
     """Rapid 1 rank
@@ -416,8 +450,8 @@ forth."""
     flag_name = "Rapid"
     ranks_for_value = 1
     is_ranked = True
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Time_Sense(Sense_Flag):
     """Time Sense 1 rank
@@ -425,8 +459,9 @@ You always know what time it is and can time events as if
 you had an accurate stopwatch."""
     flag_name = "Time Sense"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
+        self.set_sense_type(Sense_Type_Designation.MENTAL)
 
 class Tracking(Sense_Flag):
     """Tracking 1 rank
@@ -439,8 +474,8 @@ while tracking."""
     is_ranked = True
     has_upgraded_power = True
     ranks_for_value = [None, 1, 2]
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
 
 class Ultra_Hearing(Sense_Flag):
     """Ultra-Hearing 1 rank
@@ -449,8 +484,10 @@ dog whistles or ultrasonic signals, including those used
 by some remote controls."""
     flag_name = "Ultra-Hearing"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
+        self.set_sense_type(Sense_Type_Designation.AUDITORY)
+
 
 class Ultravision(Sense_Flag):
     """Ultravision 1 rank
@@ -458,8 +495,9 @@ You can see ultraviolet light, allowing you to see normally
 at night by the light of the stars or other UV light sources."""
     flag_name = "Ultravision"
     ranks_for_value = 1
-    def __init__(self):
-        super().__init__()
+    def __init__(self, modifiers={}):
+        super().__init__(modifiers)
+        self.set_sense_type(Sense_Type_Designation.VISUAL)
 
 class Sense_Flag_Description:
     mods_dict = {"Accurate": Accurate,

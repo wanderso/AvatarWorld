@@ -612,16 +612,15 @@ class Senses(Power):
 
     allowed_modifiers = [modifiers.Sustained, modifiers.Impervious, modifiers.Uncontrolled, modifiers.Unreliable]
 
-    def __init__(self, name, rank, modifier_values={}):
+    def __init__(self, name, modifier_values={}):
         super().__init__(name, "Senses")
-        self.rank = rank
+        self.rank = 0
         self.points = 0
-        self.points_of_senses_max = self.points
         self.points_of_senses_current = 0
         self.points_per_rank = 1.0
         self.sense_flags = []
         self.modifiers = modifier_values
-        self.points_in_power = points.Points_In_Power(rank, points.Points_Per_Rank.from_int(
+        self.points_in_power = points.Points_In_Power(0, points.Points_Per_Rank.from_int(
             type(self).points_per_rank_default))
         self.process_modifiers()
         
@@ -629,8 +628,34 @@ class Senses(Power):
         return self.points_of_senses_current
 
     def add_sense_flag(self, sense_flag):
+        point_val = sense_flag.get_point_value()
+
+        # print("Starting pip: %s" % self.points_in_power)
+        # print("Point_val: %d" % point_val)
+        # print("Points current: %d" % self.get_points())
+
         old_rank = self.get_rank()
-        new_rank = old_rank + sense_flag.get_point_value()
+        new_rank = old_rank + point_val
+
+        # print("Old rank: %d" % old_rank)
+        # print("New rank: %d" % new_rank)
+
+        new_pip = points.Points_In_Power(new_rank, self.points_in_power.get_ppr_tail())
+        old_pip = points.Points_In_Power(old_rank, self.points_in_power.get_ppr_tail())
+
+        # print("New pip: %s" % new_pip)
+        # print("Old pip: %s" % old_pip)
+
+        if self.get_points() == 0:
+            self.points_in_power = new_pip
+        else:
+            combine_pip = new_pip - old_pip
+            self.points_in_power += combine_pip
+
+        # print("Pip: %s" % self.points_in_power)
+
+        self.rank = old_rank + point_val
+
         self.sense_flags.append(sense_flag)
         self.points_of_senses_current += sense_flag.get_point_value()
 
@@ -659,7 +684,9 @@ class Senses(Power):
                 sense_types[st] = [flag]
 
         flag_text = []
-        
+
+        key_lists = sense_types.keys()
+
         for key in sense_types:
             type_text = key
             if key in senses.Sense_Flag_Description.sense_type_dict:

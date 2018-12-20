@@ -81,7 +81,9 @@ if __name__ == "__main__":
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", character.Character.get_toughness,
                        character.Character.get_toughness)
 
-    og = powers.Senses("Omniglasses", 8, {})
+    og = powers.Senses("Omniglasses", {})
+
+
 
     tv = powers.senses.Tracking()
     tv.set_sense_type(powers.senses.Sense_Type_Designation.VISUAL)
@@ -91,9 +93,15 @@ if __name__ == "__main__":
     ta.set_sense_type(powers.senses.Sense_Type_Designation.AUDITORY)
     og.add_sense_flag(ta)
 
-    aa = powers.senses.Accurate()
-    aa.set_sense_type(powers.senses.Sense_Type_Designation.AUDITORY)
+    aa = powers.senses.Accurate(modifiers={"Flag Type":"Auditory"})
     og.add_sense_flag(aa)
+
+    ms = powers.senses.Microscopic_Vision(modifiers={"Flag Type":"Visual","Rank":4})
+    og.add_sense_flag(ms)
+
+    av = powers.senses.Analytical(modifiers={"Flag Type":"Visual","Rank":1})
+    og.add_sense_flag(av)
+
 
     #mf_mod = powers.modifiers.Unreliable(mf,10)
 
