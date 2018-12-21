@@ -77,6 +77,12 @@ class Sense_Flag:
     def set_rank(self, rnk):
         self.rank = rnk
 
+    def apply_flag_to_sense(self, sense):
+        pass
+
+    def remove_flag_from_sense(self, sense):
+        pass
+
     def get_point_value(self):
         type_of_flag = type(self)
         ret_val = 0
