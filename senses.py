@@ -16,20 +16,45 @@ class Sense_Cluster:
     def add_sense(self, sense):
         self.senses_total.append(sense)
 
+    def add_senses(self, sense_list):
+        for sense in sense_list:
+            self.add_sense(sense)
+
     def remove_sense(self, sense):
         self.senses_total.remove(sense)
 
     def create_default_sense_cluster(self):
-        self.visual = Sense(Sense_Type_Designation.VISUAL, "Visual (Ordinary Frequencies)")
-        visual_acute = Acute(modifiers={"Flag Type":"Visual","Rank":1})
-        self.visual.add_flag(visual_acute)
+        visual = Sense(Sense_Type_Designation.VISUAL, "Visual (Ordinary Frequencies)",
+                       with_flags=[Acute(modifiers={"Rank": 1}),
+                                   Ranged(modifiers={"Rank": 1}),
+                                   Accurate(modifiers={"Rank": 1})])
+
+        auditory = Sense(Sense_Type_Designation.AUDITORY, "Auditory (Ordinary Frequencies)",
+                         with_flags=[Acute(modifiers={"Rank": 1}),
+                                     Ranged(modifiers={"Rank": 1}),
+                                     Radius(modifiers={"Rank": 1})])
+
+        olfactory = Sense(Sense_Type_Designation.OLFACTORY, "Smell and Taste",
+                          with_flags=[Radius(modifiers={"Rank": 1})])
+
+        tactile = Sense(Sense_Type_Designation.TACTILE, "Touch",
+                        with_flags=[Radius(modifiers={"Rank": 1}),
+                                    Accurate(modifiers={"Rank": 1})])
+
+        mental = Sense(Sense_Type_Designation.MENTAL, "Mental")
+
+        self.add_senses([visual, auditory, olfactory, tactile, mental])
+
 
 class Sense:
-    def __init__(self, designation, sense_name):
+    def __init__(self, designation, sense_name, with_flags=[]):
         self.sense_modifiers = []
         self.sense_type = designation
         self.name = sense_name  
         self.sense_flags = []
+        for flag in with_flags:
+            flag.set_sense_type(self.sense_type)
+            self.add_flag(flag)
 
     def add_flag(self, sense_flag):
         pass
@@ -540,3 +565,22 @@ class Sense_Flag_Description:
                        Sense_Type_Designation.TACTILE: "Tactile",
                        Sense_Type_Designation.MENTAL: "Mental",
                        Sense_Type_Designation.RADIO: "Radio"}
+
+    tag_kinds_dict = {"Accurate": Accurate,
+                      "Acute": Acute,
+                      "Analytical": Analytical,
+                      "Awareness": Awareness,
+                      "Counters Concealment": Counters_Concealment,
+                      "Counters Illusion": Counters_Illusion,
+                      "Danger Sense": Danger_Sense,
+                      "Extended": Extended,
+                      "Penetrates Concealment": Penetrates_Concealment,
+                      "Postcognition": Postcognition,
+                      "Precognition": Precognition,
+                      "Radio": Radio,
+                      "Radius": Radius,
+                      "Ranged": Ranged,
+                      "Rapid": Rapid,
+                      "Tracking": Tracking}
+
+
