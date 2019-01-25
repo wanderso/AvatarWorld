@@ -52,16 +52,31 @@ class Sense:
         self.sense_type = designation
         self.name = sense_name  
         self.sense_flags = []
+        self.sense_mask = {}
         for flag in with_flags:
             flag.set_sense_type(self.sense_type)
             self.add_flag(flag)
 
+    def __str__(self):
+        ret_val = self.name + " sense: "
+        for entry in self.sense_mask:
+            ret_val += entry + ", "
+        return ret_val[:-2]
+
     def add_flag(self, sense_flag):
-        pass
+        sense_flag.apply_flag_to_sense(self)
 
     def remove_flag(self, sense_flag):
-        pass
+        sense_flag.remove_flag_from_sense(self)
 
+    def change_mask_flag(self, mask_tag, change_value=1):
+        if mask_tag in self.sense_mask:
+            self.sense_mask[mask_tag] += change_value
+        else:
+            self.sense_mask[mask_tag] = change_value
+
+    def has_mask_tag(self, mask_tag):
+        return (not ((mask_tag in self.sense_mask) or (self.sense_mask[mask_tag] == 0)))
 
 class Sense_Event:
     def __init__(self, type, location):
@@ -79,6 +94,10 @@ class Sense_Flag:
         self.sense_type = None
         self.rank = 1
         self.process_modifiers(modifiers)
+
+    def apply_remove_default_mask(self):
+        self.apply_flag_to_sense = self.apply_flag_to_sense_default_mask
+        self.remove_flag_from_sense = self.remove_flag_from_sense_default_mask
 
     def process_modifiers(self, mods):
         if "Flag Type" in mods:
@@ -107,6 +126,12 @@ class Sense_Flag:
 
     def remove_flag_from_sense(self, sense):
         pass
+
+    def apply_flag_to_sense_default_mask(self, sense):
+        sense.change_mask_flag(self.flag_name)
+
+    def remove_flag_from_sense_default_mask(self, sense):
+        sense.change_mask_flag(self.flag_name, change_value=-1)
 
     def get_point_value(self):
         type_of_flag = type(self)
@@ -153,6 +178,7 @@ sense type."""
     ranks_for_value = [None,2,4]
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 class Acute(Sense_Flag):
     """Acute 1-2 ranks
@@ -166,6 +192,7 @@ one sense, 2 for an entire sense type."""
     ranks_for_value = [None,1, 2]
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 class Analytical(Sense_Flag):
     """Analytical 1-2 ranks
@@ -181,6 +208,7 @@ senses are not analytical. Cost is 1 rank for one sense,
     ranks_for_value = [None,1, 2]
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 class Awareness(Sense_Flag):
     """Awareness 1 rank
@@ -199,6 +227,7 @@ Subtle under Extras for details)."""
     ranks_for_value = 1
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 
 class Communication_Link(Sense_Flag):
@@ -217,6 +246,8 @@ under Power Modifiers for details)."""
     ranks_for_value = 1
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
+
 
 class Counters_Concealment(Sense_Flag):
     """Counters Concealment 2 ranks
@@ -237,6 +268,8 @@ for that, see Penetrates Concealment."""
     ranks_for_value = [None, 2,5]
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
+
 
 class Counters_Illusion(Sense_Flag):
     """Counters Illusion 2 ranks
@@ -247,6 +280,8 @@ illusion if it affects your sense type, realizing that it isn’t real."""
     ranks_for_value = 2
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
+
 
 class Danger_Sense(Sense_Flag):
     """Danger Sense 1 rank
@@ -266,6 +301,8 @@ Sense ability and may “blind” it."""
     ranks_for_value = 1
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
+
 
 class Darkvision(Sense_Flag):
     """Darkvision 2 ranks
@@ -278,6 +315,7 @@ This is essentially the same as Counters Concealment
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.set_sense_type(Sense_Type_Designation.VISUAL)
+
 
 class Detect(Sense_Flag):
     """Detect 1-2 ranks
@@ -577,7 +615,6 @@ class Sense_Flag_Description:
                       "Penetrates Concealment": Penetrates_Concealment,
                       "Postcognition": Postcognition,
                       "Precognition": Precognition,
-                      "Radio": Radio,
                       "Radius": Radius,
                       "Ranged": Ranged,
                       "Rapid": Rapid,
