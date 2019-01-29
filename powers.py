@@ -603,7 +603,9 @@ class Protection(Power):
             return self.rank
 
     def execute_power_internals(self, Power_Environment_Data):
-        pass
+        power_user = Power_Environment_Data.power_user
+        power_user_original_t = power_user.get_toughness()
+        power_user.set_toughness(power_user_original_t + self.rank)
 
 
 class Senses(Power):
