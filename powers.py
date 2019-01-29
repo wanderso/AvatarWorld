@@ -602,6 +602,9 @@ class Protection(Power):
         else:
             return self.rank
 
+    def execute_power_internals(self, Power_Environment_Data):
+        pass
+
 
 class Senses(Power):
     points_per_rank_default = 1
@@ -708,4 +711,7 @@ class Senses(Power):
             final_text = final_text[:-2]
 
         return left_side + "(" + final_text + ") " + right_side
+
+    def execute_power_internals(self, Power_Environment_Data):
+        pass
 
