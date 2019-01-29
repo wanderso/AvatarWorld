@@ -9,7 +9,12 @@ class Sense_Type_Designation(enum.Enum):
     RADIO = 6
 
 class Sense_Type_Narrow:
-    pass
+    default_narrow_senses = {Sense_Type_Designation.VISUAL: ["Ordinary Frequencies", "Infravision", "Ultravision"],
+                             Sense_Type_Designation.AUDITORY: ["Ordinary Frequencies", "Ultrahearing"],
+                             Sense_Type_Designation.OLFACTORY: ["Smell and Taste"],
+                             Sense_Type_Designation.TACTILE: ["Touch"],
+                             Sense_Type_Designation.MENTAL: ["Ordinary Awareness"],
+                             Sense_Type_Designation.RADIO: ["Radio Frequencies"]}
 
 class Sense_Cluster:
     def __init__(self):
@@ -35,20 +40,20 @@ class Sense_Cluster:
         self.senses_total.remove(sense)
 
     def create_default_sense_cluster(self):
-        visual = Sense(Sense_Type_Designation.VISUAL, sense_narrow="Ordinary Frequencies",
+        visual = Sense(Sense_Type_Designation.VISUAL,
                        with_flags=[Acute(modifiers={"Rank": 1}),
                                    Ranged(modifiers={"Rank": 1}),
                                    Accurate(modifiers={"Rank": 1})])
 
-        auditory = Sense(Sense_Type_Designation.AUDITORY, sense_narrow="Ordinary Frequencies",
+        auditory = Sense(Sense_Type_Designation.AUDITORY,
                          with_flags=[Acute(modifiers={"Rank": 1}),
                                      Ranged(modifiers={"Rank": 1}),
                                      Radius(modifiers={"Rank": 1})])
 
-        olfactory = Sense(Sense_Type_Designation.OLFACTORY, sense_narrow="Smell and Taste",
+        olfactory = Sense(Sense_Type_Designation.OLFACTORY,
                           with_flags=[Radius(modifiers={"Rank": 1})])
 
-        tactile = Sense(Sense_Type_Designation.TACTILE, sense_narrow="Touch",
+        tactile = Sense(Sense_Type_Designation.TACTILE,
                         with_flags=[Radius(modifiers={"Rank": 1}),
                                     Accurate(modifiers={"Rank": 1})])
 
@@ -63,6 +68,8 @@ class Sense:
         self.sense_type = designation
         self.name = Sense_Flag_Description.sense_type_dict[designation]
         self.sense_narrow = sense_narrow
+        if sense_narrow == "":
+            self.sense_narrow = Sense_Type_Narrow.default_narrow_senses[self.sense_type][0]
         self.sense_flags = []
         self.sense_mask = {}
         for flag in with_flags:
