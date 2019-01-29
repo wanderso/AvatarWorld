@@ -1,15 +1,10 @@
-import random
 import powers
 import skills
 import ability
 import defenses
 import advantages
-import json
 import dice
-
-from characterencoder import serialize_whole_character
-#https://pastebin.com/azrdkPdB blorp
-
+import senses
 
 
 class Condition:
@@ -61,6 +56,9 @@ class Character:
         self.conditions = []
 
         self.intelligence = None
+
+        self.sense_cluster = senses.Sense_Cluster()
+        self.sense_cluster.create_default_sense_cluster()
 
     def __str__(self):
         return self.get_name()
@@ -179,6 +177,9 @@ class Character:
 
     def get_intelligence(self):
         return self.intelligence
+
+    def get_sense_cluster(self):
+        return self.sense_cluster
 
     def generate_turn(self):
         return self.get_intelligence().large_process_turn_decision()

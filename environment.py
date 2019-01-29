@@ -158,8 +158,6 @@ if __name__ == "__main__":
     #
     # print("Menlo wins: %d, Cerulean wins: %d" % (men_wins, cer_wins))
 
-    sc = powers.senses.Sense_Cluster()
-    sc.create_default_sense_cluster()
-    print(sc.senses_total[0])
+    print(men.get_sense_cluster())
 
 

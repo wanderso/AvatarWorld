@@ -576,7 +576,7 @@ class Protection(Power):
 
     default_plain_text = "Protection"
 
-    allowed_modifiers = [modifiers.Sustained,modifiers.Impervious]
+    allowed_modifiers = [modifiers.Sustained, modifiers.Impervious]
 
     def __init__(self, name, rank, modifier_values={}):
         super().__init__(name, "Protection")
@@ -596,11 +596,12 @@ class Protection(Power):
         elif self.duration == value_enums.Power_Duration.SUSTAINED:
             return True
 
-    def affects_defense(self,defense):
+    def affects_defense(self, defense):
         if defense != defenses.Toughness:
             return False
         else:
             return self.rank
+
 
 class Senses(Power):
     points_per_rank_default = 1

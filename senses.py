@@ -8,10 +8,21 @@ class Sense_Type_Designation(enum.Enum):
     MENTAL = 5
     RADIO = 6
 
+class Sense_Type_Narrow:
+    pass
+
 class Sense_Cluster:
     def __init__(self):
         self.senses_total = []
         self.senses_powers = []
+
+    def __str__(self):
+        if len(self.senses_total) == 0:
+            return "Sense Cluster: Empty"
+        ret_val = "Sense Cluster: \n"
+        for entry in self.senses_total:
+            ret_val += "\t" + str(entry) + "\n"
+        return ret_val[:-1]
 
     def add_sense(self, sense):
         self.senses_total.append(sense)
@@ -24,33 +35,34 @@ class Sense_Cluster:
         self.senses_total.remove(sense)
 
     def create_default_sense_cluster(self):
-        visual = Sense(Sense_Type_Designation.VISUAL, "Visual (Ordinary Frequencies)",
+        visual = Sense(Sense_Type_Designation.VISUAL, sense_narrow="Ordinary Frequencies",
                        with_flags=[Acute(modifiers={"Rank": 1}),
                                    Ranged(modifiers={"Rank": 1}),
                                    Accurate(modifiers={"Rank": 1})])
 
-        auditory = Sense(Sense_Type_Designation.AUDITORY, "Auditory (Ordinary Frequencies)",
+        auditory = Sense(Sense_Type_Designation.AUDITORY, sense_narrow="Ordinary Frequencies",
                          with_flags=[Acute(modifiers={"Rank": 1}),
                                      Ranged(modifiers={"Rank": 1}),
                                      Radius(modifiers={"Rank": 1})])
 
-        olfactory = Sense(Sense_Type_Designation.OLFACTORY, "Smell and Taste",
+        olfactory = Sense(Sense_Type_Designation.OLFACTORY, sense_narrow="Smell and Taste",
                           with_flags=[Radius(modifiers={"Rank": 1})])
 
-        tactile = Sense(Sense_Type_Designation.TACTILE, "Touch",
+        tactile = Sense(Sense_Type_Designation.TACTILE, sense_narrow="Touch",
                         with_flags=[Radius(modifiers={"Rank": 1}),
                                     Accurate(modifiers={"Rank": 1})])
 
-        mental = Sense(Sense_Type_Designation.MENTAL, "Mental")
+        mental = Sense(Sense_Type_Designation.MENTAL)
 
         self.add_senses([visual, auditory, olfactory, tactile, mental])
 
 
 class Sense:
-    def __init__(self, designation, sense_name, with_flags=[]):
+    def __init__(self, designation, sense_narrow="", with_flags=[]):
         self.sense_modifiers = []
         self.sense_type = designation
-        self.name = sense_name  
+        self.name = Sense_Flag_Description.sense_type_dict[designation]
+        self.sense_narrow = sense_narrow
         self.sense_flags = []
         self.sense_mask = {}
         for flag in with_flags:
@@ -58,7 +70,10 @@ class Sense:
             self.add_flag(flag)
 
     def __str__(self):
-        ret_val = self.name + " sense: "
+        ret_val = self.name + " Sense"
+        if self.sense_narrow != "":
+            ret_val = ret_val + " [" + self.sense_narrow + "]"
+        ret_val = ret_val + ": "
         for entry in self.sense_mask:
             ret_val += entry + ", "
         return ret_val[:-2]
@@ -90,7 +105,7 @@ class Sense_Flag:
     is_ranked = False
     has_upgraded_power = False
 
-    def __init__(self, modifiers = {}):
+    def __init__(self, modifiers={}):
         self.sense_type = None
         self.rank = 1
         self.process_modifiers(modifiers)
@@ -365,6 +380,7 @@ unless it also Penetrates Concealment."""
     is_ranked = True
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 class Infravision(Sense_Flag):
     """Infravision 1 rank
@@ -405,6 +421,7 @@ and interpret what you see."""
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.set_sense_type(Sense_Type_Designation.VISUAL)
+        self.apply_remove_default_mask()
 
 class Penetrates_Concealment(Sense_Flag):
     """Penetrates Concealment 4 ranks
@@ -418,6 +435,7 @@ and so forth."""
     ranks_for_value = 4
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 
 class Postcognition(Sense_Flag):
@@ -442,6 +460,7 @@ cost to 2 ranks."""
     ranks_for_value = 4
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 
 class Precognition(Sense_Flag):
@@ -467,6 +486,7 @@ interaction."""
     ranks_for_value = 4
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 class Radio(Sense_Flag):
     """Radio 1 rank
@@ -494,6 +514,7 @@ ranks for one sense type."""
     ranks_for_value = [None, 1, 2]
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 class Ranged(Sense_Flag):
     """Ranged 1 rank
@@ -505,6 +526,7 @@ with the Extended Sense effect."""
     ranks_for_value = 1
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 class Rapid(Sense_Flag):
     """Rapid 1 rank
@@ -521,6 +543,7 @@ forth."""
     is_ranked = True
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 class Time_Sense(Sense_Flag):
     """Time Sense 1 rank
@@ -545,6 +568,7 @@ while tracking."""
     ranks_for_value = [None, 1, 2]
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.apply_remove_default_mask()
 
 class Ultra_Hearing(Sense_Flag):
     """Ultra-Hearing 1 rank
