@@ -18,19 +18,24 @@ class Sense_Type_Narrow:
 
 class Sense_Cluster:
     def __init__(self):
-        self.senses_total = []
+        self.senses_total = {}
         self.senses_powers = []
 
     def __str__(self):
         if len(self.senses_total) == 0:
             return "Sense Cluster: Empty"
         ret_val = "Sense Cluster: \n"
-        for entry in self.senses_total:
-            ret_val += "\t" + str(entry) + "\n"
+        for value in self.senses_total:
+            for entry in self.senses_total[value]:
+                ret_val += "\t" + str(self.senses_total[value][entry]) + "\n"
         return ret_val[:-1]
 
     def add_sense(self, sense):
-        self.senses_total.append(sense)
+        t = sense.get_type()
+        if t in self.senses_total:
+            self.senses_total[t][sense.get_narrow()] = sense
+        else:
+            self.senses_total[t] = {sense.get_narrow(): sense}
 
     def add_senses(self, sense_list):
         for sense in sense_list:
@@ -85,6 +90,12 @@ class Sense:
             ret_val += entry + ", "
         return ret_val[:-2]
 
+    def get_type(self):
+        return self.sense_type
+
+    def get_narrow(self):
+        return self.sense_narrow
+
     def add_flag(self, sense_flag):
         sense_flag.apply_flag_to_sense(self)
 
@@ -130,9 +141,16 @@ class Sense_Flag:
         if "Rank" in mods:
             rank_val = mods["Rank"]
             self.set_rank(rank_val)
+        if "Narrow" in mods:
+            self.set_narrow(mods["Narrow"])
+        else:
+            self.set_narrow(Sense_Type_Narrow.default_narrow_senses[self.get_sense_type()][0])
 
     def set_sense_type(self, typ):
         self.sense_type = typ
+
+    def set_narrow(self, nar):
+        self.sense_narrow = nar
 
     def get_sense_type(self):
         return self.sense_type
