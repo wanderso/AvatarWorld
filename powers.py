@@ -408,7 +408,7 @@ class Power:
             for lis in process_order:
                 if entry in lis:
                     entry_not_displayed = False
-            if entry_not_displayed == True:
+            if entry_not_displayed:
                 print(entry)
 
         for mod_list in process_order:
@@ -636,29 +636,17 @@ class Senses(Power):
     def add_sense_flag(self, sense_flag):
         point_val = sense_flag.get_point_value()
 
-        # print("Starting pip: %s" % self.points_in_power)
-        # print("Point_val: %d" % point_val)
-        # print("Points current: %d" % self.get_points())
-
         old_rank = self.get_rank()
         new_rank = old_rank + point_val
 
-        # print("Old rank: %d" % old_rank)
-        # print("New rank: %d" % new_rank)
-
         new_pip = points.Points_In_Power(new_rank, self.points_in_power.get_ppr_tail())
         old_pip = points.Points_In_Power(old_rank, self.points_in_power.get_ppr_tail())
-
-        # print("New pip: %s" % new_pip)
-        # print("Old pip: %s" % old_pip)
 
         if self.get_points() == 0:
             self.points_in_power = new_pip
         else:
             combine_pip = new_pip - old_pip
             self.points_in_power += combine_pip
-
-        # print("Pip: %s" % self.points_in_power)
 
         self.rank = old_rank + point_val
 
@@ -668,9 +656,9 @@ class Senses(Power):
     def get_sense_flags(self):
         return self.sense_flags
 
-    def create_sense_flag(self, sense_flag_name, sense_type="Default", rank=1, modifiers = {}):
-        if sense_flag_name in senses.Sense_Flag_Description.mods_dict:
-            new_flag = senses.Sense_Flag_Description.mods_dict[sense_flag_name]()
+    # def create_sense_flag(self, sense_flag_name, sense_type="Default", rank=1, modifiers = {}):
+    #     if sense_flag_name in senses.Sense_Flag_Description.mods_dict:
+    #         new_flag = senses.Sense_Flag_Description.mods_dict[sense_flag_name]()
 
     def get_character_sheet_repr(self):
         default_retval = super().get_character_sheet_repr()
@@ -715,5 +703,12 @@ class Senses(Power):
         return left_side + "(" + final_text + ") " + right_side
 
     def execute_power_internals(self, Power_Environment_Data):
-        pass
+        power_target = None
 
+        if type(Power_Environment_Data.target) == character.Character:
+            power_target = Power_Environment_Data.target.get_sense_cluster()
+        elif type(Power_Environment_Data.target) == senses.Sense_Cluster:
+            power_target = Power_Environment_Data.target
+
+        for flag in self.get_sense_flags():
+            power_target.apply_flag(flag)
