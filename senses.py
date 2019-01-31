@@ -1,5 +1,6 @@
 import enum
 
+
 class Sense_Type_Designation(enum.Enum):
     VISUAL = 1
     AUDITORY = 2
@@ -8,6 +9,7 @@ class Sense_Type_Designation(enum.Enum):
     MENTAL = 5
     RADIO = 6
 
+
 class Sense_Type_Narrow:
     default_narrow_senses = {Sense_Type_Designation.VISUAL: ["Ordinary Frequencies", "Infravision", "Ultravision"],
                              Sense_Type_Designation.AUDITORY: ["Ordinary Frequencies", "Ultrahearing"],
@@ -15,6 +17,7 @@ class Sense_Type_Narrow:
                              Sense_Type_Designation.TACTILE: ["Touch"],
                              Sense_Type_Designation.MENTAL: ["Ordinary Awareness"],
                              Sense_Type_Designation.RADIO: ["Radio Frequencies"]}
+
 
 class Sense_Cluster:
     def __init__(self):
@@ -96,6 +99,7 @@ class Sense:
             self.sense_narrow = Sense_Type_Narrow.default_narrow_senses[self.sense_type][0]
         self.sense_flags = []
         self.sense_mask = {}
+        self.active = True
         for flag in with_flags:
             flag.set_sense_type(self.sense_type)
             flag.set_narrow(self.sense_narrow)
@@ -107,7 +111,10 @@ class Sense:
             ret_val = ret_val + " [" + self.sense_narrow + "]"
         ret_val = ret_val + ": "
         for entry in self.sense_mask:
-            ret_val += entry + ", "
+            if self.sense_mask[entry] == 1:
+                ret_val += entry + ", "
+            elif self.sense_mask[entry] > 0:
+                ret_val += entry + " " + str(self.sense_mask[entry]) + ", "
         return ret_val[:-2]
 
     def get_type(self):
@@ -134,10 +141,15 @@ class Sense:
     def has_mask_tag(self, mask_tag):
         return (not ((mask_tag in self.sense_mask) or (self.sense_mask[mask_tag] == 0)))
 
+    def get_active(self):
+        return self.active
+
+
 class Sense_Event:
     def __init__(self, type, location):
         self.sense_type = type
         self.location = location
+
 
 class Sense_Flag:
     flag_name = None
@@ -165,7 +177,6 @@ class Sense_Flag:
     def apply_remove_ranked_mask(self):
         self.apply_flag_to_sense = self.apply_flag_ranked_to_sense_default_mask
         self.remove_flag_from_sense = self.remove_flag_ranked_from_sense_default_mask
-
 
     def process_modifiers(self, mods):
         if "Flag Type" in mods:
@@ -250,6 +261,7 @@ class Sense_Flag:
                 ret_val = type_of_flag.flag_name + " " + str(self.rank)
         return ret_val
 
+
 class Accurate(Sense_Flag):
     """Accurate 2 or 4 ranks
 An accurate sense can pinpoint something’s exact location.
@@ -260,6 +272,7 @@ sense type."""
     flag_name = "Accurate"
     entire_type_option = True
     ranks_for_value = [None,2,4]
+
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.apply_mask_logic()
@@ -273,7 +286,7 @@ senses are normally acute for humans. Cost is 1 rank for
 one sense, 2 for an entire sense type."""
     flag_name = "Acute"
     entire_type_option = True
-    ranks_for_value = [None,1, 2]
+    ranks_for_value = [None, 1, 2]
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
@@ -291,7 +304,7 @@ senses are not analytical. Cost is 1 rank for one sense,
 2 for an entire sense type."""
     flag_name = "Analytical"
     entire_type_option = True
-    ranks_for_value = [None,1, 2]
+    ranks_for_value = [None, 1, 2]
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
@@ -333,10 +346,10 @@ under Power Modifiers for details)."""
     flag_name = "Communication Link"
     has_descriptor = True
     ranks_for_value = 1
+
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.apply_mask_logic()
-
 
 
 class Counters_Concealment(Sense_Flag):
@@ -374,7 +387,6 @@ illusion if it affects your sense type, realizing that it isn’t real."""
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.apply_mask_logic()
-
 
 
 class Danger_Sense(Sense_Flag):
