@@ -50,6 +50,14 @@ class Sense_Cluster:
     def remove_sense(self, sense):
         self.senses_total.remove(sense)
 
+    def check_sense_for_existence(self, sense):
+        sense_broad = sense.get_type()
+        sense_narrow = sense.get_narrow()
+        if (sense_broad not in self.senses_total) or (sense_narrow not in self.senses_total[sense_broad]) \
+                or sense != self.senses_total[sense_broad][sense_narrow]:
+            return False
+        return self.senses_total[sense_broad][sense_narrow]
+
     def create_default_sense_cluster(self):
         visual = Sense(Sense_Type_Designation.VISUAL,
                        with_flags=[Acute(modifiers={"Rank": 1}),
@@ -72,21 +80,43 @@ class Sense_Cluster:
 
         self.add_senses([visual, auditory, olfactory, tactile, mental])
 
-    def apply_flag(self, flag):
-        flag_type = flag.get_sense_type()
+
+    def get_sense_targets_from_flag(self, flag):
+        flag_sense = flag.get_sense_type()
         flag_narrow = flag.get_narrow()
-        sense_target = None
+        sense_targets = []
 
-        if flag_type in self.senses_total:
-            sense_type = self.senses_total[flag_type]
+        if flag_sense in self.senses_total:
+            sense_type = self.senses_total[flag_sense]
             if flag_narrow in sense_type:
-                sense_target = sense_type[flag_narrow]
+                sense_targets.append(sense_type[flag_narrow])
 
-        if sense_target is not None:
-            sense_target.add_flag(flag)
+        return sense_targets
+
+    def apply_flag(self, flag):
+        flag_type = type(flag)
+
+        if flag_type.is_entire_sense:
+            sns = flag.get_sense()
+            exist = self.check_sense_for_existence(sns)
+            if exist != False and exist.get_active() == False:
+                exist.set_active(True)
+            elif exist != False:
+                pass
+            else:
+                self.add_sense(sns)
+
+        else:
+            for entry in self.get_sense_targets_from_flag(flag):
+                entry.add_flag(flag)
 
     def remove_flag(self, flag):
-        pass
+        flag_type = type(flag)
+        if flag_type.is_entire_sense:
+            sns = flag.get_sense()
+        else:
+            for entry in self.get_sense_targets_from_flag(flag):
+                entry.remove_flag(flag)
 
 
 class Sense:
@@ -104,6 +134,17 @@ class Sense:
             flag.set_sense_type(self.sense_type)
             flag.set_narrow(self.sense_narrow)
             self.add_flag(flag)
+
+    def __eq__(self, other):
+        if self.sense_type != other.sense_type:
+            return False
+        if self.sense_narrow != other.sense_narrow:
+            return False
+        if self.sense_mask != other.sense_mask:
+            return False
+        if self.sense_modifiers != other.sense_modifiers:
+            return False
+        return True
 
     def __str__(self):
         ret_val = self.name + " Sense"
@@ -144,6 +185,9 @@ class Sense:
     def get_active(self):
         return self.active
 
+    def set_active(self, status):
+        self.active = status
+
 
 class Sense_Event:
     def __init__(self, type, location):
@@ -157,6 +201,7 @@ class Sense_Flag:
     has_descriptor = False
     is_ranked = False
     has_upgraded_power = False
+    is_entire_sense = False
 
     def __init__(self, modifiers={}):
         self.sense_type = None
@@ -164,8 +209,16 @@ class Sense_Flag:
         self.rank = 1
         self.process_modifiers(modifiers)
 
+    def get_sense(self):
+        if not type(self).is_entire_sense:
+            return None
+        return self.sense
+
     def apply_mask_logic(self):
-        if type(self).is_ranked:
+        t = type(self)
+        if t.is_entire_sense:
+            self.sense = self.make_base_sense()
+        elif t.is_ranked:
             self.apply_remove_ranked_mask()
         else:
             self.apply_remove_default_mask()
@@ -191,6 +244,9 @@ class Sense_Flag:
             self.set_narrow(mods["Narrow"])
         elif self.get_sense_type() is not None:
             self.set_narrow(Sense_Type_Narrow.default_narrow_senses[self.get_sense_type()][0])
+
+    def make_base_sense(self):
+        return None
 
     def set_sense_type(self, typ):
         self.sense_type = typ
@@ -325,12 +381,14 @@ effects with the first rank of the Subtle modifier (see
 Subtle under Extras for details)."""
     flag_name = "Awareness"
     has_descriptor = True
+   # is_entire_sense = True
     ranks_for_value = 1
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.apply_mask_logic()
 
+    #
 
 class Communication_Link(Sense_Flag):
     """Communication Link 1 rank
@@ -345,11 +403,15 @@ Link, it extends to other dimensions as well (see Dimensional
 under Power Modifiers for details)."""
     flag_name = "Communication Link"
     has_descriptor = True
+    is_entire_sense = True
     ranks_for_value = 1
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.apply_mask_logic()
+
+    def make_base_sense(self):
+        return Sense(Sense_Type_Designation.MENTAL)
 
 
 class Counters_Concealment(Sense_Flag):
@@ -438,6 +500,7 @@ things at range (with the normal –1 per 10 feet modifier to
 your Perception check)."""
     flag_name = "Detect"
     ranks_for_value = 1
+    is_entire_sense = True
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
@@ -498,6 +561,8 @@ The Gamemaster is the final judge on how long the
 trail remains visible."""
     flag_name = "Infravision"
     ranks_for_value = 1
+    is_entire_sense = True
+
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.apply_mask_logic()
@@ -611,6 +676,8 @@ This is the base sense of the radio sense type.
 It’s ranged, radius, and acute by default."""
     flag_name = "Radio"
     ranks_for_value = 1
+    is_entire_sense = True
+
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.set_sense_type(Sense_Type_Designation.RADIO)
@@ -626,6 +693,7 @@ ranks for one sense type."""
     flag_name = "Radius"
     entire_type_option = True
     ranks_for_value = [None, 1, 2]
+
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.apply_mask_logic()
@@ -691,6 +759,8 @@ dog whistles or ultrasonic signals, including those used
 by some remote controls."""
     flag_name = "Ultra-Hearing"
     ranks_for_value = 1
+    is_entire_sense = True
+
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.set_sense_type(Sense_Type_Designation.AUDITORY)
@@ -702,6 +772,8 @@ You can see ultraviolet light, allowing you to see normally
 at night by the light of the stars or other UV light sources."""
     flag_name = "Ultravision"
     ranks_for_value = 1
+    is_entire_sense = True
+
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.set_sense_type(Sense_Type_Designation.VISUAL)
