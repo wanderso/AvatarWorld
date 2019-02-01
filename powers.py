@@ -1,7 +1,7 @@
 import modifiers
 import points
 import value_enums
-import senses
+from senses import senses
 import defenses
 import action
 import character

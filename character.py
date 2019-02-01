@@ -4,7 +4,7 @@ import ability
 import defenses
 import advantages
 import dice
-import senses
+from senses import senses
 
 
 class Condition:

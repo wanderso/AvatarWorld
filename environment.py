@@ -2,6 +2,7 @@ import character
 import timeline
 import rooms
 import powers
+from senses import senses
 import artificial_intelligence
 
 class Environment:
@@ -85,21 +86,21 @@ if __name__ == "__main__":
 
 
 
-    tv = powers.senses.Tracking()
-    tv.set_sense_type(powers.senses.Sense_Type_Designation.VISUAL)
+    tv = senses.Tracking()
+    tv.set_sense_type(senses.Sense_Type_Designation.VISUAL)
     og.add_sense_flag(tv)
 
-    ta = powers.senses.Tracking()
-    ta.set_sense_type(powers.senses.Sense_Type_Designation.AUDITORY)
+    ta = senses.Tracking()
+    ta.set_sense_type(senses.Sense_Type_Designation.AUDITORY)
     og.add_sense_flag(ta)
 
-    aa = powers.senses.Accurate(modifiers={"Flag Type":"Auditory"})
+    aa = senses.Accurate(modifiers={"Flag Type": "Auditory"})
     og.add_sense_flag(aa)
 
-    ms = powers.senses.Microscopic_Vision(modifiers={"Flag Type":"Visual","Rank":4})
+    ms = senses.Microscopic_Vision(modifiers={"Flag Type": "Visual", "Rank":4})
     og.add_sense_flag(ms)
 
-    av = powers.senses.Analytical(modifiers={"Flag Type":"Visual","Rank":1})
+    av = senses.Analytical(modifiers={"Flag Type": "Visual", "Rank":1})
     og.add_sense_flag(av)
 
     print("Sense type: %s [%s]" % (av.get_sense_type(), av.get_narrow()))
@@ -153,6 +154,6 @@ if __name__ == "__main__":
 
     print(men.get_sense_cluster())
 
-    print(men.get_sense_cluster().get_total_senses()[powers.senses.Sense_Type_Designation.VISUAL]['Ordinary Frequencies'].get_mask_tag())
+    print(men.get_sense_cluster().get_total_senses()[senses.Sense_Type_Designation.VISUAL]['Ordinary Frequencies'].get_mask_tag())
 
 

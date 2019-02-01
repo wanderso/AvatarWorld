@@ -39,7 +39,11 @@ class Sense_Cluster:
     def add_sense(self, sense):
         t = sense.get_type()
         if t in self.senses_total:
-            self.senses_total[t][sense.get_narrow()] = sense
+            n = sense.get_narrow()
+            if n in self.senses_total[t][n]:
+                pass
+            else:
+                self.senses_total[t][sense.get_narrow()] = sense
         else:
             self.senses_total[t] = {sense.get_narrow(): sense}
 
@@ -48,6 +52,7 @@ class Sense_Cluster:
             self.add_sense(sense)
 
     def remove_sense(self, sense):
+        #TODO - Fix!
         self.senses_total.remove(sense)
 
     def check_sense_for_existence(self, sense):
@@ -99,9 +104,9 @@ class Sense_Cluster:
         if flag_type.is_entire_sense:
             sns = flag.get_sense()
             exist = self.check_sense_for_existence(sns)
-            if exist != False and exist.get_active() == False:
+            if exist is not False and exist.get_active() == False:
                 exist.set_active(True)
-            elif exist != False:
+            elif exist is not False:
                 pass
             else:
                 self.add_sense(sns)
