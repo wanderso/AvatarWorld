@@ -40,8 +40,9 @@ class Sense_Cluster:
         t = sense.get_type()
         if t in self.senses_total:
             n = sense.get_narrow()
-            if n in self.senses_total[t][n]:
+            if n in self.senses_total[t]:
                 pass
+                #TODO - add senses here!
             else:
                 self.senses_total[t][sense.get_narrow()] = sense
         else:
@@ -52,8 +53,15 @@ class Sense_Cluster:
             self.add_sense(sense)
 
     def remove_sense(self, sense):
-        #TODO - Fix!
-        self.senses_total.remove(sense)
+        t = sense.get_type()
+        if t in self.senses_total:
+            n = sense.get_narrow()
+            if n in self.senses_total[t]:
+                self.senses_total[t].pop('n', None)
+            else:
+                pass
+        else:
+            pass
 
     def check_sense_for_existence(self, sense):
         sense_broad = sense.get_type()
@@ -127,6 +135,7 @@ class Sense_Cluster:
 class Sense:
     def __init__(self, designation, sense_narrow="", with_flags=[]):
         self.sense_modifiers = []
+        print (designation)
         self.sense_type = designation
         self.name = Sense_Flag_Description.sense_type_dict[designation]
         self.sense_narrow = sense_narrow
@@ -509,6 +518,18 @@ your Perception check)."""
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        if self.get_sense_type() is None:
+            self.set_sense_type(Sense_Type_Designation.MENTAL)
+        with_flags = [Ranged(modifiers={"Rank": 1})]
+        if self.rank == 1:
+            with_flags = []
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(), with_flags=with_flags)
+
+    def process_modifiers(self, mods):
+        super().process_modifiers(mods)
+        if "Descriptor" in mods:
+            self.set_narrow(mods["Descriptor"])
+
 
 class Direction_Sense(Sense_Flag):
     """Direction Sense 1 rank
@@ -518,6 +539,8 @@ your steps through any place you’ve been."""
     ranks_for_value = 1
 
     def __init__(self, modifiers={}):
+        self.set_sense_type(Sense_Type_Designation.MENTAL)
+        self.set_narrow("Direction Sense")
         super().__init__(modifiers)
         self.apply_mask_logic()
 
@@ -529,6 +552,8 @@ You can accurately and automatically judge distances."""
     ranks_for_value = 1
 
     def __init__(self, modifiers={}):
+        self.set_sense_type(Sense_Type_Designation.MENTAL)
+        self.set_narrow("Distance Sense")
         super().__init__(modifiers)
         self.apply_mask_logic()
 
@@ -570,7 +595,12 @@ trail remains visible."""
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
-        self.apply_mask_logic()
+        self.set_sense_type(Sense_Type_Designation.VISUAL)
+        self.set_narrow(Sense_Type_Narrow.default_narrow_senses[Sense_Type_Designation.VISUAL][1])
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(),
+                       with_flags=[Acute(modifiers={"Rank": 1}),
+                                   Ranged(modifiers={"Rank": 1}),
+                                   Accurate(modifiers={"Rank": 1})])
 
 
 class Low_Light_Vision(Sense_Flag):
@@ -686,6 +716,11 @@ It’s ranged, radius, and acute by default."""
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.set_sense_type(Sense_Type_Designation.RADIO)
+        self.set_narrow(Sense_Type_Narrow.default_narrow_senses[Sense_Type_Designation.VISUAL][1])
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(),
+                           with_flags=[Radius(modifiers={"Rank": 1}),
+                                       Ranged(modifiers={"Rank": 1}),
+                                       Acute(modifiers={"Rank": 1})])
 
 class Radius(Sense_Flag):
     """Radius 1-2 ranks
@@ -768,7 +803,13 @@ by some remote controls."""
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
-        self.set_sense_type(Sense_Type_Designation.AUDITORY)
+        if self.get_sense_type() == None:
+            self.set_sense_type(Sense_Type_Designation.AUDITORY)
+        self.set_narrow(Sense_Type_Narrow.default_narrow_senses[Sense_Type_Designation.AUDITORY][1])
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(),
+                           with_flags=[Acute(modifiers={"Rank": 1}),
+                                       Ranged(modifiers={"Rank": 1}),
+                                       Radius(modifiers={"Rank": 1})])
 
 
 class Ultravision(Sense_Flag):
@@ -781,7 +822,13 @@ at night by the light of the stars or other UV light sources."""
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
-        self.set_sense_type(Sense_Type_Designation.VISUAL)
+        if self.get_sense_type() == None:
+            self.set_sense_type(Sense_Type_Designation.VISUAL)
+        self.set_narrow(Sense_Type_Narrow.default_narrow_senses[Sense_Type_Designation.VISUAL][2])
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(),
+                           with_flags=[Acute(modifiers={"Rank": 1}),
+                                       Ranged(modifiers={"Rank": 1}),
+                                       Accurate(modifiers={"Rank": 1})])
 
 class Sense_Flag_Description:
     mods_dict = {"Accurate": Accurate,
