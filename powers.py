@@ -1,7 +1,9 @@
 import modifiers
 import points
+import senses.SenseCluster
+import senses.SenseConstants
+import senses.SenseFlags
 import value_enums
-from senses import senses
 import defenses
 import action
 import character
@@ -683,8 +685,8 @@ class Senses(Power):
 
         for key in sense_types:
             type_text = key
-            if key in senses.Sense_Flag_Description.sense_type_dict:
-                type_text = senses.Sense_Flag_Description.sense_type_dict[key]
+            if key in senses.SenseFlags.Sense_Flag_Description.sense_type_dict:
+                type_text = senses.SenseFlags.Sense_Flag_Description.sense_type_dict[key]
             key_text = ("%s: " % type_text)
             for entry in sense_types[key]:
                 key_text += ("%s, " % entry.get_flag_representation_no_sense())
@@ -707,7 +709,7 @@ class Senses(Power):
 
         if type(Power_Environment_Data.target) == character.Character:
             power_target = Power_Environment_Data.target.get_sense_cluster()
-        elif type(Power_Environment_Data.target) == senses.Sense_Cluster:
+        elif type(Power_Environment_Data.target) == senses.SenseCluster.SenseCluster:
             power_target = Power_Environment_Data.target
 
         for flag in self.get_sense_flags():
