@@ -105,6 +105,12 @@ if __name__ == "__main__":
     av = senses.SenseFlags.Analytical(modifiers={"Flag Type": "Visual", "Rank":1})
     og.add_sense_flag(av)
 
+    dt = senses.Detect(modifiers={"Flag Type": "Mental", "Rank":2, "Descriptor":"Electricity"})
+    og.add_sense_flag(dt)
+
+    iv = senses.Infravision(modifiers={})
+    og.add_sense_flag(iv)
+
     print("Sense type: %s [%s]" % (av.get_sense_type(), av.get_narrow()))
 
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 10)
