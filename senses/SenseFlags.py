@@ -126,6 +126,7 @@ class SenseFlag:
         return ret_val
 
 
+
 class Accurate(SenseFlag):
     """Accurate 2 or 4 ranks
 An accurate sense can pinpoint something’s exact location.
@@ -140,7 +141,6 @@ sense type."""
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.apply_mask_logic()
-
 
 class Acute(SenseFlag):
     """Acute 1-2 ranks
@@ -199,7 +199,6 @@ Subtle under Extras for details)."""
 
     #
 
-
 class Communication_Link(SenseFlag):
     """Communication Link 1 rank
 You have a link with a particular individual, chosen when
@@ -247,6 +246,7 @@ for that, see Penetrates Concealment."""
         self.apply_mask_logic()
 
 
+
 class Counters_Illusion(SenseFlag):
     """Counters Illusion 2 ranks
 A sense type with this trait ignores the Illusion effect; you
@@ -282,6 +282,7 @@ Sense ability and may “blind” it."""
         self.apply_mask_logic()
 
 
+
 class Darkvision(SenseFlag):
     """Darkvision 2 ranks
 You can see in complete darkness as if it were normal daylight;
@@ -312,6 +313,17 @@ your Perception check)."""
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        if self.get_sense_type() is None:
+            self.set_sense_type(Sense_Type_Designation.MENTAL)
+        with_flags = [Ranged(modifiers={"Rank": 1})]
+        if self.rank == 1:
+            with_flags = []
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(), with_flags=with_flags)
+
+    def process_modifiers(self, mods):
+        super().process_modifiers(mods)
+        if "Descriptor" in mods:
+            self.set_narrow(mods["Descriptor"])
 
 
 class Direction_Sense(SenseFlag):
@@ -322,6 +334,8 @@ your steps through any place you’ve been."""
     ranks_for_value = 1
 
     def __init__(self, modifiers={}):
+        self.set_sense_type(Sense_Type_Designation.MENTAL)
+        self.set_narrow("Direction Sense")
         super().__init__(modifiers)
         self.apply_mask_logic()
 
@@ -333,6 +347,8 @@ You can accurately and automatically judge distances."""
     ranks_for_value = 1
 
     def __init__(self, modifiers={}):
+        self.set_sense_type(Sense_Type_Designation.MENTAL)
+        self.set_narrow("Distance Sense")
         super().__init__(modifiers)
         self.apply_mask_logic()
 
@@ -374,7 +390,12 @@ trail remains visible."""
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
-        self.apply_mask_logic()
+        self.set_sense_type(Sense_Type_Designation.VISUAL)
+        self.set_narrow(Sense_Type_Narrow.default_narrow_senses[Sense_Type_Designation.VISUAL][1])
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(),
+                       with_flags=[Acute(modifiers={"Rank": 1}),
+                                   Ranged(modifiers={"Rank": 1}),
+                                   Accurate(modifiers={"Rank": 1})])
 
 
 class Low_Light_Vision(SenseFlag):
@@ -490,7 +511,11 @@ It’s ranged, radius, and acute by default."""
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.set_sense_type(Sense_Type_Designation.RADIO)
-
+        self.set_narrow(Sense_Type_Narrow.default_narrow_senses[Sense_Type_Designation.VISUAL][1])
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(),
+                           with_flags=[Radius(modifiers={"Rank": 1}),
+                                       Ranged(modifiers={"Rank": 1}),
+                                       Acute(modifiers={"Rank": 1})])
 
 class Radius(SenseFlag):
     """Radius 1-2 ranks
@@ -508,7 +533,6 @@ ranks for one sense type."""
         super().__init__(modifiers)
         self.apply_mask_logic()
 
-
 class Ranged(SenseFlag):
     """Ranged 1 rank
 You can use a sense that normally has no range (taste or
@@ -520,7 +544,6 @@ with the Extended Sense effect."""
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.apply_remove_default_mask()
-
 
 class Rapid(SenseFlag):
     """Rapid 1 rank
@@ -539,7 +562,6 @@ forth."""
         super().__init__(modifiers)
         self.apply_mask_logic()
 
-
 class Time_Sense(SenseFlag):
     """Time Sense 1 rank
 You always know what time it is and can time events as if
@@ -549,7 +571,6 @@ you had an accurate stopwatch."""
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
         self.set_sense_type(Sense_Type_Designation.MENTAL)
-
 
 class Tracking(SenseFlag):
     """Tracking 1 rank
@@ -566,7 +587,6 @@ while tracking."""
         super().__init__(modifiers)
         self.apply_mask_logic()
 
-
 class Ultra_Hearing(SenseFlag):
     """Ultra-Hearing 1 rank
 You can hear very high and low frequency sounds, like
@@ -578,7 +598,13 @@ by some remote controls."""
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
-        self.set_sense_type(Sense_Type_Designation.AUDITORY)
+        if self.get_sense_type() == None:
+            self.set_sense_type(Sense_Type_Designation.AUDITORY)
+        self.set_narrow(Sense_Type_Narrow.default_narrow_senses[Sense_Type_Designation.AUDITORY][1])
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(),
+                           with_flags=[Acute(modifiers={"Rank": 1}),
+                                       Ranged(modifiers={"Rank": 1}),
+                                       Radius(modifiers={"Rank": 1})])
 
 
 class Ultravision(SenseFlag):
@@ -591,7 +617,13 @@ at night by the light of the stars or other UV light sources."""
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
-        self.set_sense_type(Sense_Type_Designation.VISUAL)
+        if self.get_sense_type() == None:
+            self.set_sense_type(Sense_Type_Designation.VISUAL)
+        self.set_narrow(Sense_Type_Narrow.default_narrow_senses[Sense_Type_Designation.VISUAL][2])
+        self.sense = Sense(self.sense_type, sense_narrow=self.get_narrow(),
+                           with_flags=[Acute(modifiers={"Rank": 1}),
+                                       Ranged(modifiers={"Rank": 1}),
+                                       Accurate(modifiers={"Rank": 1})])
 
 
 class Sense_Flag_Description:

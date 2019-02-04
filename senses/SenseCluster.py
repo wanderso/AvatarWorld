@@ -24,7 +24,7 @@ class SenseCluster:
         t = sense.get_type()
         if t in self.senses_total:
             n = sense.get_narrow()
-            if n in self.senses_total[t][n]:
+            if n in self.senses_total[t]:
                 pass
             else:
                 self.senses_total[t][sense.get_narrow()] = sense
