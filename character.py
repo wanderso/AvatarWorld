@@ -1,11 +1,9 @@
 import powers
-import senses.SenseCluster
 import skills
 import ability
 import defenses
 import advantages
 import dice
-from senses import senses
 from senses.SenseCluster import SenseCluster
 
 
