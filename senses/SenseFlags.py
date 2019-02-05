@@ -189,14 +189,21 @@ effects with the first rank of the Subtle modifier (see
 Subtle under Extras for details)."""
     flag_name = "Awareness"
     has_descriptor = True
-   # is_entire_sense = True
     ranks_for_value = 1
 
     def __init__(self, modifiers={}):
+        self.descriptor = None
         super().__init__(modifiers)
         self.apply_mask_logic()
+        
+    def process_modifiers(self, mods):
+        super().process_modifiers(mods)
+        if "Descriptor" in mods:
+            self.descriptor = (mods["Descriptor"])
 
-    #
+    def get_flag_representation_no_sense(self):
+        return self.descriptor + " Awareness"
+
 
 class Communication_Link(SenseFlag):
     """Communication Link 1 rank
@@ -216,7 +223,13 @@ under Power Modifiers for details)."""
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
+        self.target = None
         self.apply_mask_logic()
+
+    def process_modifiers(self, mods):
+        super().process_modifiers(mods)
+        if "Descriptor" in mods:
+            self.target = (mods["Descriptor"])
 
     def make_base_sense(self):
         return Sense(Sense_Type_Designation.MENTAL)
@@ -238,7 +251,7 @@ for that, see Penetrates Concealment."""
     is_ranked = True
     has_upgraded_power = True
     has_descriptor = True
-    ranks_for_value = [None, 2,5]
+    ranks_for_value = [None, 2, 5]
 
     def __init__(self, modifiers={}):
         super().__init__(modifiers)
