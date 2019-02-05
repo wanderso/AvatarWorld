@@ -75,10 +75,16 @@ class SenseCluster:
         flag_narrow = flag.get_narrow()
         sense_targets = []
 
+
+
         if flag_sense in self.senses_total:
             sense_type = self.senses_total[flag_sense]
-            if flag_narrow in sense_type:
-                sense_targets.append(sense_type[flag_narrow])
+            if type(flag).entire_type_option and flag.rank == 2:
+                for entry in sense_type:
+                    sense_targets.append(sense_type[entry])
+            else:
+                if flag_narrow in sense_type:
+                    sense_targets.append(sense_type[flag_narrow])
 
         return sense_targets
 
@@ -94,7 +100,6 @@ class SenseCluster:
                 pass
             else:
                 self.add_sense(sns)
-
         else:
             for entry in self.get_sense_targets_from_flag(flag):
                 entry.add_flag(flag)

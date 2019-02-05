@@ -39,7 +39,6 @@ class SenseFlag:
         self.remove_flag_from_sense = self.remove_flag_ranked_from_sense_default_mask
 
     def process_modifiers(self, mods):
-        #TODO - refactor
         if "Flag Type" in mods:
             flag_type = mods["Flag Type"]
             if flag_type in Sense_Flag_Description.sense_type_dict.values():
