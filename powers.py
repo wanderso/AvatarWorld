@@ -1,9 +1,13 @@
 import modifiers
 import points
+import senses.SenseCluster
+import senses.SenseConstants
+import senses.SenseFlags
 import value_enums
 import defenses
 import action
 import character
+import enum
 
 """Power Effects
 Name Type Act ion Range Duration Resistance Cost
@@ -15,7 +19,7 @@ Communication Sensory Free Rank Sustained — 4 per rank
 Comprehend Sensory None Personal Permanent — 2 per rank
 Concealment Sensory Free Personal Sustained — 2 per rank
 Create Control Standard Ranged Sustained — 2 per rank
-Damage Attack Standard Close Instant Toughness 1 per rank
+XXX Damage Attack Standard Close Instant Toughness 1 per rank XXX
 Dazzle Attack Standard Ranged Instant Fort. or Will 2 per rank
 Deflect Defense Standard Ranged Instant — 1 per rank
 Duplication Control Standard Close Sustained — 3 per rank
@@ -68,6 +72,11 @@ Teleport Movement Move Rank Instant — 2 per rank
 Transform Control Standard Close Sustained — 2-5 per rank
 Variable General Standard Personal Sustained — 7 per rank
 Weaken Attack Standard Close Instant Fort. or Will 1 per rank"""
+
+class Power_Function_Codes(enum.Enum):
+    NO_ACTION = 0
+    POWER_FAILED = 1
+
 
 class Power_Execution_Data:
     def __init__(self, modifiers):
@@ -123,7 +132,12 @@ class Power:
     def __str__(self):
         return self.get_character_sheet_repr().strip()
 
+    def add_before_execution(self, fun_ptr):
+        self.before_execution.append(fun_ptr)
 
+    def remove_before_execution(self, fun_ptr):
+        if fun_ptr in self.before_execution:
+            self.before_execution.remove(fun_ptr)
 
     def calculate_points(self):
         return self.get_points_in_power().get_points_total()
@@ -157,6 +171,9 @@ class Power:
 
     def get_rank(self):
         return self.rank
+
+    def add_rank(self, extend_modifiers=True):
+        pass
 
     def get_range(self):
         return self.range
@@ -393,7 +410,7 @@ class Power:
             for lis in process_order:
                 if entry in lis:
                     entry_not_displayed = False
-            if entry_not_displayed == True:
+            if entry_not_displayed:
                 print(entry)
 
         for mod_list in process_order:
@@ -424,12 +441,14 @@ class Power:
             return
 
         for fun_ptr in self.before_execution:
-            fun_ptr(Power_Environment_Data)
+            ret_code = fun_ptr(Power_Environment_Data)
+            if ret_code == Power_Function_Codes.POWER_FAILED:
+                return
 
         self.execute_power_internals(Power_Environment_Data)
 
         for fun_ptr in self.after_execution:
-            fun_ptr(character_using_power,target_of_power,environment_of_power)
+            fun_ptr(Power_Environment_Data)
 
     def execute_power_internals(self, Power_Environment_Data):
         pass
@@ -497,9 +516,9 @@ class Attack(Power):
             power_target = Power_Environment_Data.target
             power_user = Power_Environment_Data.power_user
 
-            self.exec_attack_classic(power_user, power_target)
+            self.exec_attack_classic(power_user, power_target, verbose=False)
             
-    def exec_attack_classic(self, user, target):
+    def exec_attack_classic(self, user, target, verbose=True):
         skill = self.get_skill()
         skill_value = 0
 
@@ -518,30 +537,37 @@ class Attack(Power):
             tough_roll = target.roll_toughness()
             rank = self.get_rank()
             if (tough_roll >= 15 + rank):
-                print("No effect")
+                if verbose:
+                    print("No effect")
                 pass
             elif (tough_roll >= 10 + rank):
                 target.bruise += 1
-                print("Bruised")
+                if verbose:
+                    print("Bruised")
             elif (tough_roll >= 5 + rank):
                 target.bruise += 1
-                print("Dazed")
+                if verbose:
+                    print("Dazed")
                 # dazed
             elif (tough_roll >= rank):
                 target.bruise += 1
                 if "Staggered" not in target.conditions:
-                    print("Staggered")
+                    if verbose:
+                        print("Staggered")
                     target.conditions.append("Staggered")
                 else:
                     target.conditions.append("Incapacitated")
-                    print("Incapacitated (from Staggered)")
+                    if verbose:
+                        print("Incapacitated (from Staggered)")
             else:
                 target.conditions.append("Incapacitated")
-                print("Incapacitated")
+                if verbose:
+                    print("Incapacitated")
 
         else:
-            print("Missed")
-            print(roll)
+            if verbose:
+                print("Missed")
+                print(roll)
 
 
 class Protection(Power):
@@ -552,7 +578,7 @@ class Protection(Power):
 
     default_plain_text = "Protection"
 
-    allowed_modifiers = [modifiers.Sustained,modifiers.Impervious]
+    allowed_modifiers = [modifiers.Sustained, modifiers.Impervious]
 
     def __init__(self, name, rank, modifier_values={}):
         super().__init__(name, "Protection")
@@ -572,8 +598,119 @@ class Protection(Power):
         elif self.duration == value_enums.Power_Duration.SUSTAINED:
             return True
 
-    def affects_defense(self,defense):
+    def affects_defense(self, defense):
         if defense != defenses.Toughness:
             return False
         else:
             return self.rank
+
+    def execute_power_internals(self, Power_Environment_Data):
+        power_user = Power_Environment_Data.power_user
+        power_user_original_t = power_user.get_toughness()
+        power_user.set_toughness(power_user_original_t + self.rank)
+
+
+class Senses(Power):
+    points_per_rank_default = 1
+    default_range = value_enums.Power_Range.PERSONAL
+    default_action = value_enums.Power_Action.NONE
+    default_duration = value_enums.Power_Duration.PERMANENT
+
+    default_plain_text = "Senses"
+
+    allowed_modifiers = [modifiers.Sustained, modifiers.Impervious, modifiers.Uncontrolled, modifiers.Unreliable]
+
+    def __init__(self, name, modifier_values={}):
+        super().__init__(name, "Senses")
+        self.rank = 0
+        self.points = 0
+        self.points_of_senses_current = 0
+        self.points_per_rank = 1.0
+        self.sense_flags = []
+        self.modifiers = modifier_values
+        self.points_in_power = points.Points_In_Power(0, points.Points_Per_Rank.from_int(
+            type(self).points_per_rank_default))
+        self.process_modifiers()
+        
+    def get_points_of_senses_current(self):
+        return self.points_of_senses_current
+
+    def add_sense_flag(self, sense_flag):
+        point_val = sense_flag.get_point_value()
+
+        old_rank = self.get_rank()
+        new_rank = old_rank + point_val
+
+        new_pip = points.Points_In_Power(new_rank, self.points_in_power.get_ppr_tail())
+        old_pip = points.Points_In_Power(old_rank, self.points_in_power.get_ppr_tail())
+
+        if self.get_points() == 0:
+            self.points_in_power = new_pip
+        else:
+            combine_pip = new_pip - old_pip
+            self.points_in_power += combine_pip
+
+        self.rank = old_rank + point_val
+
+        self.sense_flags.append(sense_flag)
+        self.points_of_senses_current += sense_flag.get_point_value()
+
+    def get_sense_flags(self):
+        return self.sense_flags
+
+    # def create_sense_flag(self, sense_flag_name, sense_type="Default", rank=1, modifiers = {}):
+    #     if sense_flag_name in senses.Sense_Flag_Description.mods_dict:
+    #         new_flag = senses.Sense_Flag_Description.mods_dict[sense_flag_name]()
+
+    def get_character_sheet_repr(self):
+        default_retval = super().get_character_sheet_repr()
+        sides = default_retval.split('(')
+        left_side = '('.join(sides[:-1])
+        right_side = '(' + '('.join(sides[-1:]).rstrip('\n')
+
+        sense_types = {}
+
+        for flag in self.get_sense_flags():
+            st = flag.get_sense_type()
+            if st == None:
+                st = "None"
+            if st in sense_types:
+                sense_types[st].append(flag)
+            else:
+                sense_types[st] = [flag]
+
+        flag_text = []
+
+        key_lists = sense_types.keys()
+
+        for key in sense_types:
+            type_text = key
+            if key in senses.SenseFlags.Sense_Flag_Description.sense_type_dict:
+                type_text = senses.SenseFlags.Sense_Flag_Description.sense_type_dict[key]
+            key_text = ("%s: " % type_text)
+            for entry in sense_types[key]:
+                key_text += ("%s, " % entry.get_flag_representation_no_sense())
+
+            key_text = key_text[:-2]
+            flag_text.append(key_text)
+
+        final_text = ""
+
+        for entry in flag_text:
+            final_text += ("%s, " % entry)
+
+        if final_text != "":
+            final_text = final_text[:-2]
+
+        return left_side + "(" + final_text + ") " + right_side
+
+    def execute_power_internals(self, Power_Environment_Data):
+        power_target = None
+
+        if type(Power_Environment_Data.target) == character.Character:
+            power_target = Power_Environment_Data.target.get_sense_cluster()
+        elif type(Power_Environment_Data.target) == senses.SenseCluster.SenseCluster:
+            power_target = Power_Environment_Data.target
+
+        for flag in self.get_sense_flags():
+            power_target.apply_flag(flag)

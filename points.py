@@ -228,16 +228,20 @@ class Points_Per_Rank:
 
     def adjust_points_per_rank_by_x(self, modifier, pos=True):
         mod = None
-        if type(modifier) == Points_Per_Rank:
-            mod = modifier.get_x()
-        else:
-            mod = modifier
         if self.x is None:
             self.x = 0
-        if pos == False:
-            self.x -= mod.xmod
+        if type(modifier) == Points_Per_Rank:
+            mod = modifier.get_x()
+        elif type(modifier) == Points_Per_Rank_X_Modifier:
+            mod = modifier.xmod
         else:
-            self.x += mod.xmod
+            mod = modifier
+            print(type(modifier))
+
+        if pos == False:
+            self.x -= mod
+        else:
+            self.x += mod
 
     def adjust_points_per_rank_by_y(self, modifier, pos=True):
         modifier_y_val = modifier.get_y()
@@ -460,7 +464,7 @@ class Points_In_Power:
             current_index = 0
             for entry in other.rank_list:
                 retpip.add_ppr_break_point(entry)
-                retpip.adjust_ppr_for_range(current_value,entry,other.ppr_list[current_index],pos=False)
+                retpip.adjust_ppr_for_range(current_value,entry,other.ppr_list[current_index],True,pos=False)
                 current_value = entry
                 current_index += 1
 
@@ -496,6 +500,9 @@ class Points_In_Power:
             return ("Flat Values", self.flat_list)
         self.index += 1
         return (self.rank_list[self.index-1],self.ppr_list[self.index-1])
+
+    def get_ppr_tail(self):
+        return self.ppr_list[-1]
 
     def points_modifier_adjust_by_y(self, other, pos=True):
         retpip = Points_In_Power(0, Points_Per_Rank.from_int(0))

@@ -1,4 +1,6 @@
 import character
+import senses.SenseConstants
+import senses.SenseFlags
 import timeline
 import rooms
 import powers
@@ -26,6 +28,7 @@ class Environment:
 
     def get_time(self):
         return self.clock.get_time()
+
 
 class Event:
     def __init__(self, event_dict):
@@ -60,7 +63,6 @@ class Character_Turn(Event):
         self.event_information['Power User'] = character
         
     def execute_event(self):
-        print("%s's turn" % self.event_information['Power User'].get_name())
         turn = self.event_information['Power User'].generate_turn()
         turn.execute_actions()
         self.event_information['Initiative Round'] += 1
@@ -82,17 +84,52 @@ if __name__ == "__main__":
     mf = powers.Attack("Metal Flow", "Melee Combat: Martial Arts", 10, "Parry", character.Character.get_toughness,
                        character.Character.get_toughness)
 
+    og = powers.Senses("Omniglasses", {})
+
+
+
+    tv = senses.SenseFlags.Tracking()
+    tv.set_sense_type(senses.SenseConstants.Sense_Type_Designation.VISUAL)
+    og.add_sense_flag(tv)
+
+    ta = senses.SenseFlags.Tracking()
+    ta.set_sense_type(senses.SenseConstants.Sense_Type_Designation.AUDITORY)
+    og.add_sense_flag(ta)
+
+    aa = senses.SenseFlags.Accurate(modifiers={"Flag Type": "Auditory"})
+    og.add_sense_flag(aa)
+
+    ms = senses.SenseFlags.Microscopic_Vision(modifiers={"Flag Type": "Visual", "Rank":4})
+    og.add_sense_flag(ms)
+
+    av = senses.SenseFlags.Analytical(modifiers={"Flag Type": "Visual", "Rank":1})
+    og.add_sense_flag(av)
+
+    dt = senses.SenseFlags.Detect(modifiers={"Flag Type": "Mental", "Rank":2, "Descriptor":"Electricity"})
+    og.add_sense_flag(dt)
+
+    iv = senses.SenseFlags.Infravision(modifiers={})
+    og.add_sense_flag(iv)
+
+    ac = senses.SenseFlags.Acute(modifiers={"Flag Type": "Mental", "Rank":2})
+    og.add_sense_flag(ac)
+
+    ea = senses.SenseFlags.Awareness(modifiers={"Flag Type": "Visual", "Descriptor": "Electricity"})
+    og.add_sense_flag(ea)
+
+    print("Sense type: %s [%s]" % (av.get_sense_type(), av.get_narrow()))
+
     men.set_skill_ranks("Ranged Combat: Hypersuit Blasters", 10)
     cer.set_skill_ranks("Melee Combat: Martial Arts", 10)
 
-
     men.add_power(vm)
+    men.add_power(og)
     cer.add_power(mf)
 
     men.print_character_sheet()
-    print(men.print_character_sheet())
-
     cer.print_character_sheet()
+
+    print(men.print_character_sheet())
     print(cer.print_character_sheet())
 
     men_init = men.roll_initiative()
@@ -120,25 +157,17 @@ if __name__ == "__main__":
     men_ai.add_objective(men_ob)
     cer_ai.add_objective(cer_ob)
 
-    print(vm.get_name())
-
-
     men_wins = 0
     cer_wins = 0
 
-    for _ in range(0,1000):
-        men.generate_health_classic()
-        cer.generate_health_classic()
-        while not men.has_condition("Incapacitated") and not cer.has_condition("Incapacitated"):
-            en.advance_clock()
-        if men.has_condition("Incapacitated"):
-            cer_wins += 1
-        if cer.has_condition("Incapacitated"):
-            men_wins += 1
+    print(men.get_sense_cluster())
 
-    print("Menlo wins: %d, Cerulean wins: %d" % (men_wins, cer_wins))
+    execute_data = powers.Power_Execution_Data({"Self": men, "Target": men})
+
+    og.execute_power(execute_data)
+
+    print(men.get_sense_cluster())
+
+    print(men.get_sense_cluster().get_total_senses()[senses.SenseConstants.Sense_Type_Designation.VISUAL]['Ordinary Frequencies'].get_mask_tag())
 
 
-
-
-    

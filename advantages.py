@@ -19,6 +19,7 @@ class Advantage:
     advantage_needs_rank = False
     advantage_needs_name = False
     advantage_has_list = False
+
     def __init__(self, name):
         self.advantage_name = name
         self.advantage_cost = 0
