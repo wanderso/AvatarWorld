@@ -34,10 +34,17 @@ class Sense:
             ret_val = ret_val + " [" + self.sense_narrow + "]"
         ret_val = ret_val + ": "
         for entry in self.sense_mask:
-            if self.sense_mask[entry] == 1:
-                ret_val += entry + ", "
-            elif self.sense_mask[entry] > 0:
-                ret_val += entry + " " + str(self.sense_mask[entry]) + ", "
+            if type(self.sense_mask[entry]) != type({}):
+                if self.sense_mask[entry] == 1:
+                    ret_val += entry + ", "
+                elif self.sense_mask[entry] > 0:
+                    ret_val += entry + " " + str(self.sense_mask[entry]) + ", "
+            else:
+                for value in self.sense_mask[entry]:
+                    if self.sense_mask[entry][value] == 1:
+                        ret_val += value + " " + entry + ", "
+                    elif self.sense_mask[entry][value] > 0:
+                        ret_val += value + " " + entry + " " + str(self.sense_mask[entry][value]) + ", "
         return ret_val[:-2]
 
     def get_type(self):
@@ -57,6 +64,15 @@ class Sense:
             self.sense_mask[mask_tag] += change_value
         else:
             self.sense_mask[mask_tag] = change_value
+
+    def change_mask_flag_dict(self, mask_tag, dict_tag, change_value=1):
+        if mask_tag in self.sense_mask:
+            if dict_tag in self.sense_mask[mask_tag]:
+                self.sense_mask[mask_tag] += change_value
+            else:
+                self.sense_mask[mask_tag][dict_tag] = change_value
+        else:
+            self.sense_mask[mask_tag] = {dict_tag: change_value}
 
     def get_mask_tag(self):
         return self.sense_mask

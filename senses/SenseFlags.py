@@ -194,7 +194,13 @@ Subtle under Extras for details)."""
     def __init__(self, modifiers={}):
         self.descriptor = None
         super().__init__(modifiers)
-        self.apply_mask_logic()
+        #self.apply_mask_logic()
+
+    def apply_flag_to_sense(self, sense):
+        sense.change_mask_flag_dict(self.flag_name, self.descriptor)
+
+    def remove_flag_from_sense(self, sense):
+        sense.change_mask_flag_dict(self.flag_name, self.descriptor, change_value=-1)
         
     def process_modifiers(self, mods):
         super().process_modifiers(mods)
