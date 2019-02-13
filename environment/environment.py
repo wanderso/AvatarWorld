@@ -75,8 +75,8 @@ if __name__ == "__main__":
     men = character.CharacterGenerators.default_char("Doctor Menlo", 10, "Defense")
     cer = character.CharacterGenerators.default_char("Cerulean", 10, "Toughness")
 
-    men_loc = rooms.Room_Object(0,0,0,men,r1)
-    cer_loc = rooms.Room_Object(0,0,0,cer,r1)
+    men_loc = rooms.Room_Object(0, 0, 0, men, r1)
+    cer_loc = rooms.Room_Object(0, 0, 0, cer, r1)
 
     vm = powers.Attack("Voltaic Manipulator", "Ranged Combat: Hypersuit Blasters", 10, "Dodge",
                        character.Character.get_toughness, character.Character.get_toughness,
